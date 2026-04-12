@@ -56,6 +56,16 @@ def test_prompt_command_prints_response(monkeypatch, tmp_path: Path) -> None:
     assert result.stdout.strip() == "2"
 
 
+def test_models_command_lists_available_models() -> None:
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["models"])
+
+    assert result.exit_code == 0
+    assert "gpt\tGPT-5\tGPT_5" in result.stdout
+    assert "claude\tClaude 4.5 Sonnet\tCLAUDE_4_5_SONNET" in result.stdout
+
+
 def test_prompt_command_writes_output_file(monkeypatch, tmp_path: Path) -> None:
     runner = CliRunner()
     output_file = tmp_path / "saida.txt"

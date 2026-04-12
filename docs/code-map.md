@@ -2,7 +2,7 @@
 
 ## Estrutura
 
-- `src/adapta/cli.py` -> comandos Typer e parsing da linha de comando
+- `src/adapta/cli.py` -> comandos Typer, parsing da linha de comando e listagem de modelos
 - `src/adapta/config.py` -> carregamento de `.env` e configurações tipadas
 - `src/adapta/logging.py` -> configuração de logs por execução
 - `src/adapta/registry.py` -> catálogo de modelos e resolução de aliases

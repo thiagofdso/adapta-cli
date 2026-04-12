@@ -46,6 +46,12 @@ def _resolve_model(explicit: str | None, default: str | None) -> str:
     return _select_model_interactively()
 
 
+@app.command()
+def models() -> None:
+    for option in list_model_options():
+        typer.echo(f"{option.key}\t{option.display_name}\t{option.backend_name}")
+
+
 @app.callback()
 def callback(log: str | None = typer.Option(None, "--log")) -> None:
     configure_logging(log)

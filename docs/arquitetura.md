@@ -6,7 +6,7 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 
 ## Componentes principais
 
-- CLI Typer para `prompt` e `chat`
+- CLI Typer para `prompt`, `chat` e `models`
 - módulo de configuração baseado em `.env`
 - registro de modelos para mapear aliases curtos para nomes do backend Adapta
 - cliente HTTP assíncrono interno reestruturado em camadas de sessão, autenticação e conversas

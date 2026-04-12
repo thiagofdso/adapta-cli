@@ -24,6 +24,14 @@ Descrição: usa `--model`, `ADAPTA_MODEL` ou seleção interativa quando necess
 
 Depende de: configuração de ambiente e registro de modelos.
 
+## Listagem de modelos
+
+Status: ativo
+
+Descrição: expõe o comando `models` para listar no terminal todas as opções disponíveis com chave, nome amigável e identificador do backend.
+
+Depende de: registro de modelos.
+
 ## Instalação e atalhos locais
 
 Status: ativo
