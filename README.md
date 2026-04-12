@@ -64,6 +64,12 @@ Chat interativo:
 adapta chat --model gpt
 ```
 
+Listar modelos disponíveis:
+
+```bash
+adapta models
+```
+
 Logs são opt-in:
 
 ```bash
@@ -116,5 +122,6 @@ Documentação complementar:
 
 - `prompt` aceita `--prompt`, `--prompt-file` e `--output`
 - `chat` remove a sessão remota ao encerrar
+- `models` lista os modelos suportados com chave, nome amigável e identificador do backend
 - logs ficam desativados por padrão
 - erros esperados da CLI retornam mensagem curta sem traceback verboso

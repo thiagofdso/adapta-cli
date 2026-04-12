@@ -25,6 +25,10 @@ CLI -> resolução de configuração/modelo -> `prompt_service` -> cliente Adapt
 
 CLI -> resolução de configuração/modelo -> `chat_service` -> cliente Adapta -> loop de mensagens -> exclusão remota do chat
 
+### Models
+
+CLI -> `registry` -> listagem ordenada de modelos -> stdout
+
 ## Pontos críticos
 
 - Autenticação: `src/adapta/client.py`

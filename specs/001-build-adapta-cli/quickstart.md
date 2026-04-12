@@ -80,13 +80,19 @@ adapta --log info prompt --model gpt --prompt "quanto é 1+1 responda somente o 
 adapta --log debug prompt --model gpt --prompt "quanto é 1+1 responda somente o valor"
 ```
 
-8. Instalação local:
+8. Listagem de modelos:
+
+```bash
+adapta models
+```
+
+9. Instalação local:
 
 ```bash
 ./scripts/install-local.sh
 ```
 
-9. Instalação global recomendada:
+10. Instalação global recomendada:
 
 ```bash
 make install
@@ -94,13 +100,13 @@ make install
 
 Se `pipx` não estiver disponível no ambiente, o script tenta `python -m pipx` e, na ausência dele, cria uma `venv` dedicada em `~/.local/share/adapta-cli/venv` com link simbólico em `~/.local/bin/adapta`.
 
-10. Instalação remota:
+11. Instalação remota:
 
 ```bash
 ./scripts/install-remote.sh <repo-remoto>
 ```
 
-11. Atalhos de execução:
+12. Atalhos de execução:
 
 ```bash
 make test
@@ -115,7 +121,7 @@ make install-remote REMOTE_REPO=<repo-remoto>
 
 1. A documentação negocial e técnica obrigatória em `docs/` é atualizada antes dos testes e da implementação.
 2. Todos os testes unitários passam antes da criação dos testes de integração.
-3. Os testes de integração validam prompt inline, prompt por arquivo, saída em arquivo e limpeza do chat.
+3. Os testes de integração validam prompt inline, prompt por arquivo, saída em arquivo, listagem de modelos e limpeza do chat.
 4. Os testes também validam ausência de logs por padrão, seleção de nível de log, scripts de instalação e `Makefile`.
 5. O projeto instalado expõe o comando `adapta` no terminal a partir de origem local e remota.
 6. O `Makefile` oferece ao menos `make test`, `make prompt`, `make chat`, `make install`, `make install-local` e `make install-remote`.
