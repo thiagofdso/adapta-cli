@@ -13,7 +13,9 @@ dist/
 build/
 *.egg-info/
 .env
+.envrc
 .env.*
+logs/
 .DS_Store
 Thumbs.db
 *.tmp
