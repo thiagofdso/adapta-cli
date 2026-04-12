@@ -715,7 +715,7 @@ class AdaptaClientAdapter:
         )
         return extract_answer_text(result)
 
-    async def delete_chat(self, chat_id: str) -> None:
+    async def delete_chat(self, chat_id: str | list[str]) -> None:
         await self._conversations.delete_chat(chat_id)
 
 

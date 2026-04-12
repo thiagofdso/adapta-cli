@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-04-12
 
 ## Active Technologies
+- Python 3.11 + Typer, httpx, python-dotenv, pytest (001-build-adapta-cli)
+- arquivos locais JSON e texto/markdown para configuração e saída; estado remoto efêmero de chat no serviço Adapta (001-build-adapta-cli)
 
 - Python 3.11 + Typer, httpx, pydantic-settings, python-dotenv, pytest (001-build-adapta-cli)
 
@@ -33,6 +35,7 @@ Python 3.11: Follow standard conventions
 
 
 ## Recent Changes
+- 001-build-adapta-cli: Added Python 3.11 + Typer, httpx, python-dotenv, pytest
 
 - 001-build-adapta-cli: Added Python 3.11 + Typer, httpx, pydantic-settings, python-dotenv, pytest
 

@@ -15,6 +15,7 @@ build/
 .env
 .envrc
 .env.*
+config.json
 logs/
 .DS_Store
 Thumbs.db

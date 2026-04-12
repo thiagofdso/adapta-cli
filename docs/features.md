@@ -32,6 +32,14 @@ Descrição: expõe o comando `models` para listar no terminal todas as opções
 
 Depende de: registro de modelos.
 
+## Debate multiagente
+
+Status: planejado
+
+Descrição: expõe o comando `debate` para executar múltiplos agentes por rodadas, com configuração por arquivo JSON, variável de ambiente ou fluxo interativo, conclusão final consolidada e saída no terminal ou em arquivo.
+
+Depende de: autenticação Adapta, registro de modelos, cliente de chat, persistência local de saída e validação interativa de entrada.
+
 ## Instalação e atalhos locais
 
 Status: ativo

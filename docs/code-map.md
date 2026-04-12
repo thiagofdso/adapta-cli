@@ -2,7 +2,7 @@
 
 ## Estrutura
 
-- `src/adapta/cli.py` -> comandos Typer, parsing da linha de comando e listagem de modelos
+- `src/adapta/cli.py` -> comandos Typer, parsing da linha de comando, listagem de modelos e fluxo interativo do debate
 - `src/adapta/config.py` -> carregamento de `.env` e configurações tipadas
 - `src/adapta/logging.py` -> configuração de logs por execução
 - `src/adapta/registry.py` -> catálogo de modelos e resolução de aliases
@@ -10,6 +10,7 @@
 - `src/adapta/client.py` -> cliente interno do Adapta com classes focadas em sessão HTTP, autenticação e conversas
 - `src/adapta/services/prompt_service.py` -> fluxo de prompt único
 - `src/adapta/services/chat_service.py` -> fluxo de chat com limpeza remota
+- `src/adapta/services/debate_service.py` -> orquestração do debate por rodadas, leitura e gravação de configuração, conclusão final e emissão incremental
 - `src/adapta/services/output_service.py` -> escrita em stdout e arquivo
 - `scripts/install-local.sh` -> instala o comando `adapta` a partir do projeto local com `pipx` quando disponível ou fallback para `venv` dedicada
 - `scripts/install-remote.sh` -> instala o comando `adapta` a partir de repositório remoto ou `file://`, com o mesmo fallback local de instalação
@@ -25,6 +26,10 @@ CLI -> resolução de configuração/modelo -> `prompt_service` -> cliente Adapt
 
 CLI -> resolução de configuração/modelo -> `chat_service` -> cliente Adapta -> loop de mensagens -> exclusão remota do chat
 
+### Debate
+
+CLI -> resolução de `--config` ou `ADAPTA_DEBATE_CONFIG` ou perguntas interativas -> `debate_service` -> cliente Adapta -> chats separados por agente ao longo das rodadas -> conclusão final -> stdout e/ou arquivo -> limpeza remota dos chats
+
 ### Models
 
 CLI -> `registry` -> listagem ordenada de modelos -> stdout
@@ -35,3 +40,4 @@ CLI -> `registry` -> listagem ordenada de modelos -> stdout
 - Seleção de modelo: `src/adapta/registry.py`
 - Logs por execução: `src/adapta/logging.py`
 - Limpeza de chat remoto: `src/adapta/services/chat_service.py`
+- Orquestração multiagente: `src/adapta/services/debate_service.py`

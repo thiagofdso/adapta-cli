@@ -44,3 +44,10 @@ async def send_chat_message(
 async def close_chat_session(client, session: ChatSession) -> None:
     if session.cleanup_required:
         await client.delete_chat(session.chat_id)
+
+
+async def close_chat_sessions(client, sessions: list[ChatSession]) -> None:
+    chat_ids = [session.chat_id for session in sessions if session.cleanup_required]
+    if not chat_ids:
+        return
+    await client.delete_chat(chat_ids)

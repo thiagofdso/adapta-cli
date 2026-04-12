@@ -6,17 +6,18 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 
 ## Componentes principais
 
-- CLI Typer para `prompt`, `chat` e `models`
+- CLI Typer para `prompt`, `chat`, `models` e `debate`
 - módulo de configuração baseado em `.env`
 - registro de modelos para mapear aliases curtos para nomes do backend Adapta
 - cliente HTTP assíncrono interno reestruturado em camadas de sessão, autenticação e conversas
-- serviços separados para prompt, chat e persistência de saída
+- serviços separados para prompt, chat, debate e persistência de saída
 
 ## Comunicação entre componentes
 
 - comandos de CLI recebem opções, resolvem configuração e delegam para serviços
 - serviços orquestram chamadas ao cliente Adapta e retornam respostas normalizadas
 - o cliente encapsula autenticação, envio de prompts e exclusão de chats em classes com objetivos específicos
+- no debate, cada agente mantém uma sessão de chat própria por toda a execução e a conclusão final é gerada a partir das respostas acumuladas das rodadas
 
 ## Tecnologias
 
@@ -32,4 +33,5 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 - a CLI privilegia simplicidade e um único processo por sessão
 - logs são opt-in para manter saída limpa no uso comum
 - chat é efêmero: a sessão remota é excluída ao final por requisito do produto
+- debate reutiliza o mesmo princípio de efemeridade do chat, mas com múltiplas sessões remotas por execução
 - a implementação atual internaliza apenas o subconjunto necessário do cliente do Adapta para prompt, chat e limpeza remota, reduzindo dependências externas do projeto

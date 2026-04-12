@@ -170,3 +170,52 @@ def test_prompt_command_shows_friendly_error_without_traceback(monkeypatch) -> N
     assert result.exit_code == 1
     assert "ADAPTA_LOGIN e ADAPTA_PASSWORD são obrigatórios." in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_debate_command_reprompts_invalid_agent_count(
+    monkeypatch, tmp_path: Path
+) -> None:
+    runner = CliRunner()
+
+    class DummyClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
+        async def prompt(self, *, model_backend: str, prompt: str) -> str:
+            return "conclusao final"
+
+        async def chat(
+            self, *, model_backend: str, messages: list[dict[str, str]], chat_id: str
+        ) -> str:
+            return f"{model_backend}:{len(messages)}"
+
+        async def delete_chat(self, chat_id: str | list[str]) -> None:
+            return None
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("ADAPTA_DEBATE_CONFIG", raising=False)
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: DummyClient())
+
+    result = runner.invoke(
+        app,
+        ["debate", "--prompt", "Defina uma arquitetura"],
+        input="abc\n1\n2\n1\narquiteto\n4\ndesenvolvedor\nxyz\n2\n",
+    )
+
+    assert result.exit_code == 0, result.stderr
+    assert "Informe um número inteiro válido." in result.stdout
+    assert "Informe um número maior ou igual a 2." in result.stdout
+    assert (tmp_path / "debate.json").exists()

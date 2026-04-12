@@ -13,6 +13,7 @@ Uso principal:
 
 - autenticar sessão
 - enviar prompts e mensagens de chat
+- manter múltiplos chats simultâneos durante execuções de debate
 - excluir chats remotos ao término
 
 Falhas possíveis:
@@ -25,6 +26,7 @@ Restrições conhecidas:
 
 - depende de conectividade externa
 - o comportamento do backend pode variar por modelo
+- debates com múltiplos agentes ampliam a quantidade de chamadas remotas por execução e exigem limpeza best-effort de todos os chats abertos
 
 ## Repositório remoto para instalação
 
