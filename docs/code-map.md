@@ -11,9 +11,9 @@
 - `src/adapta/services/prompt_service.py` -> fluxo de prompt único
 - `src/adapta/services/chat_service.py` -> fluxo de chat com limpeza remota
 - `src/adapta/services/output_service.py` -> escrita em stdout e arquivo
-- `scripts/install-local.sh` -> instalação local do comando `adapta`
-- `scripts/install-remote.sh` -> instalação remota do comando `adapta`
-- `Makefile` -> atalhos para testes, prompt e chat
+- `scripts/install-local.sh` -> instala o comando `adapta` a partir do projeto local com `pipx` quando disponível ou fallback para `venv` dedicada
+- `scripts/install-remote.sh` -> instala o comando `adapta` a partir de repositório remoto ou `file://`, com o mesmo fallback local de instalação
+- `Makefile` -> atalhos para testes, prompt, chat e fluxos de instalação
 
 ## Fluxos principais
 

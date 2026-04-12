@@ -33,9 +33,16 @@ Tipo: origem remota para instalação da CLI.
 Uso principal:
 
 - instalar o projeto a partir de uma URL remota usando o script de instalação.
+- permitir instalação por referência opcional ou origem local no formato `file://`.
 
 Falhas possíveis:
 
 - URL inválida
 - indisponibilidade do repositório
 - falha de instalação do pacote
+
+Comportamento operacional:
+
+- os scripts tentam usar `pipx` primeiro, depois `python -m pipx` quando disponível.
+- se `pipx` não estiver disponível, a instalação cai para uma `venv` dedicada em `~/.local/share/adapta-cli/venv`.
+- o comando final `adapta` é exposto por link simbólico em `~/.local/bin/adapta`.
