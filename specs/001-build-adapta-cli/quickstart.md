@@ -92,7 +92,7 @@ adapta --log debug prompt --model gpt --prompt "quanto é 1+1 responda somente o
 make install
 ```
 
-Se `pipx` não estiver disponível no ambiente, o script usa `pip install --user` como fallback.
+Se `pipx` não estiver disponível no ambiente, o script tenta `python -m pipx` e, na ausência dele, cria uma `venv` dedicada em `~/.local/share/adapta-cli/venv` com link simbólico em `~/.local/bin/adapta`.
 
 10. Instalação remota:
 
