@@ -18,7 +18,12 @@ from adapta.services.output_service import persist_output
 from adapta.services.prompt_service import build_prompt_request, execute_prompt
 
 
-app = typer.Typer(add_completion=False)
+app = typer.Typer(add_completion=False, pretty_exceptions_enable=False)
+
+
+def _fail(message: str) -> None:
+    typer.echo(message, err=True)
+    raise typer.Exit(code=1)
 
 
 def _select_model_interactively() -> str:
@@ -53,52 +58,58 @@ def prompt(
     prompt_file: Path | None = typer.Option(None, "--prompt-file"),
     output: Path | None = typer.Option(None, "--output"),
 ) -> None:
-    settings = load_settings()
-    model_key = _resolve_model(model, settings.adapta_model)
-    request = build_prompt_request(
-        model_key=model_key, prompt=prompt, prompt_file=prompt_file, output=output
-    )
-    option = get_model_option(model_key)
+    try:
+        settings = load_settings()
+        model_key = _resolve_model(model, settings.adapta_model)
+        request = build_prompt_request(
+            model_key=model_key, prompt=prompt, prompt_file=prompt_file, output=output
+        )
+        option = get_model_option(model_key)
 
-    async def _run() -> str:
-        async with create_client(settings) as client:
-            response = await execute_prompt(
-                client, request, model_backend=option.backend_name
-            )
-            persist_output(response.text, request.output_path)
-            return response.text
+        async def _run() -> str:
+            async with create_client(settings) as client:
+                response = await execute_prompt(
+                    client, request, model_backend=option.backend_name
+                )
+                persist_output(response.text, request.output_path)
+                return response.text
 
-    typer.echo(run_async(_run()))
+        typer.echo(run_async(_run()))
+    except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
 
 
 @app.command()
 def chat(model: str | None = typer.Option(None, "--model")) -> None:
-    settings = load_settings()
-    model_key = _resolve_model(model, settings.adapta_model)
-    option = get_model_option(model_key)
-    session = create_chat_session(model_key)
+    try:
+        settings = load_settings()
+        model_key = _resolve_model(model, settings.adapta_model)
+        option = get_model_option(model_key)
+        session = create_chat_session(model_key)
 
-    async def _run() -> None:
-        async with create_client(settings) as client:
-            try:
-                while True:
-                    user_input = typer.prompt("Você")
-                    if user_input.strip().lower() in {"exit", "quit", "sair"}:
-                        break
-                    response = await send_chat_message(
-                        client,
-                        session,
-                        model_backend=option.backend_name,
-                        prompt_text=user_input,
-                    )
-                    typer.echo(response)
-            finally:
+        async def _run() -> None:
+            async with create_client(settings) as client:
                 try:
-                    await close_chat_session(client, session)
-                except Exception as exc:  # noqa: BLE001
-                    typer.echo(f"Falha ao limpar chat remoto: {exc}", err=True)
+                    while True:
+                        user_input = typer.prompt("Você")
+                        if user_input.strip().lower() in {"exit", "quit", "sair"}:
+                            break
+                        response = await send_chat_message(
+                            client,
+                            session,
+                            model_backend=option.backend_name,
+                            prompt_text=user_input,
+                        )
+                        typer.echo(response)
+                finally:
+                    try:
+                        await close_chat_session(client, session)
+                    except Exception as exc:  # noqa: BLE001
+                        typer.echo(f"Falha ao limpar chat remoto: {exc}", err=True)
 
-    run_async(_run())
+        run_async(_run())
+    except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
 
 
 def main() -> None:

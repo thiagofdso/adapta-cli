@@ -86,18 +86,29 @@ adapta --log debug prompt --model gpt --prompt "quanto é 1+1 responda somente o
 ./scripts/install-local.sh
 ```
 
-9. Instalação remota:
+9. Instalação global recomendada:
+
+```bash
+make install
+```
+
+Se `pipx` não estiver disponível no ambiente, o script usa `pip install --user` como fallback.
+
+10. Instalação remota:
 
 ```bash
 ./scripts/install-remote.sh <repo-remoto>
 ```
 
-10. Atalhos de execução:
+11. Atalhos de execução:
 
 ```bash
 make test
 make prompt
 make chat
+make install
+make install-local
+make install-remote REMOTE_REPO=<repo-remoto>
 ```
 
 ## 6. Critérios de pronto para implementação
@@ -107,4 +118,4 @@ make chat
 3. Os testes de integração validam prompt inline, prompt por arquivo, saída em arquivo e limpeza do chat.
 4. Os testes também validam ausência de logs por padrão, seleção de nível de log, scripts de instalação e `Makefile`.
 5. O projeto instalado expõe o comando `adapta` no terminal a partir de origem local e remota.
-6. O `Makefile` oferece ao menos `make test`, `make prompt` e `make chat`.
+6. O `Makefile` oferece ao menos `make test`, `make prompt`, `make chat`, `make install`, `make install-local` e `make install-remote`.

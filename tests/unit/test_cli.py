@@ -133,3 +133,30 @@ def test_prompt_command_uses_default_model(monkeypatch, tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert result.stdout.strip() == "2"
+
+
+def test_prompt_command_shows_friendly_error_without_traceback(monkeypatch) -> None:
+    runner = CliRunner()
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: (_ for _ in ()).throw(
+            ValueError("ADAPTA_LOGIN e ADAPTA_PASSWORD são obrigatórios.")
+        ),
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "prompt",
+            "--model",
+            "gpt",
+            "--prompt",
+            "quanto é 1+1 responda somente o valor",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "ADAPTA_LOGIN e ADAPTA_PASSWORD são obrigatórios." in result.stderr
+    assert "Traceback" not in result.stderr

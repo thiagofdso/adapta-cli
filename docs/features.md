@@ -28,6 +28,6 @@ Depende de: configuração de ambiente e registro de modelos.
 
 Status: ativo
 
-Descrição: disponibiliza scripts de instalação e atalhos via `Makefile` para testes, prompt e chat.
+Descrição: disponibiliza scripts de instalação e atalhos via `Makefile` para testes, prompt, chat, instalação global com `pipx`, instalação local no ambiente atual e instalação remota.
 
 Depende de: empacotamento Python e scripts de shell.
