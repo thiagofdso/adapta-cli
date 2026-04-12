@@ -13,6 +13,10 @@ from adapta.config import Settings
 class DummyClient:
     def __init__(self) -> None:
         self.deleted: list[str] = []
+        self.uploaded: list[str] = []
+        self.chat_calls: list[
+            tuple[str, str, list[dict[str, str]], list[str] | None]
+        ] = []
 
     async def __aenter__(self):
         return self
@@ -26,7 +30,36 @@ class DummyClient:
     async def chat(
         self, *, model_backend: str, messages: list[dict[str, str]], chat_id: str
     ) -> str:
+        self.chat_calls.append((model_backend, chat_id, list(messages), None))
         return f"{model_backend}:{len(messages)}"
+
+    async def chat_with_files(
+        self,
+        *,
+        model_backend: str,
+        messages: list[dict[str, str]],
+        chat_id: str,
+        files: list[dict[str, object]],
+    ) -> str:
+        self.chat_calls.append(
+            (
+                model_backend,
+                chat_id,
+                list(messages),
+                [str(file["filename"]) for file in files],
+            )
+        )
+        return f"{model_backend}:{len(messages)}"
+
+    async def upload_file(self, file_path: Path) -> dict[str, object]:
+        self.uploaded.append(file_path.name)
+        return {
+            "filename": file_path.name,
+            "url": f"https://files.example/{file_path.name}",
+            "size": file_path.stat().st_size,
+            "mediaType": "application/pdf",
+            "path": f"uploads/{file_path.name}",
+        }
 
     async def delete_chat(self, chat_id: str | list[str]) -> None:
         if isinstance(chat_id, list):
@@ -37,6 +70,7 @@ class DummyClient:
 
 def test_debate_command_runs_with_config_file(monkeypatch, tmp_path: Path) -> None:
     runner = CliRunner()
+    client = DummyClient()
     config_path = tmp_path / "debate.json"
     config_path.write_text(
         json.dumps(
@@ -58,7 +92,7 @@ def test_debate_command_runs_with_config_file(monkeypatch, tmp_path: Path) -> No
             env_file_path=tmp_path / ".env",
         ),
     )
-    monkeypatch.setattr(cli_module, "create_client", lambda settings: DummyClient())
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
 
     result = runner.invoke(
         app,
@@ -77,3 +111,54 @@ def test_debate_command_runs_with_config_file(monkeypatch, tmp_path: Path) -> No
     assert "A1 Rodada 1" in result.stdout
     assert "A2 Rodada 2" in result.stdout
     assert "Conclusão Final" in result.stdout
+
+
+def test_debate_command_accepts_file_attachments(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    config_path = tmp_path / "debate.json"
+    attachment_a = tmp_path / "a.pdf"
+    attachment_b = tmp_path / "b.pdf"
+    config_path.write_text(
+        json.dumps(
+            {
+                "A1": {"model": "claude", "prompt": "arquiteto"},
+                "A2": {"model": "gpt", "prompt": "dev"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    attachment_a.write_bytes(b"%PDF-1.4\n")
+    attachment_b.write_bytes(b"%PDF-1.4\n")
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+
+    result = runner.invoke(
+        app,
+        [
+            "debate",
+            "--config",
+            str(config_path),
+            "--prompt",
+            "Defina uma arquitetura",
+            "--rounds",
+            "2",
+            "--file",
+            f"{attachment_a},{attachment_b}",
+        ],
+    )
+
+    assert result.exit_code == 0, result.stderr
+    assert client.uploaded == ["a.pdf", "b.pdf"]
+    assert len(client.chat_calls) == 4
+    assert all(call[3] == ["a.pdf", "b.pdf"] for call in client.chat_calls)

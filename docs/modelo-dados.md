@@ -26,8 +26,9 @@ Regra: `key` deve ser único e mapear para um modelo válido do backend.
 - `prompt_text`
 - `prompt_source`
 - `output_path`
+- `file_paths`
 
-Regra: apenas uma origem de prompt por execução.
+Regra: apenas uma origem de prompt por execução e no máximo 5 anexos locais por chamada.
 
 ### ChatSession
 
@@ -54,8 +55,19 @@ Regra: cada agente precisa de identificador único, modelo válido e prompt não
 - `conclusion_model_key`
 - `output_path`
 - `config_source`
+- `file_paths`
 
-Regra: o debate exige pelo menos 2 agentes e pelo menos 1 rodada.
+Regra: o debate exige pelo menos 2 agentes, pelo menos 1 rodada e reutiliza o mesmo conjunto opcional de anexos em todas as rodadas.
+
+### RemoteFileEntry
+
+- `filename`
+- `path`
+- `mediaType`
+- `size`
+- `url`
+
+Regra: `filename` deve existir para permitir deduplicação de upload e inspeção via `list-files`.
 
 ### DebateTurn
 
@@ -84,3 +96,60 @@ Regra: a rodada agrega as respostas de todos os agentes configurados.
 - `cleanup_warnings`
 
 Regra: a conclusão final é produzida após a última rodada e avisos de cleanup não invalidam o resultado já concluído.
+
+### DistillationRequest
+
+- `input_path`
+- `input_dir_path`
+- `output_path`
+- `output_dir_path`
+- `mode`
+- `upload_delay_seconds`
+
+Regra: o modo por arquivo exige `input_path` e `output_path`; o modo por diretório exige `input_dir_path` e `output_dir_path`.
+
+Observação: `input_path` com `output_dir_path` é permitido e produz um consolidado único dentro do diretório de saída, preservando os parciais por dimensão.
+
+### DistillationInputItem
+
+- `source_path`
+- `target_output_path`
+- `source_origin`
+
+Regra: cada item resolvido para processamento deve apontar para uma origem única e um destino determinístico.
+
+Observação: `source_origin` distingue fluxos como `input`, `input-output-dir` e `input-dir` para decidir se os arquivos parciais devem ser preservados.
+
+### DistillationDimension
+
+- `dimension_number`
+- `prompt_text`
+- `attempt_count`
+- `selected_content`
+- `status`
+
+Regra: cada dimensão precisa manter no máximo uma saída final por item processado.
+
+### DistillationArtifact
+
+- `artifact_type`
+- `path_or_identifier`
+- `cleanup_required`
+- `preserved_reason`
+
+Regra: artefatos temporários e remotos devem ser rastreáveis para limpeza ou preservação.
+
+Exemplos: upload remoto do PDF, subdiretório local com `dimensao1.txt` a `dimensao7.txt`, consolidado final `.md`.
+
+### DistillationResult
+
+- `request`
+- `processed_items`
+- `dimensions`
+- `final_output_paths`
+- `cleanup_warnings`
+- `preserved_artifacts`
+
+Regra: a execução pode produzir um consolidado por item e avisos de cleanup não invalidam sucesso já concluído.
+
+Observação: quando o usuário escolhe `--output-dir` com `--input`, os artefatos parciais do item permanecem disponíveis para inspeção local mesmo após o consolidado final ser salvo.

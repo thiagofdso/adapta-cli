@@ -30,12 +30,35 @@ def create_chat_session(
 
 
 async def send_chat_message(
-    client, session: ChatSession, model_backend: str, prompt_text: str
+    client,
+    session: ChatSession,
+    model_backend: str,
+    prompt_text: str,
+    file_paths=None,
+    uploaded_files=None,
 ) -> str:
     session.messages.append({"role": "user", "content": prompt_text})
-    response = await client.chat(
-        model_backend=model_backend, messages=session.messages, chat_id=session.chat_id
-    )
+    if uploaded_files:
+        response = await client.chat_with_files(
+            model_backend=model_backend,
+            messages=session.messages,
+            chat_id=session.chat_id,
+            files=uploaded_files,
+        )
+    elif file_paths:
+        files = [await client.upload_file(file_path) for file_path in file_paths]
+        response = await client.chat_with_files(
+            model_backend=model_backend,
+            messages=session.messages,
+            chat_id=session.chat_id,
+            files=files,
+        )
+    else:
+        response = await client.chat(
+            model_backend=model_backend,
+            messages=session.messages,
+            chat_id=session.chat_id,
+        )
     session.messages.append({"role": "assistant", "content": response})
     session.cleanup_required = True
     return response

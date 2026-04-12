@@ -5,7 +5,6 @@ import typer
 
 from adapta.client import create_client
 from adapta.config import load_settings
-from adapta.logging import configure_logging
 from adapta.models import DebateAgentConfig
 from adapta.registry import get_model_option, list_model_options, resolve_model_key
 from adapta.runtime import run_async
@@ -22,8 +21,16 @@ from adapta.services.debate_service import (
     resolve_debate_config_path,
     run_debate,
 )
+from adapta.services.destilador_service import (
+    build_distillation_request,
+    distill_documents,
+)
 from adapta.services.output_service import persist_output
-from adapta.services.prompt_service import build_prompt_request, execute_prompt
+from adapta.services.prompt_service import (
+    build_prompt_request,
+    execute_prompt,
+    normalize_file_paths,
+)
 
 
 app = typer.Typer(add_completion=False, pretty_exceptions_enable=False)
@@ -67,15 +74,43 @@ def _prompt_int(label: str, *, minimum: int) -> int:
         return value
 
 
+def _parse_file_option(value: str | None) -> list[Path]:
+    if value is None:
+        return []
+    parts = [Path(item.strip()) for item in value.split(",") if item.strip()]
+    return normalize_file_paths(parts)
+
+
 @app.command()
 def models() -> None:
     for option in list_model_options():
         typer.echo(f"{option.key}\t{option.display_name}\t{option.backend_name}")
 
 
-@app.callback()
-def callback(log: str | None = typer.Option(None, "--log")) -> None:
-    configure_logging(log)
+@app.command("list-files")
+def list_files() -> None:
+    try:
+        settings = load_settings()
+
+        async def _run() -> list[dict[str, object]]:
+            async with create_client(settings) as client:
+                return await client.list_files()
+
+        files = run_async(_run())
+        typer.echo("filename\tpath\tmediaType\tsize")
+        for file_info in files:
+            typer.echo(
+                "\t".join(
+                    [
+                        str(file_info.get("filename") or ""),
+                        str(file_info.get("path") or ""),
+                        str(file_info.get("mediaType") or ""),
+                        str(file_info.get("size") or ""),
+                    ]
+                )
+            )
+    except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
 
 
 @app.command()
@@ -84,12 +119,17 @@ def prompt(
     prompt: str | None = typer.Option(None, "--prompt"),
     prompt_file: Path | None = typer.Option(None, "--prompt-file"),
     output: Path | None = typer.Option(None, "--output"),
+    file: str | None = typer.Option(None, "--file"),
 ) -> None:
     try:
         settings = load_settings()
         model_key = _resolve_model(model, settings.adapta_model)
         request = build_prompt_request(
-            model_key=model_key, prompt=prompt, prompt_file=prompt_file, output=output
+            model_key=model_key,
+            prompt=prompt,
+            prompt_file=prompt_file,
+            output=output,
+            files=_parse_file_option(file),
         )
         option = get_model_option(model_key)
 
@@ -107,12 +147,16 @@ def prompt(
 
 
 @app.command()
-def chat(model: str | None = typer.Option(None, "--model")) -> None:
+def chat(
+    model: str | None = typer.Option(None, "--model"),
+    file: str | None = typer.Option(None, "--file"),
+) -> None:
     try:
         settings = load_settings()
         model_key = _resolve_model(model, settings.adapta_model)
         option = get_model_option(model_key)
         session = create_chat_session(model_key)
+        file_paths = _parse_file_option(file)
 
         async def _run() -> None:
             async with create_client(settings) as client:
@@ -126,6 +170,7 @@ def chat(model: str | None = typer.Option(None, "--model")) -> None:
                             session,
                             model_backend=option.backend_name,
                             prompt_text=user_input,
+                            file_paths=file_paths,
                         )
                         typer.echo(response)
                 finally:
@@ -146,6 +191,7 @@ def debate(
     output: Path | None = typer.Option(None, "--output"),
     prompt: str | None = typer.Option(None, "--prompt"),
     model_conclusion: str | None = typer.Option(None, "--model-conclusion"),
+    file: str | None = typer.Option(None, "--file"),
 ) -> None:
     try:
         settings = load_settings()
@@ -182,6 +228,7 @@ def debate(
             conclusion_model_key=model_conclusion,
             output_path=output,
             config_source=config_source,
+            file_paths=_parse_file_option(file),
         )
 
         def _emit_turn(turn) -> None:
@@ -213,6 +260,45 @@ def debate(
         for warning in cleanup_warnings:
             typer.echo(warning, err=True)
     except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+
+@app.command()
+def destilador(
+    input: Path | None = typer.Option(None, "--input"),
+    output: Path | None = typer.Option(None, "--output"),
+    input_dir: Path | None = typer.Option(None, "--input-dir"),
+    output_dir: Path | None = typer.Option(None, "--output-dir"),
+    log: bool = typer.Option(False, "--log"),
+) -> None:
+    try:
+        request = build_distillation_request(
+            input_path=input,
+            input_dir=input_dir,
+            output_path=output,
+            output_dir=output_dir,
+        )
+        settings = load_settings()
+
+        def _progress(message: str) -> None:
+            if log:
+                typer.echo(message)
+
+        async def _run() -> tuple[list[Path], list[str]]:
+            async with create_client(settings) as client:
+                result = await distill_documents(
+                    client,
+                    request,
+                    progress_callback=_progress if log else None,
+                )
+                return result.final_output_paths, result.cleanup_warnings
+
+        output_paths, cleanup_warnings = run_async(_run())
+        for path in output_paths:
+            typer.echo(f"Resultado salvo em {path}")
+        for warning in cleanup_warnings:
+            typer.echo(warning, err=True)
+    except (ValueError, RuntimeError, FileNotFoundError) as exc:
         _fail(str(exc))
 
 

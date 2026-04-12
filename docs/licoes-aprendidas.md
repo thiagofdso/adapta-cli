@@ -95,3 +95,99 @@ Desativar `pretty_exceptions` e converter `ValueError` e `RuntimeError` em mensa
 
 - retornar mensagens curtas e acionáveis em stderr
 - manter detalhes de depuração restritos ao modo de log explícito
+
+## 2026-04-12 - Reproduzir contratos de arquivo a partir do HAR em fatias pequenas
+
+### Problema
+
+Era necessário implementar a listagem remota de arquivos sem acesso estável ao corpo completo das respostas do navegador.
+
+### Causa
+
+O `har.json` era grande e algumas entradas não traziam `response.content.text`, o que inviabiliza assumir o payload inteiro de uma vez.
+
+### Solucao
+
+Inspecionar o HAR com `jq` em partes pequenas para confirmar endpoint, paginação e headers essenciais, e então implementar o parser do cliente de forma tolerante a formatos equivalentes (`data`, `files`, `items`, `results`).
+
+### ❌ NAO FAZER
+
+- presumir o contrato completo da listagem sem validar o HAR
+- acoplar o parser a um único formato rígido quando o backend já mostra variações de campos
+
+### ✅ FAZER
+
+- analisar o HAR por endpoint e metadados antes de codificar
+- normalizar os metadados de arquivo no client antes de comparar ou reutilizar uploads
+
+## 2026-04-12 - Centralizar a validação de anexos de CLI
+
+### Problema
+
+`prompt` e `chat` passaram a aceitar anexos opcionais via `--file`, ambos com o mesmo limite e as mesmas validações básicas.
+
+### Causa
+
+A regra de negócio é compartilhada: aceitar de 1 a 5 arquivos existentes, separados por vírgula, e falhar cedo em caso de entrada inválida.
+
+### Solucao
+
+Centralizar a normalização de `Path` em um helper reutilizado pela CLI e pelo fluxo de prompt, mantendo a lógica de upload no serviço que efetivamente faz a chamada ao backend.
+
+### ❌ NAO FAZER
+
+- duplicar manualmente o parsing de anexos em cada comando
+- deixar a validação apenas no nível HTTP, depois de abrir a sessão remota
+
+### ✅ FAZER
+
+- validar contagem e existência dos arquivos antes de iniciar o fluxo remoto
+- reutilizar o mesmo conjunto de anexos durante a sessão de chat quando o comando for iniciado com `--file`
+
+## 2026-04-12 - Fazer upload único para anexos compartilhados no debate
+
+### Problema
+
+No debate, os mesmos anexos precisam estar disponíveis para múltiplos agentes e múltiplas rodadas.
+
+### Causa
+
+Se o upload acontecer dentro de cada mensagem, o fluxo repete trabalho remoto e pode multiplicar arquivos equivalentes sem necessidade.
+
+### Solucao
+
+Realizar o upload uma única vez no início do `run_debate` e reutilizar os metadados retornados em todas as chamadas `chat_with_files` dos agentes.
+
+### ❌ NAO FAZER
+
+- repetir o upload dos mesmos anexos a cada rodada ou agente
+- espalhar a lógica de reutilização de anexos entre CLI e serviço
+
+### ✅ FAZER
+
+- manter o upload compartilhado centralizado no serviço de debate
+- passar os arquivos já normalizados para o fluxo de chat das rodadas
+
+## 2026-04-12 - Reaproveitar capacidades internas via comandos pequenos de CLI
+
+### Problema
+
+A CLI já sabia listar arquivos remotos no client, mas esse comportamento não estava exposto diretamente para inspeção operacional.
+
+### Causa
+
+A capacidade foi implementada primeiro como detalhe interno de deduplicação de upload.
+
+### Solucao
+
+Adicionar um comando pequeno e direto, `list-files`, reaproveitando o mesmo método do client e mantendo a saída tabulada simples para uso manual.
+
+### ❌ NAO FAZER
+
+- duplicar chamadas HTTP só para criar um comando novo
+- esconder uma capacidade útil apenas como detalhe interno de outro fluxo
+
+### ✅ FAZER
+
+- expor o método já existente no client por um comando dedicado
+- manter formato de saída simples e estável para inspeção rápida

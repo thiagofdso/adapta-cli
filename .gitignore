@@ -16,7 +16,10 @@ build/
 .envrc
 .env.*
 config.json
+saida.md
 logs/
+*.pdf
+!/*.pdf
 .DS_Store
 Thumbs.db
 *.tmp

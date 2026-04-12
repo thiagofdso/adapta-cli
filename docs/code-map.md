@@ -2,16 +2,18 @@
 
 ## Estrutura
 
-- `src/adapta/cli.py` -> comandos Typer, parsing da linha de comando, listagem de modelos e fluxo interativo do debate
+- `src/adapta/cli.py` -> comandos Typer, parsing da linha de comando, parsing de anexos `--file`, listagem de modelos, listagem de arquivos remotos, fluxo interativo do debate e entrada explícita do destilador
 - `src/adapta/config.py` -> carregamento de `.env` e configurações tipadas
 - `src/adapta/logging.py` -> configuração de logs por execução
 - `src/adapta/registry.py` -> catálogo de modelos e resolução de aliases
 - `src/adapta/runtime.py` -> ponte síncrona para fluxos assíncronos
-- `src/adapta/client.py` -> cliente interno do Adapta com classes focadas em sessão HTTP, autenticação e conversas
-- `src/adapta/services/prompt_service.py` -> fluxo de prompt único
-- `src/adapta/services/chat_service.py` -> fluxo de chat com limpeza remota
-- `src/adapta/services/debate_service.py` -> orquestração do debate por rodadas, leitura e gravação de configuração, conclusão final e emissão incremental
+- `src/adapta/client.py` -> cliente interno do Adapta com classes focadas em sessão HTTP, autenticação, listagem/upload/exclusão de arquivos e conversas com SSE
+- `src/adapta/services/prompt_service.py` -> fluxo de prompt único, validação de anexos e upload opcional antes do envio
+- `src/adapta/services/chat_service.py` -> fluxo de chat com limpeza remota e suporte a anexos enviados junto das mensagens
+- `src/adapta/services/debate_service.py` -> orquestração do debate por rodadas, leitura e gravação de configuração, upload único de anexos opcionais, conclusão final e emissão incremental
+- `src/adapta/services/destilador_service.py` -> pipeline internalizado de destilação por 7 dimensões, com suporte a arquivo único e lote por diretório
 - `src/adapta/services/output_service.py` -> escrita em stdout e arquivo
+- `src/adapta/prompts/livro/*.txt` -> prompts internalizados das 7 dimensões usados pelo `destilador`
 - `scripts/install-local.sh` -> instala o comando `adapta` a partir do projeto local com `pipx` quando disponível ou fallback para `venv` dedicada
 - `scripts/install-remote.sh` -> instala o comando `adapta` a partir de repositório remoto ou `file://`, com o mesmo fallback local de instalação
 - `Makefile` -> atalhos para testes, prompt, chat e fluxos de instalação
@@ -20,19 +22,27 @@
 
 ### Prompt
 
-CLI -> resolução de configuração/modelo -> `prompt_service` -> cliente Adapta -> stdout/arquivo
+CLI -> resolução de configuração/modelo/anexos -> `prompt_service` -> upload opcional no cliente Adapta -> stdout/arquivo
 
 ### Chat
 
-CLI -> resolução de configuração/modelo -> `chat_service` -> cliente Adapta -> loop de mensagens -> exclusão remota do chat
+CLI -> resolução de configuração/modelo/anexos -> `chat_service` -> upload opcional no cliente Adapta -> loop de mensagens -> exclusão remota do chat
 
 ### Debate
 
-CLI -> resolução de `--config` ou `ADAPTA_DEBATE_CONFIG` ou perguntas interativas -> `debate_service` -> cliente Adapta -> chats separados por agente ao longo das rodadas -> conclusão final -> stdout e/ou arquivo -> limpeza remota dos chats
+CLI -> resolução de `--config` ou `ADAPTA_DEBATE_CONFIG` ou perguntas interativas -> parsing opcional de `--file` -> `debate_service` -> upload único opcional no cliente Adapta -> chats separados por agente ao longo das rodadas -> conclusão final -> stdout e/ou arquivo -> limpeza remota dos chats
+
+### Destilador
+
+CLI -> resolução de `--input`/`--output`, `--input`/`--output-dir` ou `--input-dir`/`--output-dir` -> `destilador_service` -> upload do PDF ao Adapta -> geração de 7 dimensões com prompts internalizados -> consolidação markdown -> stdout e/ou arquivo -> preservação opcional de parciais -> limpeza best-effort dos artefatos
 
 ### Models
 
 CLI -> `registry` -> listagem ordenada de modelos -> stdout
+
+### List Files
+
+CLI -> cliente Adapta -> listagem paginada de arquivos remotos -> stdout tabulado
 
 ## Pontos críticos
 
@@ -41,3 +51,5 @@ CLI -> `registry` -> listagem ordenada de modelos -> stdout
 - Logs por execução: `src/adapta/logging.py`
 - Limpeza de chat remoto: `src/adapta/services/chat_service.py`
 - Orquestração multiagente: `src/adapta/services/debate_service.py`
+- Pipeline de destilação: `src/adapta/services/destilador_service.py`
+- Prompts do destilador: `src/adapta/prompts/livro/*.txt`

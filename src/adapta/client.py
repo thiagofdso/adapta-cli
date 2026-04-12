@@ -10,6 +10,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -20,12 +21,40 @@ from adapta.models import Settings
 logger = logging.getLogger(__name__)
 
 AGENT_BASE_URL = "https://agent.adapta.one"
+API_AGENT_BASE_URL = "https://api-agent.adapta.one"
 CLERK_BASE_URL = "https://clerk.agent.adapta.one/v1"
 CLERK_API_VERSION = "2025-11-10"
 CLERK_JS_VERSION = "5.125.7"
 DEFAULT_MODEL = "CLAUDE_4_5_SONNET"
 LOGIN_THROTTLE_SECONDS = 2.0
 TOKEN_REFRESH_THROTTLE_SECONDS = 120.0
+FILE_UPLOAD_ENDPOINT = f"{API_AGENT_BASE_URL}/api/file/upload"
+FILES_LIST_ENDPOINT = f"{AGENT_BASE_URL}/api/files/v2"
+FILES_DELETE_ENDPOINT = f"{AGENT_BASE_URL}/api/files/delete/v1"
+
+SUPPORTED_UPLOAD_FORMATS = {
+    ".txt",
+    ".pdf",
+    ".docx",
+    ".xlsx",
+    ".xls",
+    ".csv",
+    ".png",
+    ".jpg",
+    ".jpeg",
+}
+
+MIME_TYPES = {
+    ".txt": "text/plain",
+    ".pdf": "application/pdf",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".xls": "application/vnd.ms-excel",
+    ".csv": "text/csv",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+}
 
 
 @dataclass
@@ -79,6 +108,13 @@ def _generate_uuid7_like() -> str:
         (timestamp_ms << 80) | (0x7 << 76) | (rand_a << 64) | (0x2 << 62) | rand_b
     )
     return str(uuid.UUID(int=uuid_int))
+
+
+def _first_non_none(*values: Any) -> Any:
+    for value in values:
+        if value is not None:
+            return value
+    return None
 
 
 class AdaptaHttpSession:
@@ -423,12 +459,17 @@ class AdaptaAuthenticator:
 class ChatPayloadBuilder:
     @staticmethod
     def prepare_messages_payload(
-        *, messages: list[dict[str, Any]] | None, prompt: str | None
+        *,
+        messages: list[dict[str, Any]] | None,
+        prompt: str | None,
+        files: list[dict[str, Any]] | None = None,
     ) -> list[dict[str, Any]]:
         if not messages:
             if prompt is None:
                 raise ValueError("Não é possível construir a mensagem sem prompt.")
-            return [{"role": "user", "parts": [{"type": "text", "text": prompt}]}]
+            parts = ChatPayloadBuilder.build_file_parts(files)
+            parts.append({"type": "text", "text": prompt})
+            return [{"id": _generate_uuid7_like(), "role": "user", "parts": parts}]
 
         normalized: list[dict[str, Any]] = []
         for message in messages:
@@ -446,8 +487,46 @@ class ChatPayloadBuilder:
                 parts = [{"type": "text", "text": ""}]
             else:
                 parts = [{"type": "text", "text": str(content)}]
-            normalized.append({"role": role, "parts": parts})
+            normalized.append(
+                {
+                    "id": str(message.get("id") or _generate_uuid7_like()),
+                    "role": role,
+                    "parts": parts,
+                }
+            )
+
+        file_parts = ChatPayloadBuilder.build_file_parts(files)
+        if file_parts:
+            target = next(
+                (msg for msg in normalized if msg.get("role") == "user"), None
+            )
+            if target:
+                target["parts"] = file_parts + target.get("parts", [])
+            elif normalized:
+                normalized[0]["parts"] = file_parts + normalized[0].get("parts", [])
         return normalized
+
+    @staticmethod
+    def build_file_parts(files: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+        file_parts: list[dict[str, Any]] = []
+        if not files:
+            return file_parts
+
+        for file_info in files:
+            formatted = {
+                "type": "file",
+                "filename": file_info.get("filename"),
+                "url": file_info.get("url"),
+                "size": file_info.get("size"),
+                "mediaType": file_info.get("mediaType"),
+                "path": file_info.get("path"),
+            }
+            formatted = {
+                key: value for key, value in formatted.items() if value is not None
+            }
+            if len(formatted) > 1:
+                file_parts.append(formatted)
+        return file_parts
 
     @staticmethod
     def normalize_part(part: Any) -> dict[str, Any] | None:
@@ -489,13 +568,18 @@ class AdaptaConversationClient:
         *,
         model: str = DEFAULT_MODEL,
         chat_id: str | None = None,
+        files: list[dict[str, Any]] | None = None,
     ) -> ChatCompletionResult:
         if prompt is None and not messages:
             raise ValueError("call_model() requer prompt ou messages.")
 
         chunks: list[str] = []
         async for event_type, payload in self._chat_event_stream(
-            prompt=prompt, messages=messages, model=model, chat_id=chat_id
+            prompt=prompt,
+            messages=messages,
+            model=model,
+            chat_id=chat_id,
+            files=files,
         ):
             if event_type == "answer":
                 chunks.append(payload)
@@ -537,6 +621,190 @@ class AdaptaConversationClient:
         response.raise_for_status()
         return response.json()
 
+    async def upload_file(self, file_path: Path) -> dict[str, Any]:
+        if not file_path.exists():
+            raise FileNotFoundError(f"Arquivo não encontrado: {file_path}")
+
+        suffix = file_path.suffix.lower()
+        if suffix not in SUPPORTED_UPLOAD_FORMATS:
+            raise ValueError(f"Formato de arquivo não suportado: {suffix}")
+
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        existing_file = await self._find_existing_file(file_path.name)
+        if existing_file is not None:
+            return existing_file
+
+        mime_type = MIME_TYPES.get(suffix, "application/octet-stream")
+        response = await client.post(
+            FILE_UPLOAD_ENDPOINT,
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/",
+            },
+            files={"file": (file_path.name, file_path.read_bytes(), mime_type)},
+        )
+        response.raise_for_status()
+        payload = response.json()
+
+        upload_info = self._extract_first_file_entry(payload)
+        if upload_info is None:
+            raise RuntimeError(f"Resposta inesperada do upload: {payload}")
+
+        return self._normalize_file_entry(
+            upload_info,
+            default_filename=file_path.name,
+            default_size=file_path.stat().st_size,
+            default_media_type=mime_type,
+            default_path=file_path.name,
+        )
+
+    async def list_files(self, *, limit: int = 20) -> list[dict[str, Any]]:
+        if limit <= 0:
+            raise ValueError("limit deve ser maior que zero.")
+
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        files: list[dict[str, Any]] = []
+        offset = 0
+
+        while True:
+            params: dict[str, Any] = {"limit": limit}
+            if offset > 0:
+                params["offset"] = offset
+                params["skipStorage"] = "true"
+
+            response = await client.get(
+                FILES_LIST_ENDPOINT,
+                headers={
+                    "accept": "*/*",
+                    "authorization": f"Bearer {token}",
+                    "origin": AGENT_BASE_URL,
+                    "referer": f"{AGENT_BASE_URL}/agentic-chat",
+                },
+                params=params,
+            )
+            response.raise_for_status()
+
+            page_entries = self._extract_file_entries(response.json())
+            files.extend(
+                self._normalize_file_entry(entry)
+                for entry in page_entries
+                if isinstance(entry, dict)
+            )
+            if len(page_entries) < limit:
+                break
+            offset += limit
+
+        return files
+
+    async def delete_file(self, file_paths: str | list[str]) -> dict[str, Any]:
+        if isinstance(file_paths, str):
+            normalized = [file_paths]
+        elif isinstance(file_paths, list):
+            normalized = [file_path for file_path in file_paths if file_path]
+        else:
+            raise TypeError("delete_file aceita string ou lista de strings.")
+
+        if not normalized:
+            return {"success": True}
+
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.request(
+            "DELETE",
+            FILES_DELETE_ENDPOINT,
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "content-type": "application/json",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            json={"filesPaths": normalized},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def _find_existing_file(self, filename: str) -> dict[str, Any] | None:
+        for file_info in await self.list_files():
+            if file_info.get("filename") == filename:
+                return file_info
+        return None
+
+    def _extract_file_entries(self, payload: Any) -> list[dict[str, Any]]:
+        if isinstance(payload, list):
+            return [entry for entry in payload if isinstance(entry, dict)]
+        if not isinstance(payload, dict):
+            return []
+
+        candidates = [
+            payload.get("data"),
+            payload.get("files"),
+            payload.get("items"),
+            payload.get("results"),
+        ]
+        for candidate in candidates:
+            if isinstance(candidate, list):
+                return [entry for entry in candidate if isinstance(entry, dict)]
+            if isinstance(candidate, dict):
+                nested = self._extract_file_entries(candidate)
+                if nested:
+                    return nested
+        return []
+
+    def _extract_first_file_entry(self, payload: Any) -> dict[str, Any] | None:
+        entries = self._extract_file_entries(payload)
+        return entries[0] if entries else None
+
+    def _normalize_file_entry(
+        self,
+        file_info: dict[str, Any],
+        *,
+        default_filename: str | None = None,
+        default_size: int | None = None,
+        default_media_type: str | None = None,
+        default_path: str | None = None,
+    ) -> dict[str, Any]:
+        filename = (
+            file_info.get("fileName")
+            or file_info.get("filename")
+            or file_info.get("name")
+            or default_filename
+        )
+        path = _first_non_none(
+            file_info.get("filePathOnStorage"),
+            file_info.get("path"),
+            file_info.get("fileKey"),
+            file_info.get("key"),
+            default_path,
+            filename,
+        )
+        return {
+            "filename": filename,
+            "url": _first_non_none(file_info.get("signedUrl"), file_info.get("url")),
+            "size": _first_non_none(
+                file_info.get("fileSizeInBytes"),
+                file_info.get("size"),
+                default_size,
+            ),
+            "mediaType": _first_non_none(
+                file_info.get("fileMimeType"),
+                file_info.get("mediaType"),
+                file_info.get("mimeType"),
+                default_media_type,
+            ),
+            "path": path,
+        }
+
     async def _chat_event_stream(
         self,
         *,
@@ -544,12 +812,26 @@ class AdaptaConversationClient:
         messages: list[dict[str, Any]] | None,
         model: str,
         chat_id: str | None,
+        files: list[dict[str, Any]] | None = None,
     ):
         client = await self._session.ensure_client()
         await self._authenticator.ensure_authenticated()
         token = await self._authenticator.ensure_bearer_token()
 
         chat_identifier = chat_id or _generate_uuid7_like()
+        prepared_messages = ChatPayloadBuilder.prepare_messages_payload(
+            messages=messages,
+            prompt=prompt,
+            files=files,
+        )
+        message_identifier = next(
+            (
+                str(message.get("id"))
+                for message in reversed(prepared_messages)
+                if message.get("role") == "user" and message.get("id")
+            ),
+            _generate_uuid7_like(),
+        )
         payload = {
             "mandatoryTools": [],
             "chatId": chat_identifier,
@@ -557,17 +839,16 @@ class AdaptaConversationClient:
             "meetingContextsIds": [],
             "modelAi": model,
             "id": chat_identifier,
-            "messages": ChatPayloadBuilder.prepare_messages_payload(
-                messages=messages, prompt=prompt
-            ),
+            "messages": prepared_messages,
             "trigger": "submit-message",
+            "messageId": message_identifier,
         }
         headers = {
             "accept": "*/*",
             "authorization": f"Bearer {token}",
             "content-type": "application/json",
             "origin": AGENT_BASE_URL,
-            "referer": f"{AGENT_BASE_URL}/",
+            "referer": f"{AGENT_BASE_URL}/agentic-chat",
         }
 
         pending_surrogate: str | None = None
@@ -707,16 +988,51 @@ class AdaptaClientAdapter:
         )
         return extract_answer_text(result)
 
+    async def prompt_with_files(
+        self, *, model_backend: str, prompt: str, files: list[dict[str, Any]]
+    ) -> str:
+        result = await self._conversations.call_model(
+            prompt=prompt,
+            model=model_backend,
+            files=files,
+        )
+        return extract_answer_text(result)
+
     async def chat(
-        self, *, model_backend: str, messages: list[dict[str, str]], chat_id: str
+        self, *, model_backend: str, messages: list[dict[str, Any]], chat_id: str
     ) -> str:
         result = await self._conversations.call_model(
             messages=messages, model=model_backend, chat_id=chat_id
         )
         return extract_answer_text(result)
 
+    async def chat_with_files(
+        self,
+        *,
+        model_backend: str,
+        messages: list[dict[str, Any]],
+        chat_id: str,
+        files: list[dict[str, Any]],
+    ) -> str:
+        result = await self._conversations.call_model(
+            messages=messages,
+            model=model_backend,
+            chat_id=chat_id,
+            files=files,
+        )
+        return extract_answer_text(result)
+
     async def delete_chat(self, chat_id: str | list[str]) -> None:
         await self._conversations.delete_chat(chat_id)
+
+    async def upload_file(self, file_path: Path) -> dict[str, Any]:
+        return await self._conversations.upload_file(file_path)
+
+    async def list_files(self) -> list[dict[str, Any]]:
+        return await self._conversations.list_files()
+
+    async def delete_file(self, file_path: str | list[str]) -> None:
+        await self._conversations.delete_file(file_path)
 
 
 def create_client(settings: Settings) -> AdaptaClientAdapter:

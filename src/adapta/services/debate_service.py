@@ -20,6 +20,7 @@ from adapta.services.chat_service import (
     send_chat_message,
 )
 from adapta.services.output_service import format_debate_result, persist_output
+from adapta.services.prompt_service import normalize_file_paths
 
 
 TurnEmitter = Callable[[DebateTurn], None]
@@ -100,6 +101,7 @@ def build_debate_config(
     conclusion_model_key: str | None,
     output_path: Path | None,
     config_source: str,
+    file_paths: list[Path] | None = None,
 ) -> DebateConfig:
     normalized_prompt = topic_prompt.strip()
     if not normalized_prompt:
@@ -117,6 +119,7 @@ def build_debate_config(
         conclusion_model_key=normalized_conclusion_model,
         output_path=output_path,
         config_source=config_source,
+        file_paths=normalize_file_paths(file_paths),
     )
 
 
@@ -191,6 +194,7 @@ async def run_debate(
     debate_rounds: list[DebateRound] = []
     cleanup_warnings: list[str] = []
     previous_responses: dict[str, str] = {}
+    uploaded_files = [await client.upload_file(path) for path in config.file_paths]
 
     try:
         for round_number in range(1, config.rounds + 1):
@@ -211,6 +215,7 @@ async def run_debate(
                         session,
                         model_backend=model_backend,
                         prompt_text=prompt_text,
+                        uploaded_files=uploaded_files,
                     )
                     status = "success" if response_text.strip() else "empty"
                     if not response_text.strip():

@@ -16,15 +16,46 @@ from adapta.services.debate_service import (
 
 class DummyDebateClient:
     def __init__(self) -> None:
-        self.chat_calls: list[tuple[str, str, list[dict[str, str]]]] = []
+        self.chat_calls: list[
+            tuple[str, str, list[dict[str, str]], list[str] | None]
+        ] = []
         self.prompt_calls: list[tuple[str, str]] = []
         self.deleted: list[str] = []
+        self.uploaded: list[str] = []
 
     async def chat(
         self, *, model_backend: str, messages: list[dict[str, str]], chat_id: str
     ) -> str:
-        self.chat_calls.append((model_backend, chat_id, list(messages)))
+        self.chat_calls.append((model_backend, chat_id, list(messages), None))
         return f"resposta-{model_backend}-{len(messages)}"
+
+    async def chat_with_files(
+        self,
+        *,
+        model_backend: str,
+        messages: list[dict[str, str]],
+        chat_id: str,
+        files: list[dict[str, object]],
+    ) -> str:
+        self.chat_calls.append(
+            (
+                model_backend,
+                chat_id,
+                list(messages),
+                [str(file["filename"]) for file in files],
+            )
+        )
+        return f"resposta-{model_backend}-{len(messages)}"
+
+    async def upload_file(self, file_path: Path) -> dict[str, object]:
+        self.uploaded.append(file_path.name)
+        return {
+            "filename": file_path.name,
+            "url": f"https://files.example/{file_path.name}",
+            "size": file_path.stat().st_size,
+            "mediaType": "application/pdf",
+            "path": f"uploads/{file_path.name}",
+        }
 
     async def prompt(self, *, model_backend: str, prompt: str) -> str:
         self.prompt_calls.append((model_backend, prompt))
@@ -109,6 +140,40 @@ async def test_run_debate_orchestrates_rounds_and_cleanup(tmp_path: Path) -> Non
     ]
     assert len(client.chat_calls) == 4
     assert len(client.deleted) == 2
+
+
+@pytest.mark.anyio
+async def test_run_debate_uploads_attachments_once_and_reuses_them(
+    tmp_path: Path,
+) -> None:
+    config_path = _write_config(
+        tmp_path / "debate.json",
+        {
+            "A1": {"model": "claude", "prompt": "arquiteto"},
+            "A2": {"model": "gpt", "prompt": "desenvolvedor"},
+        },
+    )
+    attachment_a = tmp_path / "a.pdf"
+    attachment_b = tmp_path / "b.pdf"
+    attachment_a.write_bytes(b"%PDF-1.4\n")
+    attachment_b.write_bytes(b"%PDF-1.4\n")
+    agents = load_debate_agents(config_path)
+    config = DebateConfig(
+        agents=agents,
+        rounds=2,
+        topic_prompt="Defina uma arquitetura",
+        conclusion_model_key="gemini",
+        output_path=None,
+        config_source="argument",
+        file_paths=[attachment_a, attachment_b],
+    )
+    client = DummyDebateClient()
+
+    await run_debate(client, config)
+
+    assert client.uploaded == ["a.pdf", "b.pdf"]
+    assert len(client.chat_calls) == 4
+    assert all(call[3] == ["a.pdf", "b.pdf"] for call in client.chat_calls)
 
 
 def test_format_turn_label_uses_agent_and_round() -> None:

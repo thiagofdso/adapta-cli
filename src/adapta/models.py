@@ -26,6 +26,7 @@ class PromptRequest:
     prompt_text: str
     prompt_source: str
     output_path: Path | None
+    file_paths: list[Path] = field(default_factory=list)
 
 
 @dataclass
@@ -58,6 +59,7 @@ class DebateConfig:
     conclusion_model_key: str
     output_path: Path | None
     config_source: str
+    file_paths: list[Path] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -83,3 +85,47 @@ class DebateResult:
     final_conclusion: str
     saved_path: Path | None
     cleanup_warnings: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class DistillationRequest:
+    input_path: Path | None
+    input_dir_path: Path | None
+    output_path: Path | None
+    output_dir_path: Path | None
+    mode: str
+    upload_delay_seconds: float = 0.0
+
+
+@dataclass(frozen=True)
+class DistillationInputItem:
+    source_path: Path
+    target_output_path: Path
+    source_origin: str
+
+
+@dataclass(frozen=True)
+class DistillationDimension:
+    dimension_number: int
+    prompt_text: str
+    attempt_count: int
+    selected_content: str
+    status: str
+
+
+@dataclass(frozen=True)
+class DistillationArtifact:
+    artifact_type: str
+    path_or_identifier: str
+    cleanup_required: bool
+    preserved_reason: str | None = None
+
+
+@dataclass(frozen=True)
+class DistillationResult:
+    request: DistillationRequest
+    processed_items: list[DistillationInputItem]
+    dimensions: list[DistillationDimension]
+    final_output_paths: list[Path]
+    cleanup_warnings: list[str] = field(default_factory=list)
+    preserved_artifacts: list[DistillationArtifact] = field(default_factory=list)
