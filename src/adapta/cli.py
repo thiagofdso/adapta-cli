@@ -25,6 +25,7 @@ from adapta.services.destilador_service import (
     build_distillation_request,
     distill_documents,
 )
+from adapta.services.pipeline_service import build_pipeline_request, run_pipeline
 from adapta.services.output_service import persist_output
 from adapta.services.prompt_service import (
     build_prompt_request,
@@ -296,6 +297,59 @@ def destilador(
         output_paths, cleanup_warnings = run_async(_run())
         for path in output_paths:
             typer.echo(f"Resultado salvo em {path}")
+        for warning in cleanup_warnings:
+            typer.echo(warning, err=True)
+    except (ValueError, RuntimeError, FileNotFoundError) as exc:
+        _fail(str(exc))
+
+
+@app.command()
+def pipeline(
+    input_dir: Path | None = typer.Option(None, "--input-dir"),
+    output_dir: Path | None = typer.Option(None, "--output-dir"),
+    db_path: Path | None = typer.Option(None, "--db-path"),
+    mode: str = typer.Option("upload", "--mode"),
+    job: int | None = typer.Option(None, "--job"),
+    keep_chat: bool = typer.Option(False, "--keep-chat"),
+    log: bool = typer.Option(False, "--log"),
+) -> None:
+    try:
+        request = build_pipeline_request(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            db_path=db_path,
+            mode=mode,
+            job=job,
+            keep_chat=keep_chat,
+            log=log,
+        )
+        settings = load_settings()
+
+        def _progress(message: str) -> None:
+            if log:
+                typer.echo(message)
+
+        async def _run() -> tuple[list[Path], list[Path], list[str]]:
+            async with create_client(settings) as client:
+                result = await run_pipeline(
+                    client,
+                    request,
+                    progress_callback=_progress if log else None,
+                )
+                return (
+                    result.index_paths,
+                    result.generated_documents,
+                    result.cleanup_warnings,
+                )
+
+        index_paths, generated_documents, cleanup_warnings = run_async(_run())
+        typer.echo(
+            f"Pipeline concluído: {len(index_paths)} índice(s), {len(generated_documents)} documento(s) gerado(s)."
+        )
+        for path in index_paths:
+            typer.echo(f"Índice salvo em {path}")
+        for path in generated_documents:
+            typer.echo(f"Documento salvo em {path}")
         for warning in cleanup_warnings:
             typer.echo(warning, err=True)
     except (ValueError, RuntimeError, FileNotFoundError) as exc:

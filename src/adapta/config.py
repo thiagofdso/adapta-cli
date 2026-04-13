@@ -8,8 +8,26 @@ from dotenv import dotenv_values
 from adapta.models import Settings
 
 
+PIPELINE_DB_ENV_VAR = "ADAPTA_PIPELINE_DB_PATH"
+
+
 def default_env_file() -> Path:
     return Path(__file__).resolve().parents[2] / ".env"
+
+
+def default_pipeline_db_path() -> Path:
+    return Path.home() / ".local" / "state" / "adapta-cli" / "pipeline.db"
+
+
+def resolve_pipeline_db_path(db_path: Path | None = None) -> Path:
+    if db_path is not None:
+        return db_path.expanduser().resolve()
+
+    env_value = os.environ.get(PIPELINE_DB_ENV_VAR)
+    if env_value:
+        return Path(env_value).expanduser().resolve()
+
+    return default_pipeline_db_path().expanduser().resolve()
 
 
 def load_settings(env_file: Path | None = None) -> Settings:

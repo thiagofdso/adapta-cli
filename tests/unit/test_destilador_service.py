@@ -105,7 +105,7 @@ def test_resolve_distillation_items_for_directory(tmp_path: Path) -> None:
     output_dir.mkdir()
     (input_dir / "a.pdf").write_bytes(b"%PDF-1.4\n")
     (input_dir / "b.pdf").write_bytes(b"%PDF-1.4\n")
-    (input_dir / "ignorar.txt").write_text("x", encoding="utf-8")
+    (input_dir / "c.txt").write_text("x", encoding="utf-8")
 
     request = build_distillation_request(
         input_path=None,
@@ -116,8 +116,8 @@ def test_resolve_distillation_items_for_directory(tmp_path: Path) -> None:
 
     items = resolve_distillation_items(request)
 
-    assert [item.source_path.name for item in items] == ["a.pdf", "b.pdf"]
-    assert [item.target_output_path.name for item in items] == ["a.md", "b.md"]
+    assert [item.source_path.name for item in items] == ["a.pdf", "b.pdf", "c.txt"]
+    assert [item.target_output_path.name for item in items] == ["a.md", "b.md", "c.md"]
 
 
 @pytest.mark.anyio
@@ -162,3 +162,22 @@ async def test_distill_documents_preserves_partials_when_output_dir_used(
     assert result.final_output_paths == [output_dir / "livro.md"]
     assert (output_dir / "livro" / "dimensao1.txt").exists()
     assert (output_dir / "livro" / "dimensao7.txt").exists()
+
+
+@pytest.mark.anyio
+async def test_distill_documents_inlines_txt_without_upload(tmp_path: Path) -> None:
+    txt_path = tmp_path / "livro.txt"
+    txt_path.write_text("conteudo do livro em texto", encoding="utf-8")
+    request = build_distillation_request(
+        input_path=txt_path,
+        input_dir=None,
+        output_path=tmp_path / "saida.md",
+        output_dir=None,
+    )
+    client = DummyDistillationClient()
+
+    result = await distill_documents(client, request)
+
+    assert result.final_output_paths == [tmp_path / "saida.md"]
+    assert client.uploaded == []
+    assert client.deleted_files == []

@@ -191,3 +191,27 @@ Adicionar um comando pequeno e direto, `list-files`, reaproveitando o mesmo mét
 
 - expor o método já existente no client por um comando dedicado
 - manter formato de saída simples e estável para inspeção rápida
+
+## 2026-04-13 - Internalizar pipeline legado sem importar o outro repositório
+
+### Problema
+
+O novo comando `pipeline` precisava reaproveitar o comportamento do fluxo legado sem transformar a CLI em um wrapper dependente de outro checkout em runtime.
+
+### Causa
+
+A implementação original mistura prompts, SQLite, uploads e lógica de estágios em um módulo grande com dependências locais que não existem neste projeto.
+
+### Solucao
+
+Internalizar apenas o contrato observável necessário: descoberta recursiva, índices JSON, markdowns por conhecimento, SQLite local e prompts copiados para `src/adapta/prompts/pipeline/`.
+
+### ❌ NAO FAZER
+
+- importar `pipeline.py` de outro repositório em tempo de execução
+- esconder dependência externa atrás de variável de ambiente de caminho
+
+### ✅ FAZER
+
+- copiar apenas prompts e regras necessárias
+- manter a orquestração dentro de `src/adapta/services/pipeline_service.py`

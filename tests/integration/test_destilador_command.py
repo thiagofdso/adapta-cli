@@ -10,6 +10,9 @@ from adapta.config import Settings
 
 
 class DummyClient:
+    def __init__(self) -> None:
+        self.uploaded: list[Path] = []
+
     async def __aenter__(self):
         return self
 
@@ -17,6 +20,7 @@ class DummyClient:
         return None
 
     async def upload_file(self, file_path: Path) -> dict[str, object]:
+        self.uploaded.append(file_path)
         return {
             "filename": file_path.name,
             "url": f"https://example.invalid/{file_path.name}",
@@ -106,3 +110,40 @@ def test_destilador_command_prints_progress_with_log(
     assert result.exit_code == 0, result.stderr
     assert "Processando livro.pdf" in result.stdout
     assert "Gerando dimensão 1 para livro.pdf" in result.stdout
+
+
+def test_destilador_command_uses_inline_txt_without_upload(
+    monkeypatch, tmp_path: Path
+) -> None:
+    runner = CliRunner()
+    txt_path = tmp_path / "livro.txt"
+    output_path = tmp_path / "saida.md"
+    txt_path.write_text("conteudo inline do livro", encoding="utf-8")
+    client = DummyClient()
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+
+    result = runner.invoke(
+        app,
+        [
+            "destilador",
+            "--input",
+            str(txt_path),
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0, result.stderr
+    assert output_path.exists()
+    assert client.uploaded == []

@@ -16,10 +16,12 @@ Uso principal:
 - enviar prompts e mensagens de chat com até 5 arquivos anexados por chamada de CLI
 - reutilizar os mesmos anexos ao longo de todas as rodadas do comando `debate` quando iniciado com `--file`
 - manter múltiplos chats simultâneos durante execuções de debate
-- realizar upload de arquivos para processamento em fluxos como `destilador`
+- realizar upload de arquivos para processamento em fluxos como `destilador`, exceto quando a entrada é `.txt` e o conteúdo segue inline no prompt
+- realizar upload de arquivos para processamento no comando `pipeline`, exceto quando a entrada é `.txt` e o conteúdo segue inline no prompt
 - listar arquivos remotos antes do upload para evitar duplicação por nome no `destilador`
 - listar arquivos remotos sob demanda via comando `list-files`
 - combinar arquivos enviados com prompts internalizados por dimensão no fluxo `destilador`
+- combinar arquivos enviados com prompts internalizados de extração e criação no fluxo `pipeline`
 - excluir chats remotos ao término
 - excluir artefatos remotos quando o pipeline terminar
 
@@ -36,7 +38,30 @@ Restrições conhecidas:
 - o comportamento do backend pode variar por modelo
 - debates com múltiplos agentes ampliam a quantidade de chamadas remotas por execução e exigem limpeza best-effort de todos os chats abertos
 - destilações baseadas em arquivo ampliam o uso de upload remoto e exigem rastreamento explícito dos artefatos gerados
+- o fluxo do `pipeline` amplia o uso de upload remoto e exige rastreamento local em SQLite para jobs, conhecimentos e artefatos por diretório
 - o fluxo do `destilador` depende de o backend aceitar o PDF anexado no stream de chat e pode demandar execuções longas para documentos extensos
+
+## SQLite local do pipeline
+
+Tipo: persistência operacional local.
+
+Uso principal:
+
+- registrar jobs descobertos no diretório de entrada
+- persistir conhecimentos pendentes e concluídos ao longo da execução
+- permitir retomar rastreamento por job quando o usuário informar `--job`
+
+Falhas possíveis:
+
+- caminho sem permissão de escrita
+- arquivo corrompido ou incompatível
+- diretório pai inexistente sem possibilidade de criação
+
+Comportamento operacional:
+
+- o caminho padrão é `~/.local/state/adapta-cli/pipeline.db`
+- a variável `ADAPTA_PIPELINE_DB_PATH` substitui o padrão
+- a opção `--db-path` tem precedência sobre ambiente e padrão
 
 ## Repositório remoto para instalação
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 
@@ -129,3 +130,42 @@ class DistillationResult:
     final_output_paths: list[Path]
     cleanup_warnings: list[str] = field(default_factory=list)
     preserved_artifacts: list[DistillationArtifact] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class PipelineRequest:
+    input_dir_path: Path
+    output_dir_path: Path
+    db_path: Path
+    mode: str
+    job_filter: int | None = None
+    keep_chat: bool = False
+    log_enabled: bool = False
+
+
+@dataclass(frozen=True)
+class PipelineDocument:
+    source_path: Path
+    source_name: str
+    folder_path: Path
+    relative_path: str
+    file_type: str
+    job_id: int | None = None
+
+
+@dataclass(frozen=True)
+class PipelineArtifact:
+    artifact_type: str
+    artifact_path: Path
+    document_source_path: Path | None = None
+
+
+@dataclass(frozen=True)
+class PipelineRunResult:
+    request: PipelineRequest
+    processed_files: list[PipelineDocument]
+    index_paths: list[Path]
+    generated_documents: list[Path]
+    cleanup_warnings: list[str] = field(default_factory=list)
+    started_at: datetime | None = None
+    finished_at: datetime | None = None

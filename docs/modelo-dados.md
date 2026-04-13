@@ -153,3 +153,52 @@ Exemplos: upload remoto do PDF, subdiretório local com `dimensao1.txt` a `dimen
 Regra: a execução pode produzir um consolidado por item e avisos de cleanup não invalidam sucesso já concluído.
 
 Observação: quando o usuário escolhe `--output-dir` com `--input`, os artefatos parciais do item permanecem disponíveis para inspeção local mesmo após o consolidado final ser salvo.
+
+### PipelineRequest
+
+- `input_dir_path`
+- `output_dir_path`
+- `db_path`
+- `mode`
+- `job_filter`
+- `keep_chat`
+- `log_enabled`
+
+Regra: `input_dir_path` e `output_dir_path` são obrigatórios; `db_path` segue precedência entre opção explícita, ambiente e padrão local.
+
+### PipelineRunResult
+
+- `input_dir_path`
+- `output_dir_path`
+- `db_path`
+- `processed_files`
+- `index_paths`
+- `generated_documents`
+- `cleanup_warnings`
+
+Regra: a execução precisa informar os artefatos produzidos e avisos de limpeza sem invalidar sucesso já concluído.
+
+### PipelineJobRecord
+
+- `id`
+- `file_path`
+- `file_name`
+- `folder_path`
+- `stage_id`
+- `status_id`
+- `created_at`
+
+Regra: cada arquivo elegível deve gerar no máximo um job por banco e manter rastreamento por pasta de origem.
+
+### PipelineKnowledgeRecord
+
+- `id`
+- `name`
+- `description`
+- `position`
+- `folder_path`
+- `status_id`
+- `created_at`
+- `files`
+
+Regra: cada conhecimento precisa manter lista única de arquivos associados, limitada ao escopo funcional do pipeline legado.

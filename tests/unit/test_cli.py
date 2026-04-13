@@ -435,3 +435,44 @@ def test_destilador_command_rejects_missing_mode_arguments(tmp_path: Path) -> No
 
     assert result.exit_code == 1
     assert "Informe --input e --output" in result.stderr
+
+
+def test_pipeline_command_rejects_missing_mode_arguments(tmp_path: Path) -> None:
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["pipeline"])
+
+    assert result.exit_code == 1
+    assert "Informe --input-dir e --output-dir" in result.stderr
+
+
+def test_pipeline_command_shows_friendly_error_for_missing_input_dir(
+    monkeypatch, tmp_path: Path
+) -> None:
+    runner = CliRunner()
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "pipeline",
+            "--input-dir",
+            str(tmp_path / "inexistente"),
+            "--output-dir",
+            str(tmp_path / "saida"),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Diretório de entrada não encontrado" in result.stderr
+    assert "Traceback" not in result.stderr

@@ -6,11 +6,11 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 
 ## Componentes principais
 
-- CLI Typer para `prompt`, `chat`, `models`, `list-files`, `debate` e `destilador`
+- CLI Typer para `prompt`, `chat`, `models`, `list-files`, `debate`, `destilador` e `pipeline`
 - módulo de configuração baseado em `.env`
 - registro de modelos para mapear aliases curtos para nomes do backend Adapta
 - cliente HTTP assíncrono interno reestruturado em camadas de sessão, autenticação, upload/exclusão de arquivos e conversas
-- serviços separados para prompt, chat, debate, destilador e persistência de saída
+- serviços separados para prompt, chat, debate, destilador, pipeline e persistência de saída
 
 ## Comunicação entre componentes
 
@@ -19,6 +19,7 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 - o cliente encapsula autenticação, envio de prompts e exclusão de chats em classes com objetivos específicos
 - no debate, cada agente mantém uma sessão de chat própria por toda a execução e a conclusão final é gerada a partir das respostas acumuladas das rodadas
 - no destilador, a CLI internaliza o pipeline em 7 dimensões, carrega prompts especializados de `src/adapta/prompts/livro/` e usa upload de arquivo para gerar um consolidado por item
+- no pipeline, a CLI internaliza um fluxo de extração e escrita de conhecimentos por diretório, usa prompts especializados em `src/adapta/prompts/pipeline/`, persiste estado operacional em SQLite local e grava índices e documentos dentro do diretório de saída informado
 
 ## Tecnologias
 
@@ -37,4 +38,5 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 - debate reutiliza o mesmo princípio de efemeridade do chat, mas com múltiplas sessões remotas por execução
 - destilador reutiliza o padrão de limpeza best-effort para uploads e artefatos remotos após a consolidação final
 - no modo `--input` com `--output-dir`, o destilador preserva os arquivos parciais por dimensão para inspeção local
+- pipeline reutiliza SQLite local para rastrear jobs e conhecimentos, evitando dependência de serviço externo para estado operacional
 - a implementação atual internaliza apenas o subconjunto necessário do cliente do Adapta para prompt, chat e limpeza remota, reduzindo dependências externas do projeto

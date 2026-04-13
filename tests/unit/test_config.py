@@ -1,29 +1,33 @@
 from pathlib import Path
 
-import pytest
-
-from adapta.config import Settings, load_settings
+from adapta.config import default_pipeline_db_path, resolve_pipeline_db_path
 
 
-def test_load_settings_reads_env_file(tmp_path: Path) -> None:
-    env_file = tmp_path / ".env"
-    env_file.write_text(
-        'ADAPTA_LOGIN="user@example.com"\nADAPTA_PASSWORD="secret"\nADAPTA_MODEL="gpt"\n',
-        encoding="utf-8",
-    )
+def test_resolve_pipeline_db_path_uses_default_when_unset(monkeypatch) -> None:
+    monkeypatch.delenv("ADAPTA_PIPELINE_DB_PATH", raising=False)
 
-    settings = load_settings(env_file=env_file)
+    resolved = resolve_pipeline_db_path()
 
-    assert isinstance(settings, Settings)
-    assert settings.adapta_login == "user@example.com"
-    assert settings.adapta_password == "secret"
-    assert settings.adapta_model == "gpt"
-    assert settings.env_file_path == env_file
+    assert resolved == default_pipeline_db_path().expanduser().resolve()
 
 
-def test_load_settings_requires_credentials(tmp_path: Path) -> None:
-    env_file = tmp_path / ".env"
-    env_file.write_text('ADAPTA_LOGIN="user@example.com"\n', encoding="utf-8")
+def test_resolve_pipeline_db_path_uses_environment_when_set(
+    monkeypatch, tmp_path: Path
+) -> None:
+    env_path = tmp_path / "env-pipeline.db"
+    monkeypatch.setenv("ADAPTA_PIPELINE_DB_PATH", str(env_path))
 
-    with pytest.raises(ValueError):
-        load_settings(env_file=env_file)
+    resolved = resolve_pipeline_db_path()
+
+    assert resolved == env_path.resolve()
+
+
+def test_resolve_pipeline_db_path_prefers_explicit_path(
+    monkeypatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("ADAPTA_PIPELINE_DB_PATH", str(tmp_path / "env-pipeline.db"))
+    explicit_path = tmp_path / "cli-pipeline.db"
+
+    resolved = resolve_pipeline_db_path(explicit_path)
+
+    assert resolved == explicit_path.resolve()

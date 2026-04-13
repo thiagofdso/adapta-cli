@@ -21,7 +21,7 @@ DEFAULT_MODEL_KEY = "claude"
 DISTILLATION_ITERATIONS = 2
 DISTILLATION_RETRY_LIMIT = 3
 DISTILLATION_RETRY_DELAY_SECONDS = 2.0
-SUPPORTED_INPUT_SUFFIXES = {".pdf"}
+SUPPORTED_INPUT_SUFFIXES = {".pdf", ".txt"}
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts" / "livro"
 
 
@@ -186,6 +186,23 @@ def _build_dimension_messages(
     ]
 
 
+def _build_text_only_messages(prompt_text: str) -> list[dict[str, Any]]:
+    return [{"role": "user", "content": [{"type": "text", "text": prompt_text}]}]
+
+
+def _build_inline_text_prompt(prompt_text: str, source_path: Path) -> str:
+    source_text = source_path.read_text(encoding="utf-8", errors="replace").strip()
+    return (
+        f"{prompt_text}\n\n"
+        "# ARQUIVO TXT INLINE\n"
+        f"Nome do arquivo: {source_path.name}\n"
+        "Conteudo:\n"
+        "```text\n"
+        f"{source_text}\n"
+        "```\n"
+    )
+
+
 def _requires_processing_retry(response_text: str | None) -> bool:
     normalized = (response_text or "").lower()
     return (
@@ -208,20 +225,26 @@ async def _run_dimension_once(
     *,
     model_backend: str,
     prompt_text: str,
-    upload_info: dict[str, Any],
+    upload_info: dict[str, Any] | None,
 ) -> tuple[str, str]:
     chat_id = _generate_uuid7_like()
-    if hasattr(client, "chat_with_files"):
+    if upload_info is not None and hasattr(client, "chat_with_files"):
         response = await client.chat_with_files(
             model_backend=model_backend,
             messages=[{"role": "user", "content": prompt_text}],
             chat_id=chat_id,
             files=[upload_info],
         )
-    else:
+    elif upload_info is not None:
         response = await client.chat(
             model_backend=model_backend,
             messages=_build_dimension_messages(prompt_text, upload_info),
+            chat_id=chat_id,
+        )
+    else:
+        response = await client.chat(
+            model_backend=model_backend,
+            messages=_build_text_only_messages(prompt_text),
             chat_id=chat_id,
         )
     return chat_id, _remove_think_tags(response)
@@ -241,9 +264,15 @@ async def _distill_single_item(
     cleanup_warnings: list[str] = []
     preserved_artifacts: list[DistillationArtifact] = []
     chat_ids: list[str] = []
-    upload_info = await client.upload_file(item.source_path)
+    upload_info: dict[str, Any] | None = None
+    inline_prompt_suffix = ""
 
-    if upload_delay_seconds > 0:
+    if item.source_path.suffix.lower() == ".txt":
+        inline_prompt_suffix = _build_inline_text_prompt("", item.source_path).strip()
+    else:
+        upload_info = await client.upload_file(item.source_path)
+
+    if upload_info is not None and upload_delay_seconds > 0:
         await asyncio.sleep(upload_delay_seconds)
 
     dimensions: list[DistillationDimension] = []
@@ -252,6 +281,8 @@ async def _distill_single_item(
     try:
         for index in range(1, 8):
             prompt_text = _load_dimension_prompt(index)
+            if inline_prompt_suffix:
+                prompt_text = f"{prompt_text}\n\n{inline_prompt_suffix}"
             if progress_callback is not None:
                 progress_callback(
                     f"Gerando dimensão {index} para {item.source_path.name}"
@@ -321,7 +352,7 @@ async def _distill_single_item(
             preserved_artifacts,
         )
     finally:
-        if upload_info.get("path"):
+        if upload_info is not None and upload_info.get("path"):
             try:
                 await client.delete_file(str(upload_info["path"]))
             except Exception as exc:  # noqa: BLE001
