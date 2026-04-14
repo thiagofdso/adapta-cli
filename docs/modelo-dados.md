@@ -39,13 +39,64 @@ Regra: apenas uma origem de prompt por execução e no máximo 5 anexos locais p
 
 Regra: o chat remoto deve ser excluído ao final da sessão.
 
+### PersonaQuestionnaire
+
+- `nome`
+- `cargo`
+- `setor`
+- `idade`
+- `tamanho_empresa`
+- `valores`
+- `comunicacao`
+- `senioridade`
+- `objetivo_6_12m`
+- `aspiracao_3_5a`
+- `dia_perfeito`
+- `dores`
+- `tira_sono`
+- `medos`
+- `forma_trabalho`
+- `inovacao`
+- `aprendizado`
+- `tom_voz`
+- `maneirismos`
+- `motiva_desmotiva`
+
+Regra: `nome` e `cargo` são obrigatórios; os demais campos podem seguir vazios e o nome precisa gerar um slug seguro para arquivo.
+
+Observação: o JSON salvo ao lado do markdown reutiliza esse formato para suportar `--input-file` e `--update`.
+
+### PersonaDocument
+
+- `display_name`
+- `slug`
+- `output_path`
+- `content`
+
+Regra: `output_path` deve apontar para a pasta de personas sob o diretório home real do usuário, em um local equivalente a `~/.adapta/persona/{slug}.md`.
+
+### PersonaAnswersFile
+
+- `output_path`
+- `payload`
+
+Regra: o arquivo `.json` deve ser salvo ao lado do `.md` com o mesmo slug para permitir regeneração e edição futura da persona.
+
+### PersonaGenerationResult
+
+- `text`
+- `cleanup_warning`
+
+Regra: warning de cleanup não invalida um markdown já salvo com sucesso.
+
 ### DebateAgentConfig
 
 - `agent_id`
 - `model_key`
 - `prompt`
+- `persona_path`
 
-Regra: cada agente precisa de identificador único, modelo válido e prompt não vazio.
+Regra: cada agente precisa de identificador único, modelo válido e prompt não vazio; `persona_path` é opcional e, quando informado, deve apontar para um arquivo legível cujo conteúdo será incorporado ao prompt do agente.
 
 ### DebateConfig
 

@@ -1,11 +1,14 @@
 # adapta-cli Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-12
+Auto-generated from all feature plans. Last updated: 2026-04-14
 
 ## Active Technologies
 - Python 3.11 + Typer, httpx, python-dotenv, pytest (001-build-adapta-cli)
 - arquivos locais JSON e texto/markdown para configuração e saída; estado remoto efêmero de chat no serviço Adapta (001-build-adapta-cli)
 - arquivos locais PDF, arquivos texto/markdown de saída, diretórios temporários locais e artefatos remotos efêmeros no serviço Adapta (001-build-adapta-cli)
+- Python 3.11 + Typer, httpx, python-dotenv, pytest, biblioteca padrão `sqlite3` (001-build-adapta-cli)
+- SQLite local para estado operacional do pipeline e filesystem para artefatos de saída (001-build-adapta-cli)
+- Arquivos markdown e JSON no diretório do usuário; conversa remota efêmera no serviço Adapta (001-build-adapta-cli)
 
 - Python 3.11 + Typer, httpx, pydantic-settings, python-dotenv, pytest (001-build-adapta-cli)
 
@@ -37,9 +40,9 @@ Python 3.11: Follow standard conventions
 
 ## Recent Changes
 - 001-build-adapta-cli: Added Python 3.11 + Typer, httpx, pydantic-settings, python-dotenv, pytest
-- 001-build-adapta-cli: Added Python 3.11 + Typer, httpx, python-dotenv, pytest
-
+- 001-build-adapta-cli: Added Python 3.11 + Typer, httpx, python-dotenv, pytest, biblioteca padrão `sqlite3`
 - 001-build-adapta-cli: Added Python 3.11 + Typer, httpx, pydantic-settings, python-dotenv, pytest
+
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

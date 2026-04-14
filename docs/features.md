@@ -16,6 +16,14 @@ Descrição: inicia uma conversa contextual com o modelo e exclui o chat remoto 
 
 Depende de: autenticação Adapta, registro de modelos, cliente de chat.
 
+## Gerador de persona
+
+Status: ativo
+
+Descrição: expõe o comando `persona` para conduzir uma entrevista interativa em 6 blocos, gerar um markdown de persona com `--model` opcional e salvar o resultado na pasta de personas sob o diretório home do usuário, em um caminho equivalente a `~/.adapta/persona/{nome-persona}.md`. O comando valida nome e cargo, aceita campos opcionais vazios, salva também um JSON com todas as respostas, aceita `--input-file` para gerar a persona a partir de um JSON preenchido e aceita `--update` para reler o JSON salvo, permitir ajustes interativos e regerar o prompt. O fluxo continua pedindo confirmação imediata se os arquivos já existirem e tenta excluir o chat remoto ao final.
+
+Depende de: autenticação Adapta, registro de modelos, cliente de chat, persistência local de saída e resolução multiplataforma do diretório home.
+
 ## Seleção de modelo
 
 Status: ativo
@@ -44,7 +52,7 @@ Depende de: autenticação Adapta e cliente de listagem de arquivos.
 
 Status: planejado
 
-Descrição: expõe o comando `debate` para executar múltiplos agentes por rodadas, com configuração por arquivo JSON, variável de ambiente ou fluxo interativo, conclusão final consolidada e saída no terminal ou em arquivo. Também aceita `--file` com 1 a 5 anexos separados por vírgula, faz upload único no início da execução e reutiliza esses arquivos em todas as mensagens dos agentes.
+Descrição: expõe o comando `debate` para executar múltiplos agentes por rodadas, com configuração por arquivo JSON, variável de ambiente ou fluxo interativo, conclusão final consolidada e saída no terminal ou em arquivo. No JSON de configuração, cada agente pode definir opcionalmente `persona` apontando para um arquivo de persona cujo conteúdo é incorporado ao prompt do agente. Também aceita `--file` com 1 a 5 anexos separados por vírgula, faz upload único no início da execução e reutiliza esses arquivos em todas as mensagens dos agentes.
 
 Depende de: autenticação Adapta, registro de modelos, cliente de chat, persistência local de saída e validação interativa de entrada.
 
@@ -55,6 +63,14 @@ Status: ativo
 Descrição: expõe o comando `pipeline` para processar lotes em `--input-dir` e gravar artefatos compatíveis com o pipeline legado em `--output-dir`, preservando o formato funcional de entrada e saída. O comando usa SQLite local para estado operacional, com caminho padrão em `~/.local/state/adapta-cli/pipeline.db`, customização por `ADAPTA_PIPELINE_DB_PATH` e precedência do parâmetro `--db-path` quando informado. Arquivos `.txt` são enviados inline no prompt, sem upload remoto.
 
 Depende de: autenticação Adapta, upload de arquivo, prompts internalizados de extração e criação de conhecimento, persistência local em SQLite e escrita de artefatos em filesystem.
+
+## Importação de cookies de sessão
+
+Status: ativo
+
+Descrição: expõe o comando `import-cookies` para converter um arquivo de export de cookies do navegador, como `session.json`, para o cache local `~/.adapta/cookies.json`. O comando extrai cookies, infere `session_id` do contexto Clerk e atualiza o backup de sessão usado pela CLI para evitar novo login nas chamadas seguintes.
+
+Depende de: filesystem local e formato JSON compatível de export de cookies.
 
 ## Destilador por arquivo ou diretório
 

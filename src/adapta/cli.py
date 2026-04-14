@@ -1,9 +1,10 @@
 from __future__ import annotations
+import json
 from pathlib import Path
 
 import typer
 
-from adapta.client import create_client
+from adapta.client import create_client, import_cookies_to_session_cache
 from adapta.config import load_settings
 from adapta.models import DebateAgentConfig
 from adapta.registry import get_model_option, list_model_options, resolve_model_key
@@ -27,6 +28,17 @@ from adapta.services.destilador_service import (
 )
 from adapta.services.pipeline_service import build_pipeline_request, run_pipeline
 from adapta.services.output_service import persist_output
+from adapta.services.persona_service import (
+    PERSONA_BLOCKS,
+    build_persona_questionnaire,
+    generate_persona_document,
+    load_persona_questionnaire_from_file,
+    questionnaire_to_dict,
+    resolve_persona_answers_path,
+    resolve_persona_output_path,
+    save_persona_answers,
+    save_persona_document,
+)
 from adapta.services.prompt_service import (
     build_prompt_request,
     execute_prompt,
@@ -75,6 +87,154 @@ def _prompt_int(label: str, *, minimum: int) -> int:
         return value
 
 
+def _prompt_required_text(label: str, empty_message: str) -> str:
+    while True:
+        value = typer.prompt(label).strip()
+        if value:
+            return value
+        typer.echo(empty_message)
+
+
+def _confirm_overwrite(path: Path) -> bool:
+    while True:
+        value = (
+            typer.prompt(f"A persona já existe em {path}. Deseja sobrescrever? [s/n]")
+            .strip()
+            .lower()
+        )
+        if value in {"s", "sim", "y", "yes"}:
+            return True
+        if value in {"n", "nao", "não", "no"}:
+            return False
+        typer.echo("Responda com 's' ou 'n'.")
+
+
+def _prompt_persona_name() -> tuple[str, Path, bool]:
+    while True:
+        raw_name = typer.prompt("Qual é o nome da persona?")
+        try:
+            output_path = resolve_persona_output_path(raw_name)
+        except ValueError as exc:
+            typer.echo(str(exc))
+            continue
+        if output_path.exists():
+            overwrite = _confirm_overwrite(output_path)
+            return raw_name.strip(), output_path, overwrite
+        return raw_name.strip(), output_path, True
+
+
+def _prompt_text_with_default(
+    label: str,
+    default: str,
+    *,
+    allow_empty: bool = True,
+    empty_message: str | None = None,
+) -> str:
+    while True:
+        value = typer.prompt(label, default=default, show_default=bool(default)).strip()
+        if value or allow_empty:
+            return value
+        if empty_message is not None:
+            typer.echo(empty_message)
+
+
+def _collect_persona_answers(
+    existing: dict[str, str] | None = None,
+) -> tuple[dict[str, str], Path, bool]:
+    defaults = existing or {}
+    while True:
+        if defaults.get("nome"):
+            raw_name = _prompt_text_with_default(
+                "Qual é o nome da persona?",
+                defaults["nome"],
+                allow_empty=False,
+                empty_message="Nome da persona inválido: informe um valor não vazio.",
+            )
+        else:
+            raw_name, output_path, overwrite = _prompt_persona_name()
+            defaults = {**defaults, "nome": raw_name}
+            if output_path.exists() and not overwrite:
+                return {"nome": raw_name}, output_path, overwrite
+            break
+        try:
+            output_path = resolve_persona_output_path(raw_name)
+            overwrite = True
+            if output_path.exists():
+                overwrite = _confirm_overwrite(output_path)
+            defaults["nome"] = raw_name.strip()
+            break
+        except ValueError as exc:
+            typer.echo(str(exc))
+
+    answers: dict[str, str] = {"nome": defaults["nome"]}
+    for block_index, (block_title, questions) in enumerate(PERSONA_BLOCKS):
+        typer.echo(block_title if block_index == 0 else f"\n{block_title}")
+        for field, question in questions:
+            if field == "nome":
+                continue
+            default_value = defaults.get(field, "")
+            if field == "cargo":
+                answers[field] = _prompt_text_with_default(
+                    question,
+                    default_value,
+                    allow_empty=False,
+                    empty_message="O cargo/título profissional não pode ser vazio.",
+                )
+            else:
+                answers[field] = _prompt_text_with_default(
+                    question,
+                    default_value,
+                    allow_empty=True,
+                )
+    return answers, output_path, overwrite
+
+
+def _resolve_persona_source(
+    *, input_file: Path | None, update: bool
+) -> tuple[dict[str, str], Path, Path, bool]:
+    if input_file is not None and update:
+        raise ValueError("Use apenas uma das opções: --input-file ou --update.")
+
+    if input_file is not None:
+        questionnaire = load_persona_questionnaire_from_file(input_file)
+        output_path = resolve_persona_output_path(questionnaire.nome)
+        answers_path = resolve_persona_answers_path(questionnaire.nome)
+        overwrite = True
+        if output_path.exists() or answers_path.exists():
+            overwrite = _confirm_overwrite(output_path)
+        return (
+            questionnaire_to_dict(questionnaire),
+            output_path,
+            answers_path,
+            overwrite,
+        )
+
+    if update:
+        update_name = _prompt_required_text(
+            "Qual persona deseja atualizar?",
+            "Informe o nome da persona que deseja atualizar.",
+        )
+        answers_path = resolve_persona_answers_path(update_name)
+        questionnaire = load_persona_questionnaire_from_file(answers_path)
+        answers, output_path, overwrite = _collect_persona_answers(
+            questionnaire_to_dict(questionnaire)
+        )
+        return (
+            answers,
+            output_path,
+            resolve_persona_answers_path(answers["nome"]),
+            overwrite,
+        )
+
+    answers, output_path, overwrite = _collect_persona_answers()
+    return (
+        answers,
+        output_path,
+        resolve_persona_answers_path(answers["nome"]),
+        overwrite,
+    )
+
+
 def _parse_file_option(value: str | None) -> list[Path]:
     if value is None:
         return []
@@ -114,6 +274,19 @@ def list_files() -> None:
         _fail(str(exc))
 
 
+@app.command("import-cookies")
+def import_cookies(
+    input: Path = typer.Option(..., "--input"),
+) -> None:
+    try:
+        destination, payload = import_cookies_to_session_cache(input)
+        typer.echo(f"Cookies importados para {destination}")
+        typer.echo(f"session_id: {payload['session_id']}")
+        typer.echo(f"cookies: {len(payload['cookies'])}")
+    except (ValueError, RuntimeError, FileNotFoundError, json.JSONDecodeError) as exc:
+        _fail(str(exc))
+
+
 @app.command()
 def prompt(
     model: str | None = typer.Option(None, "--model"),
@@ -144,6 +317,44 @@ def prompt(
 
         typer.echo(run_async(_run()))
     except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+
+@app.command()
+def persona(
+    model: str | None = typer.Option(None, "--model"),
+    input_file: Path | None = typer.Option(None, "--input-file"),
+    update: bool = typer.Option(False, "--update"),
+) -> None:
+    try:
+        settings = load_settings()
+        model_key = get_model_option(model or "claude").key
+        answers, output_path, answers_path, overwrite = _resolve_persona_source(
+            input_file=input_file,
+            update=update,
+        )
+        if (output_path.exists() or answers_path.exists()) and not overwrite:
+            typer.echo("Operação cancelada.")
+            return
+
+        questionnaire = build_persona_questionnaire(**answers)
+
+        async def _run() -> tuple[str, str | None]:
+            async with create_client(settings) as client:
+                result = await generate_persona_document(
+                    client,
+                    questionnaire,
+                    model_key=model_key,
+                )
+                save_persona_document(result.text, output_path, overwrite=overwrite)
+                save_persona_answers(questionnaire, answers_path, overwrite=overwrite)
+                return result.text, result.cleanup_warning
+
+        _, cleanup_warning = run_async(_run())
+        typer.echo(f"Resultado salvo em {output_path}")
+        if cleanup_warning:
+            typer.echo(cleanup_warning, err=True)
+    except (ValueError, RuntimeError, FileExistsError) as exc:
         _fail(str(exc))
 
 

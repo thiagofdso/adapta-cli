@@ -16,15 +16,19 @@ def _create_venv(target: Path) -> Path:
 
 def test_local_install_script_exposes_command(tmp_path: Path) -> None:
     python_bin = _create_venv(tmp_path / "venv-local")
+    install_home = tmp_path / "install-home"
+    bin_home = tmp_path / "bin-home"
     env = os.environ.copy()
     env["PYTHON"] = str(python_bin)
+    env["INSTALL_HOME"] = str(install_home)
+    env["BIN_HOME"] = str(bin_home)
 
     subprocess.run(
         ["sh", "scripts/install-local.sh"], cwd=REPO_ROOT, env=env, check=True
     )
 
     result = subprocess.run(
-        [str(tmp_path / "venv-local" / "bin" / "adapta"), "--help"],
+        [str(bin_home / "adapta"), "--help"],
         cwd=REPO_ROOT,
         env=env,
         capture_output=True,
@@ -38,8 +42,12 @@ def test_local_install_script_exposes_command(tmp_path: Path) -> None:
 
 def test_remote_install_script_exposes_command(tmp_path: Path) -> None:
     python_bin = _create_venv(tmp_path / "venv-remote")
+    install_home = tmp_path / "install-home"
+    bin_home = tmp_path / "bin-home"
     env = os.environ.copy()
     env["PYTHON"] = str(python_bin)
+    env["INSTALL_HOME"] = str(install_home)
+    env["BIN_HOME"] = str(bin_home)
 
     repo_url = REPO_ROOT.as_uri()
     subprocess.run(
@@ -50,7 +58,7 @@ def test_remote_install_script_exposes_command(tmp_path: Path) -> None:
     )
 
     result = subprocess.run(
-        [str(tmp_path / "venv-remote" / "bin" / "adapta"), "--help"],
+        [str(bin_home / "adapta"), "--help"],
         cwd=REPO_ROOT,
         env=env,
         capture_output=True,

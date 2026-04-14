@@ -18,6 +18,7 @@ build/
 config.json
 saida.md
 logs/
+*.log
 *.pdf
 !/*.pdf
 .DS_Store

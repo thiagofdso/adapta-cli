@@ -14,6 +14,7 @@ from adapta.models import (
     DebateTurn,
 )
 from adapta.registry import get_model_option
+from adapta.services.persona_service import get_persona_directory
 from adapta.services.chat_service import (
     close_chat_sessions,
     create_chat_session,
@@ -24,6 +25,19 @@ from adapta.services.prompt_service import normalize_file_paths
 
 
 TurnEmitter = Callable[[DebateTurn], None]
+
+
+def _resolve_persona_path(persona_value: str, config_path: Path) -> Path:
+    candidate_path = Path(persona_value)
+    if candidate_path.is_absolute():
+        return candidate_path.resolve()
+
+    # Nome curto como `cliente-cetico` ou `cliente-cetico.md`
+    if candidate_path.parent == Path(".") and not candidate_path.suffix:
+        persona_name = f"{candidate_path.name}.md"
+        return (get_persona_directory() / persona_name).resolve()
+
+    return (config_path.parent / candidate_path).resolve()
 
 
 def load_debate_agents(config_path: Path) -> list[DebateAgentConfig]:
@@ -50,6 +64,14 @@ def load_debate_agents(config_path: Path) -> list[DebateAgentConfig]:
         normalized_id = str(agent_id).strip()
         model_key = get_model_option(str(raw_agent.get("model", "")).strip()).key
         prompt = str(raw_agent.get("prompt", "")).strip()
+        persona_value = str(raw_agent.get("persona", "")).strip()
+        persona_path = None
+        if persona_value:
+            persona_path = _resolve_persona_path(persona_value, config_path)
+            if not persona_path.exists() or not persona_path.is_file():
+                raise ValueError(
+                    f"Arquivo de persona não encontrado para o agente {normalized_id}: {persona_path}"
+                )
 
         if not normalized_id:
             raise ValueError("Todo agente precisa de um identificador.")
@@ -61,6 +83,7 @@ def load_debate_agents(config_path: Path) -> list[DebateAgentConfig]:
                 agent_id=normalized_id,
                 model_key=model_key,
                 prompt=prompt,
+                persona_path=persona_path,
             )
         )
 
@@ -76,10 +99,23 @@ def persist_debate_agents(agents: list[DebateAgentConfig], destination: Path) ->
             "model": agent.model_key,
             "prompt": agent.prompt,
         }
+        if agent.persona_path is not None:
+            payload[agent.agent_id]["persona"] = str(agent.persona_path)
     destination.write_text(
         json.dumps(payload, ensure_ascii=True, indent=2),
         encoding="utf-8",
     )
+
+
+def _load_persona_content(agent: DebateAgentConfig) -> str:
+    if agent.persona_path is None:
+        return ""
+    try:
+        return agent.persona_path.read_text(encoding="utf-8").strip()
+    except OSError as exc:
+        raise ValueError(
+            f"Não foi possível ler o arquivo de persona do agente {agent.agent_id}: {agent.persona_path}"
+        ) from exc
 
 
 def resolve_debate_config_path(explicit: Path | None) -> tuple[Path | None, str]:
@@ -156,6 +192,15 @@ def _build_turn_prompt(
         f'Tema do debate: "{config.topic_prompt}".',
         f"Rodada {round_number} de {config.rounds}.",
     ]
+
+    persona_content = _load_persona_content(agent)
+    if persona_content:
+        base_lines.extend(
+            [
+                "Assuma também a seguinte persona durante todo o debate:",
+                persona_content,
+            ]
+        )
 
     if round_number == 1:
         base_lines.append(

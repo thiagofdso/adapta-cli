@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -5,11 +6,13 @@ from typer.testing import CliRunner
 import adapta.cli as cli_module
 from adapta.cli import app
 from adapta.config import Settings
+from adapta.services import persona_service
 
 
 class DummyClient:
     def __init__(self) -> None:
         self.prompt_calls: list[tuple[str, str, list[str] | None]] = []
+        self.deleted_chats: list[str] = []
         self.chat_calls: list[
             tuple[str, str, list[dict[str, str]], list[str] | None]
         ] = []
@@ -38,6 +41,11 @@ class DummyClient:
         self.prompt_calls.append((model_backend, prompt, None))
         return "2"
 
+    async def prompt_ephemeral(self, *, model_backend: str, prompt: str) -> str:
+        self.prompt_calls.append((model_backend, prompt, None))
+        self.deleted_chats.append("ephemeral")
+        return "2"
+
     async def prompt_with_files(
         self,
         *,
@@ -48,6 +56,19 @@ class DummyClient:
         self.prompt_calls.append(
             (model_backend, prompt, [str(file["filename"]) for file in files])
         )
+        return "2"
+
+    async def prompt_with_files_ephemeral(
+        self,
+        *,
+        model_backend: str,
+        prompt: str,
+        files: list[dict[str, object]],
+    ) -> str:
+        self.prompt_calls.append(
+            (model_backend, prompt, [str(file["filename"]) for file in files])
+        )
+        self.deleted_chats.append("ephemeral")
         return "2"
 
     async def chat(
@@ -84,6 +105,7 @@ class DummyClient:
         }
 
     async def delete_chat(self, chat_id: str) -> None:
+        self.deleted_chats.append(chat_id)
         return None
 
     async def list_files(self) -> list[dict[str, object]]:
@@ -122,6 +144,7 @@ def test_prompt_command_prints_response(monkeypatch, tmp_path: Path) -> None:
     assert client.prompt_calls == [
         ("GPT_5", "quanto é 1+1 responda somente o valor", None)
     ]
+    assert client.deleted_chats == ["ephemeral"]
 
 
 def test_models_command_lists_available_models() -> None:
@@ -476,3 +499,265 @@ def test_pipeline_command_shows_friendly_error_for_missing_input_dir(
     assert result.exit_code == 1
     assert "Diretório de entrada não encontrado" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_import_cookies_command_updates_cache(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    source_path = tmp_path / "session.json"
+    cache_dir = tmp_path / ".adapta"
+    cache_path = cache_dir / "cookies.json"
+    source_path.write_text(
+        json.dumps(
+            [
+                {"name": "clerk_active_context", "value": "sess_imported:"},
+                {
+                    "name": "__session",
+                    "value": "eyJhbGciOiJub25lIn0.eyJzaWQiOiJzZXNzX2ltcG9ydGVkIn0.",
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+    original_import = cli_module.import_cookies_to_session_cache
+    monkeypatch.setattr(
+        cli_module,
+        "import_cookies_to_session_cache",
+        lambda input: original_import(input, target_path=cache_path),
+    )
+
+    result = runner.invoke(app, ["import-cookies", "--input", str(source_path)])
+
+    assert result.exit_code == 0
+    assert cache_path.exists()
+    assert "Cookies importados para" in result.stdout
+    assert "session_id: sess_imported" in result.stdout
+
+
+def test_persona_command_reprompts_invalid_name(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model="gpt",
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+
+    result = runner.invoke(
+        app,
+        ["persona"],
+        input="   \n@@@\nAna Lider\nGerente de Produto\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    )
+
+    assert result.exit_code == 0, result.stderr
+    assert "Nome da persona inválido" in result.stdout
+    assert "Resultado salvo em" in result.stdout
+
+
+def test_persona_command_requires_non_empty_cargo(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+
+    result = runner.invoke(
+        app,
+        ["persona"],
+        input="Ana Lider\n   \nGerente de Produto\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    )
+
+    assert result.exit_code == 0, result.stderr
+    assert "O cargo/título profissional não pode ser vazio." in result.stdout
+
+
+def test_persona_command_confirms_overwrite(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    output_path = tmp_path / ".adapta" / "persona" / "ana-lider.md"
+    output_path.parent.mkdir(parents=True)
+    output_path.write_text("anterior", encoding="utf-8")
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+
+    reject = runner.invoke(app, ["persona"], input="Ana Lider\nn\n")
+
+    assert reject.exit_code == 0
+    assert output_path.read_text(encoding="utf-8") == "anterior"
+    assert "Operação cancelada." in reject.stdout
+
+    accept = runner.invoke(
+        app,
+        ["persona"],
+        input="Ana Lider\ns\nGerente de Produto\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    )
+
+    assert accept.exit_code == 0, accept.stderr
+    assert output_path.read_text(encoding="utf-8") == "2\n"
+
+
+def test_persona_command_warns_when_cleanup_fails(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+
+    class CleanupFailClient(DummyClient):
+        async def chat(
+            self, *, model_backend: str, messages: list[dict[str, str]], chat_id: str
+        ) -> str:
+            self.chat_calls.append((model_backend, chat_id, list(messages), None))
+            return "# Persona\n"
+
+        async def delete_chat(self, chat_id: str) -> None:
+            raise RuntimeError("cleanup falhou")
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(
+        cli_module, "create_client", lambda settings: CleanupFailClient()
+    )
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+
+    result = runner.invoke(
+        app,
+        ["persona"],
+        input="Ana Lider\nGerente de Produto\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    )
+
+    assert result.exit_code == 0, result.stderr
+    assert "Falha ao limpar chat remoto: cleanup falhou" in result.stderr
+
+
+def test_persona_command_accepts_custom_model_option(
+    monkeypatch, tmp_path: Path
+) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+
+    result = runner.invoke(
+        app,
+        ["persona", "--model", "gpt"],
+        input="Ana Lider\nGerente de Produto\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    )
+
+    assert result.exit_code == 0, result.stderr
+    assert client.chat_calls[0][0] == "GPT_5"
+
+
+def test_persona_command_accepts_input_file(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    input_file = tmp_path / "persona.json"
+    input_file.write_text(
+        json.dumps(
+            {"nome": "Ana Lider", "cargo": "Gerente de Produto", "setor": "SaaS"}
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+
+    result = runner.invoke(app, ["persona", "--input-file", str(input_file)])
+
+    assert result.exit_code == 0, result.stderr
+    assert (tmp_path / ".adapta" / "persona" / "ana-lider.md").exists()
+    assert (tmp_path / ".adapta" / "persona" / "ana-lider.json").exists()
+
+
+def test_persona_command_update_reuses_saved_json(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    persona_dir = tmp_path / ".adapta" / "persona"
+    persona_dir.mkdir(parents=True)
+    (persona_dir / "ana-lider.json").write_text(
+        json.dumps(
+            {
+                "nome": "Ana Lider",
+                "cargo": "Gerente de Produto",
+                "setor": "SaaS",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (persona_dir / "ana-lider.md").write_text("anterior", encoding="utf-8")
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+
+    result = runner.invoke(
+        app,
+        ["persona", "--update"],
+        input="Ana Lider\nAna Lider\ns\n\nMarketing\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    )
+
+    assert result.exit_code == 0, result.stderr
+    saved_json = (persona_dir / "ana-lider.json").read_text(encoding="utf-8")
+    assert '"setor": "Marketing"' in saved_json

@@ -12,7 +12,10 @@ Autenticação:
 Uso principal:
 
 - autenticar sessão
+- reaproveitar cookies, `session_id` e cabeçalhos de autenticação salvos em `~/.adapta/cookies.json` para evitar novo login a cada execução
+- importar export de cookies do navegador para `~/.adapta/cookies.json` via comando `import-cookies`
 - enviar prompts e mensagens de chat
+- enviar um prompt fixo de geração de persona em chat efêmero via comando `persona`, usando o modelo padrão ou um `--model` explícito do usuário
 - enviar prompts e mensagens de chat com até 5 arquivos anexados por chamada de CLI
 - reutilizar os mesmos anexos ao longo de todas as rodadas do comando `debate` quando iniciado com `--file`
 - manter múltiplos chats simultâneos durante execuções de debate
@@ -23,6 +26,7 @@ Uso principal:
 - combinar arquivos enviados com prompts internalizados por dimensão no fluxo `destilador`
 - combinar arquivos enviados com prompts internalizados de extração e criação no fluxo `pipeline`
 - excluir chats remotos ao término
+- excluir o chat remoto ao término do comando `persona`, com aviso operacional se a limpeza falhar após o salvamento local
 - excluir artefatos remotos quando o pipeline terminar
 
 Falhas possíveis:
@@ -36,6 +40,8 @@ Restrições conhecidas:
 
 - depende de conectividade externa
 - o comportamento do backend pode variar por modelo
+- quando a sessão persistida expira ou recebe `401`, a CLI descarta `~/.adapta/cookies.json`, executa novo login e regrava o cache local
+- a CLI só invalida explicitamente a sessão local ao encerrar quando `ADAPTA_LOGOUT=true`; em qualquer outro caso, o cache permanece disponível para reaproveitamento
 - debates com múltiplos agentes ampliam a quantidade de chamadas remotas por execução e exigem limpeza best-effort de todos os chats abertos
 - destilações baseadas em arquivo ampliam o uso de upload remoto e exigem rastreamento explícito dos artefatos gerados
 - o fluxo do `pipeline` amplia o uso de upload remoto e exige rastreamento local em SQLite para jobs, conhecimentos e artefatos por diretório

@@ -215,3 +215,42 @@ Internalizar apenas o contrato observável necessário: descoberta recursiva, í
 
 - copiar apenas prompts e regras necessárias
 - manter a orquestração dentro de `src/adapta/services/pipeline_service.py`
+
+## 2026-04-14 - Persistir sessão local para reduzir logins repetidos
+
+### Problema
+
+Cada nova execução da CLI podia repetir o fluxo completo de login, aumentando latência e carga desnecessária nas chamadas ao backend.
+
+### Solucao
+
+Persistir `session_id`, cookies e cabeçalhos úteis em `~/.adapta/cookies.json`, reutilizando essa sessão enquanto ela continuar válida.
+
+### Cuidados
+
+- o caminho precisa depender de `Path.home()` para funcionar em Linux e Windows
+- qualquer `401` com sessão reaproveitada deve invalidar o cache local e forçar novo login antes de repetir a chamada
+
+## 2026-04-14 - Testes de instalação devem validar o contrato dos scripts, não um venv implícito do teste
+
+### Problema
+
+Os testes de integração de instalação assumiam que definir `PYTHON` faria o binário `adapta` ser exposto dentro do mesmo venv temporário criado pelo teste.
+
+### Causa
+
+Os scripts `install-local.sh` e `install-remote.sh` usam `PYTHON` para escolher o interpretador do ambiente instalado, mas o destino funcional do binário continua sendo controlado por `INSTALL_HOME` e `BIN_HOME`.
+
+### Solucao
+
+Isolar os testes definindo `INSTALL_HOME` e `BIN_HOME` temporários e validar o comando a partir de `BIN_HOME/adapta`, que é o contrato real dos scripts.
+
+### ❌ NAO FAZER
+
+- inferir o caminho final do binário apenas a partir da variável `PYTHON`
+- acoplar o teste a um layout de venv temporário que os scripts não prometem
+
+### ✅ FAZER
+
+- ler as variáveis de destino reais usadas pelo script antes de definir a expectativa do teste
+- usar diretórios temporários em `INSTALL_HOME` e `BIN_HOME` para manter isolamento sem alterar o contrato observado

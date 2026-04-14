@@ -1,0 +1,22 @@
+{
+  "levantamento": {
+    "model": "claude",
+    "prompt": "Estruture o problema, objetivos, contexto e informacoes necessarias para compor uma proposta executiva consistente.",
+    "persona": "realista-de-execucao"
+  },
+  "primeira-versao": {
+    "model": "gpt",
+    "prompt": "Escreva uma primeira versao executiva com foco em clareza, proposta de valor, diferencial e encaminhamento objetivo.",
+    "persona": "tradutor-tecnico-para-negocios"
+  },
+  "critica": {
+    "model": "gemini",
+    "prompt": "Ataque a proposta como um revisor exigente de negocio e risco. Procure incoerencia, promessa fraca, fragilidade e partes mal sustentadas.",
+    "persona": "critico-construtivo"
+  },
+  "versao-final": {
+    "model": "grok",
+    "prompt": "Consolide uma versao final executiva, clara, priorizada e apta para apresentar a decisores.",
+    "persona": "cliente-premium"
+  }
+}

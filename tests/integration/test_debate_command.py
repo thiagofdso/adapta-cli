@@ -8,6 +8,7 @@ from typer.testing import CliRunner
 import adapta.cli as cli_module
 from adapta.cli import app
 from adapta.config import Settings
+from adapta.services import persona_service
 
 
 class DummyClient:
@@ -162,3 +163,112 @@ def test_debate_command_accepts_file_attachments(monkeypatch, tmp_path: Path) ->
     assert client.uploaded == ["a.pdf", "b.pdf"]
     assert len(client.chat_calls) == 4
     assert all(call[3] == ["a.pdf", "b.pdf"] for call in client.chat_calls)
+
+
+def test_debate_command_accepts_optional_persona_file_per_agent(
+    monkeypatch, tmp_path: Path
+) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    config_path = tmp_path / "debate.json"
+    persona_path = tmp_path / "persona.md"
+    persona_path.write_text(
+        "# Você é Cliente Premium\nDefenda qualidade.", encoding="utf-8"
+    )
+    config_path.write_text(
+        json.dumps(
+            {
+                "A1": {
+                    "model": "claude",
+                    "prompt": "arquiteto",
+                    "persona": "persona.md",
+                },
+                "A2": {"model": "gpt", "prompt": "dev"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+
+    result = runner.invoke(
+        app,
+        [
+            "debate",
+            "--config",
+            str(config_path),
+            "--prompt",
+            "Defina uma arquitetura",
+            "--rounds",
+            "1",
+        ],
+    )
+
+    assert result.exit_code == 0, result.stderr
+    first_prompt = client.chat_calls[0][2][0]["content"]
+    assert "# Você é Cliente Premium" in first_prompt
+
+
+def test_debate_command_accepts_persona_short_name(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    config_path = tmp_path / "debate.json"
+    persona_dir = tmp_path / ".adapta" / "persona"
+    persona_dir.mkdir(parents=True)
+    (persona_dir / "cliente-cetico.md").write_text(
+        "# Você é Cliente Cético\nQuestione promessas.",
+        encoding="utf-8",
+    )
+    config_path.write_text(
+        json.dumps(
+            {
+                "A1": {
+                    "model": "claude",
+                    "prompt": "arquiteto",
+                    "persona": "cliente-cetico",
+                },
+                "A2": {"model": "gpt", "prompt": "dev"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+
+    result = runner.invoke(
+        app,
+        [
+            "debate",
+            "--config",
+            str(config_path),
+            "--prompt",
+            "Defina uma arquitetura",
+            "--rounds",
+            "1",
+        ],
+    )
+
+    assert result.exit_code == 0, result.stderr
+    first_prompt = client.chat_calls[0][2][0]["content"]
+    assert "# Você é Cliente Cético" in first_prompt

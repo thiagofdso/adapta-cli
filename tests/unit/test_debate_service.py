@@ -103,6 +103,52 @@ def test_persist_debate_agents_writes_expected_json(tmp_path: Path) -> None:
     }
 
 
+def test_load_debate_agents_resolves_optional_persona_path(tmp_path: Path) -> None:
+    persona_path = tmp_path / "persona.md"
+    persona_path.write_text("# Você é Cliente Cético\n", encoding="utf-8")
+    config_path = _write_config(
+        tmp_path / "debate.json",
+        {
+            "A1": {
+                "model": "claude",
+                "prompt": "arquiteto",
+                "persona": "persona.md",
+            },
+            "A2": {"model": "gpt", "prompt": "desenvolvedor"},
+        },
+    )
+
+    agents = load_debate_agents(config_path)
+
+    assert agents[0].persona_path == persona_path.resolve()
+    assert agents[1].persona_path is None
+
+
+def test_load_debate_agents_resolves_persona_short_name_from_user_directory(
+    monkeypatch, tmp_path: Path
+) -> None:
+    persona_dir = tmp_path / ".adapta" / "persona"
+    persona_dir.mkdir(parents=True)
+    persona_path = persona_dir / "cliente-cetico.md"
+    persona_path.write_text("# Você é Cliente Cético\n", encoding="utf-8")
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    config_path = _write_config(
+        tmp_path / "debate.json",
+        {
+            "A1": {
+                "model": "claude",
+                "prompt": "arquiteto",
+                "persona": "cliente-cetico",
+            },
+            "A2": {"model": "gpt", "prompt": "desenvolvedor"},
+        },
+    )
+
+    agents = load_debate_agents(config_path)
+
+    assert agents[0].persona_path == persona_path.resolve()
+
+
 @pytest.mark.anyio
 async def test_run_debate_orchestrates_rounds_and_cleanup(tmp_path: Path) -> None:
     config_path = _write_config(
@@ -174,6 +220,43 @@ async def test_run_debate_uploads_attachments_once_and_reuses_them(
     assert client.uploaded == ["a.pdf", "b.pdf"]
     assert len(client.chat_calls) == 4
     assert all(call[3] == ["a.pdf", "b.pdf"] for call in client.chat_calls)
+
+
+@pytest.mark.anyio
+async def test_run_debate_incorporates_persona_file_into_agent_prompt(
+    tmp_path: Path,
+) -> None:
+    persona_path = tmp_path / "persona.md"
+    persona_path.write_text(
+        "# Você é Cliente Cético\nQuestione promessas.", encoding="utf-8"
+    )
+    config_path = _write_config(
+        tmp_path / "debate.json",
+        {
+            "A1": {
+                "model": "claude",
+                "prompt": "arquiteto",
+                "persona": str(persona_path),
+            },
+            "A2": {"model": "gpt", "prompt": "desenvolvedor"},
+        },
+    )
+    agents = load_debate_agents(config_path)
+    config = DebateConfig(
+        agents=agents,
+        rounds=1,
+        topic_prompt="Avalie uma proposta",
+        conclusion_model_key="gemini",
+        output_path=None,
+        config_source="argument",
+    )
+    client = DummyDebateClient()
+
+    await run_debate(client, config)
+
+    first_prompt = client.chat_calls[0][2][0]["content"]
+    assert "# Você é Cliente Cético" in first_prompt
+    assert "Questione promessas." in first_prompt
 
 
 def test_format_turn_label_uses_agent_and_round() -> None:

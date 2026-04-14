@@ -50,6 +50,7 @@ class DebateAgentConfig:
     agent_id: str
     model_key: str
     prompt: str
+    persona_path: Path | None = None
 
 
 @dataclass(frozen=True)
