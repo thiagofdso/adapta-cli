@@ -11,6 +11,7 @@ class ModelOption:
     display_name: str
     backend_name: str
     supports_chat: bool = True
+    summary: str = ""
 
 
 @dataclass(frozen=True)

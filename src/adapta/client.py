@@ -4,6 +4,7 @@ import asyncio
 import base64
 import json
 import logging
+import os
 import secrets
 import time
 import uuid
@@ -19,6 +20,9 @@ from adapta.models import Settings
 
 
 logger = logging.getLogger(__name__)
+
+SESSION_HOME_DIRNAME = ".adapta"
+SESSION_CACHE_FILENAME = "cookies.json"
 
 AGENT_BASE_URL = "https://agent.adapta.one"
 API_AGENT_BASE_URL = "https://api-agent.adapta.one"
@@ -117,6 +121,11 @@ def _first_non_none(*values: Any) -> Any:
     return None
 
 
+def _resolve_session_cache_path(path: Path | None = None) -> Path:
+    target = path or (Path.home() / SESSION_HOME_DIRNAME / SESSION_CACHE_FILENAME)
+    return target.expanduser().resolve()
+
+
 class AdaptaHttpSession:
     def __init__(self, *, transport: httpx.BaseTransport | None = None) -> None:
         self._transport = transport
@@ -172,7 +181,12 @@ class AdaptaHttpSession:
 
 class AdaptaAuthenticator:
     def __init__(
-        self, *, session: AdaptaHttpSession, login: str, password: str
+        self,
+        *,
+        session: AdaptaHttpSession,
+        login: str,
+        password: str,
+        session_cache_path: Path | None = None,
     ) -> None:
         if not login or not password:
             raise ValueError("ADAPTA_LOGIN e ADAPTA_PASSWORD são obrigatórios.")
@@ -187,10 +201,108 @@ class AdaptaAuthenticator:
         self._auth_lock = asyncio.Lock()
         self._login_rate_limiter = RateLimiter(LOGIN_THROTTLE_SECONDS)
         self._token_refresh_rate_limiter = RateLimiter(TOKEN_REFRESH_THROTTLE_SECONDS)
+        self._session_cache_path = _resolve_session_cache_path(session_cache_path)
+        self._cached_cookies: dict[str, str] = {}
+        self._cached_headers: dict[str, str] = {}
+        self._restore_session_cache()
 
     @property
     def session_id(self) -> str | None:
         return self._session_id
+
+    def _restore_session_cache(self) -> None:
+        if not self._session_cache_path:
+            return
+        try:
+            payload_text = self._session_cache_path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return
+        except OSError:
+            logger.warning(
+                "Não foi possível ler o cache de sessão em %s",
+                self._session_cache_path,
+            )
+            return
+
+        try:
+            payload = json.loads(payload_text)
+        except json.JSONDecodeError:
+            logger.warning(
+                "Conteúdo inválido no cache de sessão %s", self._session_cache_path
+            )
+            return
+
+        session_id = payload.get("session_id")
+        cookies = payload.get("cookies")
+        bearer_token = payload.get("bearer_token")
+        bearer_token_exp = payload.get("bearer_token_exp")
+        used_production_token = payload.get("used_production_token")
+        headers = payload.get("headers")
+
+        if isinstance(session_id, str) and session_id:
+            self._session_id = session_id
+
+        if isinstance(cookies, dict):
+            normalized_cookies = {
+                str(key): str(value)
+                for key, value in cookies.items()
+                if isinstance(key, str) and isinstance(value, str)
+            }
+            if normalized_cookies:
+                self._cached_cookies = normalized_cookies
+                self._session.remember_cookies(normalized_cookies)
+
+        if isinstance(bearer_token, str) and bearer_token:
+            self._bearer_token = bearer_token
+            if isinstance(bearer_token_exp, (int, float)):
+                self._bearer_token_exp = float(bearer_token_exp)
+            self._used_production_token = bool(used_production_token)
+
+        if isinstance(headers, dict):
+            self._cached_headers = {
+                str(key): str(value)
+                for key, value in headers.items()
+                if isinstance(key, str) and isinstance(value, str)
+            }
+
+    def _persist_session_state(self) -> None:
+        if not self._session_cache_path or not self._session_id:
+            return
+
+        cookies = self._cached_cookies or getattr(self._session, "_auth_cookies", {})
+        payload: dict[str, Any] = {
+            "session_id": self._session_id,
+            "cookies": dict(cookies),
+        }
+        if self._bearer_token:
+            payload["bearer_token"] = self._bearer_token
+            payload["bearer_token_exp"] = self._bearer_token_exp
+            payload["used_production_token"] = self._used_production_token
+        if self._cached_headers:
+            payload["headers"] = self._cached_headers
+
+        try:
+            self._session_cache_path.parent.mkdir(parents=True, exist_ok=True)
+            self._session_cache_path.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except OSError:
+            logger.warning(
+                "Não foi possível gravar o cache de sessão em %s",
+                self._session_cache_path,
+            )
+
+    def _clear_session_cache(self) -> None:
+        if not self._session_cache_path:
+            return
+        try:
+            self._session_cache_path.unlink(missing_ok=True)
+        except OSError:
+            logger.warning(
+                "Não foi possível remover o cache de sessão em %s",
+                self._session_cache_path,
+            )
 
     async def simulate_login(self) -> AuthResult:
         await self._login_rate_limiter.wait()
@@ -210,6 +322,8 @@ class AdaptaAuthenticator:
 
             cookies = self._collect_auth_cookies(client)
             self._session.remember_cookies(cookies)
+            self._cached_cookies = dict(cookies)
+            self._persist_session_state()
             return AuthResult(session_id=self._session_id, cookies=cookies)
 
     async def ensure_authenticated(self) -> None:
@@ -217,7 +331,15 @@ class AdaptaAuthenticator:
         if not self._session_id:
             await self.simulate_login()
             return
-        await self._touch_session(client, self._session_id)
+        try:
+            await self._touch_session(client, self._session_id)
+        except httpx.HTTPStatusError as exc:
+            status_code = exc.response.status_code if exc.response else None
+            if status_code == 401:
+                await self.reset_authentication(drop_cache=True)
+                await self.simulate_login()
+                return
+            raise
 
     async def ensure_bearer_token(self) -> str:
         async with self._auth_lock:
@@ -236,7 +358,23 @@ class AdaptaAuthenticator:
 
             self._bearer_token = token
             self._bearer_token_exp = self._extract_token_exp(token)
+            self._persist_session_state()
             return token
+
+    async def reset_authentication(self, *, drop_cache: bool) -> None:
+        self._session_id = None
+        self._bearer_token = None
+        self._bearer_token_exp = 0.0
+        self._used_production_token = False
+        self._cached_cookies = {}
+        self._cached_headers = {}
+        await self._session.close()
+        if drop_cache:
+            self._clear_session_cache()
+
+    async def close(self) -> None:
+        if should_logout():
+            await self.reset_authentication(drop_cache=True)
 
     async def _fetch_sign_in_page(self, client: httpx.AsyncClient) -> None:
         response = await client.get(
@@ -316,6 +454,7 @@ class AdaptaAuthenticator:
             if cookie_name == "clerk_active_context" and value.endswith(":"):
                 value = value[:-1]
             relevant[cookie_name] = value
+        self._cached_cookies = dict(relevant)
         return relevant
 
     def _clerk_params(self) -> dict[str, str]:
@@ -573,19 +712,28 @@ class AdaptaConversationClient:
         if prompt is None and not messages:
             raise ValueError("call_model() requer prompt ou messages.")
 
-        chunks: list[str] = []
-        async for event_type, payload in self._chat_event_stream(
-            prompt=prompt,
-            messages=messages,
-            model=model,
-            chat_id=chat_id,
-            files=files,
-        ):
-            if event_type == "answer":
-                chunks.append(payload)
-        return ChatCompletionResult(
-            messages=[{"kind": "answer", "text": "".join(chunks)}]
-        )
+        for attempt in range(2):
+            chunks: list[str] = []
+            try:
+                async for event_type, payload in self._chat_event_stream(
+                    prompt=prompt,
+                    messages=messages,
+                    model=model,
+                    chat_id=chat_id,
+                    files=files,
+                ):
+                    if event_type == "answer":
+                        chunks.append(payload)
+                return ChatCompletionResult(
+                    messages=[{"kind": "answer", "text": "".join(chunks)}]
+                )
+            except httpx.HTTPStatusError as exc:
+                status_code = exc.response.status_code if exc.response else None
+                if status_code == 401 and attempt == 0:
+                    await self._authenticator.reset_authentication(drop_cache=True)
+                    continue
+                raise
+        raise RuntimeError("Falha ao executar o chat após reautenticação.")
 
     async def delete_chat(self, chat_ids: str | list[str]) -> dict[str, Any]:
         if isinstance(chat_ids, str):
@@ -981,6 +1129,7 @@ class AdaptaClientAdapter:
 
     async def close(self) -> None:
         await self._session.close()
+        await self._authenticator.close()
 
     async def prompt(self, *, model_backend: str, prompt: str) -> str:
         result = await self._conversations.call_model(
@@ -1055,3 +1204,101 @@ def extract_answer_text(result: Any) -> str:
         if any(chunk.strip() for chunk in answers):
             return "".join(answers).strip()
     return str(result).strip()
+
+
+def should_logout() -> bool:
+    value = os.environ.get("ADAPTA_LOGOUT", "")
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _extract_session_id_from_cookies(cookies: dict[str, str]) -> str | None:
+    context = cookies.get("clerk_active_context") or cookies.get("clerk_active_session")
+    if isinstance(context, str) and context:
+        normalized = context[:-1] if context.endswith(":") else context
+        if normalized:
+            return normalized
+    token = cookies.get("__session")
+    if isinstance(token, str) and token:
+        parts = token.split(".")
+        if len(parts) >= 2:
+            padding = "=" * (-len(parts[1]) % 4)
+            try:
+                payload_bytes = base64.urlsafe_b64decode(parts[1] + padding)
+                payload_data = json.loads(payload_bytes)
+            except (ValueError, json.JSONDecodeError):
+                payload_data = None
+            if isinstance(payload_data, dict):
+                session_id = payload_data.get("sid")
+                if isinstance(session_id, str) and session_id:
+                    return session_id
+    return None
+
+
+def import_cookies_to_session_cache(
+    source_path: Path,
+    *,
+    target_path: Path | None = None,
+) -> tuple[Path, dict[str, Any]]:
+    raw_text = source_path.read_text(encoding="utf-8")
+    payload = json.loads(raw_text)
+    cookies, headers = _normalize_cookie_payload(payload)
+    if not cookies:
+        raise ValueError("Nenhum cookie encontrado no arquivo informado.")
+    session_id = _extract_session_id_from_cookies(cookies)
+    if not session_id:
+        raise RuntimeError("Não foi possível inferir o session_id dos cookies.")
+
+    destination = _resolve_session_cache_path(target_path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    cache_payload: dict[str, Any] = {
+        "session_id": session_id,
+        "cookies": cookies,
+    }
+    if headers:
+        cache_payload["headers"] = headers
+
+    destination.write_text(
+        json.dumps(cache_payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return destination, cache_payload
+
+
+def _normalize_cookie_payload(payload: Any) -> tuple[dict[str, str], dict[str, str]]:
+    cookies: dict[str, str] = {}
+    headers: dict[str, str] = {}
+
+    if isinstance(payload, list):
+        for entry in payload:
+            if isinstance(entry, dict):
+                name = entry.get("name")
+                value = entry.get("value")
+                if isinstance(name, str) and value is not None:
+                    cookies[name] = str(value)
+    elif isinstance(payload, dict):
+        if isinstance(payload.get("cookies"), dict):
+            cookies = {
+                str(key): str(value)
+                for key, value in payload["cookies"].items()
+                if isinstance(key, str) and value is not None
+            }
+        else:
+            cookies = {
+                str(key): str(value)
+                for key, value in payload.items()
+                if isinstance(key, str) and value is not None
+            }
+
+        if isinstance(payload.get("headers"), dict):
+            headers = {
+                str(key): str(value)
+                for key, value in payload["headers"].items()
+                if isinstance(key, str) and value is not None
+            }
+    else:
+        raise ValueError("Formato de export de cookies inválido.")
+
+    cookies = {key: value for key, value in cookies.items() if key}
+    headers = {key: value for key, value in headers.items() if key}
+    return cookies, headers

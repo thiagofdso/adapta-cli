@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from adapta.models import PromptRequest, ResponseArtifact
 
 
 MAX_PROMPT_FILES = 5
+logger = logging.getLogger(__name__)
 
 
 def normalize_file_paths(files: list[Path] | None) -> list[Path]:
@@ -61,20 +63,47 @@ def build_prompt_request(
 async def execute_prompt(
     client, request: PromptRequest, model_backend: str
 ) -> ResponseArtifact:
-    if request.file_paths:
-        files = [
-            await client.upload_file(file_path) for file_path in request.file_paths
-        ]
-        text = await client.prompt_with_files(
-            model_backend=model_backend,
-            prompt=request.prompt_text,
-            files=files,
-        )
-    else:
-        text = await client.prompt(
-            model_backend=model_backend, prompt=request.prompt_text
-        )
+    cleanup_chat_id = "ephemeral"
+    text: str
+    cleanup_needed = True
+    try:
+        if request.file_paths:
+            files = [
+                await client.upload_file(file_path) for file_path in request.file_paths
+            ]
+            prompt_callable = getattr(client, "prompt_with_files_ephemeral", None)
+            if prompt_callable is not None:
+                cleanup_needed = False
+            else:
+                prompt_callable = getattr(client, "prompt_with_files")
+            text = await prompt_callable(
+                model_backend=model_backend,
+                prompt=request.prompt_text,
+                files=files,
+            )
+        else:
+            prompt_callable = getattr(client, "prompt_ephemeral", None)
+            if prompt_callable is not None:
+                cleanup_needed = False
+            else:
+                prompt_callable = getattr(client, "prompt")
+            text = await prompt_callable(
+                model_backend=model_backend, prompt=request.prompt_text
+            )
+    finally:
+        if cleanup_needed:
+            await _delete_ephemeral_chat(client, cleanup_chat_id)
     destination = "stdout" if request.output_path is None else "stdout+file"
     return ResponseArtifact(
         text=text, destination=destination, saved_path=request.output_path
     )
+
+
+async def _delete_ephemeral_chat(client, chat_id: str) -> None:
+    delete_chat = getattr(client, "delete_chat", None)
+    if delete_chat is None:
+        return
+    try:
+        await delete_chat(chat_id)
+    except Exception:
+        logger.warning("Falha ao remover o chat %s", chat_id, exc_info=True)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import typer
@@ -34,6 +35,7 @@ from adapta.services.persona_service import (
     PERSONA_BLOCKS,
     build_persona_questionnaire,
     generate_persona_document,
+    get_persona_directory,
     load_persona_questionnaire_from_file,
     questionnaire_to_dict,
     resolve_persona_answers_path,
@@ -244,6 +246,40 @@ def _parse_file_option(value: str | None) -> list[Path]:
     return normalize_file_paths(parts)
 
 
+def _load_persona_prompt_text(identifier: str) -> str:
+    persona_path = resolve_persona_output_path(identifier)
+    if not persona_path.exists():
+        raise ValueError(
+            f"Persona não encontrada: {persona_path}. Use 'adapta persona --list' para listar."
+        )
+    content = persona_path.read_text(encoding="utf-8").strip()
+    if not content:
+        raise ValueError(f"Persona vazia: {persona_path}")
+    return content
+
+
+def _list_personas() -> None:
+    directory = get_persona_directory()
+    if not directory.exists():
+        typer.echo(f"Nenhuma persona encontrada em {directory}")
+        return
+    entries = sorted(directory.glob("*.json"))
+    if not entries:
+        typer.echo(f"Nenhuma persona encontrada em {directory}")
+        return
+    typer.echo("slug\tNome\tCargo")
+    for json_file in entries:
+        slug = json_file.stem
+        try:
+            payload = json.loads(json_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            typer.echo(f"{slug}\t(Não foi possível ler)\t")
+            continue
+        nome = str(payload.get("nome") or slug)
+        cargo = str(payload.get("cargo") or "")
+        typer.echo(f"{slug}\t{nome}\t{cargo}")
+
+
 def _select_agent_id(agents: list[DebateAgentConfig], label: str) -> str:
     typer.echo(label)
     for index, agent in enumerate(agents, start=1):
@@ -308,7 +344,19 @@ def _prompt_control_decision(
 @app.command()
 def models() -> None:
     for option in list_model_options():
-        typer.echo(f"{option.key}\t{option.display_name}\t{option.backend_name}")
+        typer.echo(
+            "\t".join(
+                filter(
+                    None,
+                    [
+                        option.key,
+                        option.display_name,
+                        option.backend_name,
+                        option.summary,
+                    ],
+                )
+            )
+        )
 
 
 @app.command("list-files")
@@ -357,10 +405,16 @@ def prompt(
     prompt_file: Path | None = typer.Option(None, "--prompt-file"),
     output: Path | None = typer.Option(None, "--output"),
     file: str | None = typer.Option(None, "--file"),
+    persona: str | None = typer.Option(
+        None, "--persona", help="Nome ou slug da persona salva em ~/.adapta/persona/."
+    ),
 ) -> None:
     try:
         settings = load_settings()
         model_key = _resolve_model(model, settings.adapta_model)
+        persona_text: str | None = None
+        if persona:
+            persona_text = _load_persona_prompt_text(persona)
         request = build_prompt_request(
             model_key=model_key,
             prompt=prompt,
@@ -368,6 +422,9 @@ def prompt(
             output=output,
             files=_parse_file_option(file),
         )
+        if persona_text:
+            combined = f"{persona_text.rstrip()}\n\n{request.prompt_text}".strip()
+            request = replace(request, prompt_text=combined)
         option = get_model_option(model_key)
 
         async def _run() -> str:
@@ -388,8 +445,14 @@ def persona(
     model: str | None = typer.Option(None, "--model"),
     input_file: Path | None = typer.Option(None, "--input-file"),
     update: bool = typer.Option(False, "--update"),
+    list_existing: bool = typer.Option(
+        False, "--list", help="Lista personas já salvas e retorna."
+    ),
 ) -> None:
     try:
+        if list_existing:
+            _list_personas()
+            return
         settings = load_settings()
         model_key = get_model_option(model or "claude").key
         answers, output_path, answers_path, overwrite = _resolve_persona_source(

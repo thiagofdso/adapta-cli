@@ -153,8 +153,8 @@ def test_models_command_lists_available_models() -> None:
     result = runner.invoke(app, ["models"])
 
     assert result.exit_code == 0
-    assert "gpt\tGPT-5\tGPT_5" in result.stdout
-    assert "claude\tClaude 4.5 Sonnet\tCLAUDE_4_5_SONNET" in result.stdout
+    assert "gpt54\tGPT-5.4\tGPT_54" in result.stdout
+    assert "one\tONE\tONE" in result.stdout
 
 
 def test_list_files_command_lists_existing_files(monkeypatch, tmp_path: Path) -> None:
@@ -531,6 +531,65 @@ def test_import_cookies_command_updates_cache(monkeypatch, tmp_path: Path) -> No
     assert cache_path.exists()
     assert "Cookies importados para" in result.stdout
     assert "session_id: sess_imported" in result.stdout
+
+
+def test_prompt_command_uses_persona(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    persona_dir = tmp_path / ".adapta" / "persona"
+    persona_dir.mkdir(parents=True)
+    persona_dir.joinpath("desenvolvedor-backend.md").write_text(
+        "## Persona\nVocê é especialista em incidentes.\n", encoding="utf-8"
+    )
+
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+
+    result = runner.invoke(
+        app,
+        [
+            "prompt",
+            "--model",
+            "gpt54",
+            "--prompt",
+            "Faça um resumo",
+            "--persona",
+            "desenvolvedor-backend",
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    assert client.prompt_calls
+    combined_prompt = client.prompt_calls[0][1]
+    assert "Você é especialista em incidentes." in combined_prompt
+    assert combined_prompt.strip().endswith("Faça um resumo")
+
+
+def test_persona_command_lists_existing_personas(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    persona_dir = tmp_path / ".adapta" / "persona"
+    persona_dir.mkdir(parents=True)
+    persona_dir.joinpath("dev.json").write_text(
+        json.dumps({"nome": "Dev Backend", "cargo": "Engenheiro"}), encoding="utf-8"
+    )
+
+    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+
+    result = runner.invoke(app, ["persona", "--list"])
+
+    assert result.exit_code == 0, result.stdout
+    assert "dev" in result.stdout
+    assert "Dev Backend" in result.stdout
 
 
 def test_persona_command_reprompts_invalid_name(monkeypatch, tmp_path: Path) -> None:

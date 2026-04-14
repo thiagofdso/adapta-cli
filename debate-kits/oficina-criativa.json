@@ -1,16 +1,16 @@
 {
   "sonhador": {
-    "model": "claude",
+    "model": "claude46",
     "prompt": "Gere caminhos ambiciosos, diferenciados e nao obvios. Nao limite a ideacao cedo demais.",
     "persona": "sonhador-estrategico"
   },
   "realista": {
-    "model": "gpt",
+    "model": "gpt54",
     "prompt": "Pegue as ideias e transforme em passos concretos, prioridades, dependencias e sequencia viavel de execucao.",
     "persona": "realista-de-execucao"
   },
   "critico": {
-    "model": "gemini",
+    "model": "gemini31",
     "prompt": "Ataque pontos fracos, riscos, suposicoes ingenuas e falhas previsiveis. Sugira melhorias concretas.",
     "persona": "critico-construtivo"
   }

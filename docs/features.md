@@ -4,7 +4,7 @@
 
 Status: ativo
 
-Descrição: envia um prompt inline ou por arquivo e retorna a resposta no terminal, com opção de salvar em arquivo. Também aceita `--file` com 1 a 5 anexos separados por vírgula, fazendo upload antes de chamar o modelo.
+Descrição: envia um prompt inline ou por arquivo e retorna a resposta no terminal, com opção de salvar em arquivo. Também aceita `--file` com 1 a 5 anexos separados por vírgula, fazendo upload antes de chamar o modelo. Com `--persona <slug>`, injeta o conteúdo de `~/.adapta/persona/<slug>.md` antes do prompt, facilitando reaproveitamento de personas. Reforce sempre o contexto completo (objetivo, estado atual, restrições) ao escrever o prompt.
 
 Depende de: autenticação Adapta, registro de modelos, cliente de prompt.
 
@@ -20,7 +20,7 @@ Depende de: autenticação Adapta, registro de modelos, cliente de chat.
 
 Status: ativo
 
-Descrição: expõe o comando `persona` para conduzir uma entrevista interativa em 6 blocos, gerar um markdown de persona com `--model` opcional e salvar o resultado na pasta de personas sob o diretório home do usuário, em um caminho equivalente a `~/.adapta/persona/{nome-persona}.md`. O comando valida nome e cargo, aceita campos opcionais vazios, salva também um JSON com todas as respostas, aceita `--input-file` para gerar a persona a partir de um JSON preenchido e aceita `--update` para reler o JSON salvo, permitir ajustes interativos e regerar o prompt. O fluxo continua pedindo confirmação imediata se os arquivos já existirem e tenta excluir o chat remoto ao final.
+Descrição: expõe o comando `persona` para conduzir uma entrevista interativa em 6 blocos, gerar JSON+Markdown em `~/.adapta/persona/{slug}` (diretório home real), e agora inclui `--list` para exibir as personas já salvas, `--input-file` para regerar a partir de JSON existente e `--update` para reaproveitar respostas. O comando valida nome/cargo, grava tanto o JSON quanto o prompt final e tenta excluir o chat remoto ao final.
 
 Depende de: autenticação Adapta, registro de modelos, cliente de chat, persistência local de saída e resolução multiplataforma do diretório home.
 
@@ -36,7 +36,7 @@ Depende de: configuração de ambiente e registro de modelos.
 
 Status: ativo
 
-Descrição: expõe o comando `models` para listar no terminal todas as opções disponíveis com chave, nome amigável e identificador do backend.
+Descrição: expõe o comando `models` para listar no terminal todas as opções disponíveis com chave, nome amigável, identificador do backend e um resumo do uso recomendado (catálogo atualizado com ONE, ONE Pro, ONE Superfast, GPT-5.4, GPT-5.1, Gemini 3.1 Pro Preview, Gemini 3 Flash, Claude 4.6 Sonnet, Claude 4.5 Haiku, DeepSeek V3.2 Reasoner, DeepSeek V3.2, Grok 4.1, Kimi K2.5, MiniMax M2.7, GLM-5, Llama 4 Maverick, Sonar Pro e Qwen 3.5 Plus).
 
 Depende de: registro de modelos.
 

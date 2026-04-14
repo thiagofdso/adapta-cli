@@ -1,16 +1,16 @@
 {
   "mapeador": {
-    "model": "claude",
+    "model": "claude46",
     "prompt": "Mapeie o problema com foco em contexto, sintomas, partes envolvidas, restricoes e impacto percebido no negocio.",
     "persona": "realista-de-execucao"
   },
   "causas": {
-    "model": "gpt",
+    "model": "gpt54",
     "prompt": "Levante causas provaveis, hipoteses, erros de premissa e fatores estruturais que podem explicar o problema.",
     "persona": "critico-construtivo"
   },
   "impactos": {
-    "model": "gemini",
+    "model": "gemini31",
     "prompt": "Analise impactos financeiros, comerciais, operacionais e reputacionais do problema e da inacao.",
     "persona": "cfo-rigoroso"
   },

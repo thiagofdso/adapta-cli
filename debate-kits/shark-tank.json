@@ -1,16 +1,16 @@
 {
   "cfo": {
-    "model": "claude",
+    "model": "claude46",
     "prompt": "Avalie qualquer proposta como um CFO extremamente rigoroso. Pressione por ROI, payback, risco, escalabilidade e sustentabilidade financeira.",
     "persona": "cfo-rigoroso"
   },
   "juridico": {
-    "model": "gpt",
+    "model": "gpt54",
     "prompt": "Avalie a proposta sob a otica de risco contratual, compliance, responsabilidades e possiveis passivos.",
     "persona": "juridico-preventivo"
   },
   "critico": {
-    "model": "gemini",
+    "model": "gemini31",
     "prompt": "Procure fragilidades na narrativa, premissas escondidas, riscos ignorados e pontos onde a proposta pode falhar na pratica.",
     "persona": "critico-construtivo"
   }

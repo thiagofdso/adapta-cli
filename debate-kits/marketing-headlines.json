@@ -1,11 +1,11 @@
 {
   "copywriter": {
-    "model": "claude",
+    "model": "claude46",
     "prompt": "Crie headlines e textos de anuncio com alto impacto, foco em atencao, clareza de beneficio e potencial de conversao. Sempre proponha uma nova versao melhorada quando receber critica.",
     "persona": "copywriter-competitivo"
   },
   "editor": {
-    "model": "gpt",
+    "model": "gpt54",
     "prompt": "Critique a copy com rigor editorial. Aponte fraquezas, objecoes nao respondidas, excesso de promessa e falta de clareza. Sempre devolva uma versao melhor.",
     "persona": "editor-critico-de-copy"
   }

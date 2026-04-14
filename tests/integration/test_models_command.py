@@ -27,5 +27,5 @@ def test_models_command_lists_supported_models() -> None:
     lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
     assert lines
-    assert "gpt\tGPT-5\tGPT_5" in lines
-    assert "claude\tClaude 4.5 Sonnet\tCLAUDE_4_5_SONNET" in lines
+    assert any(line.startswith("gpt54\tGPT-5.4\tGPT_54") for line in lines)
+    assert any(line.startswith("one\tONE\tONE") for line in lines)
