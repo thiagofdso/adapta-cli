@@ -98,6 +98,8 @@ Regra: warning de cleanup não invalida um markdown já salvo com sucesso.
 
 Regra: cada agente precisa de identificador único, modelo válido e prompt não vazio; `persona_path` é opcional e, quando informado, deve apontar para um arquivo legível cujo conteúdo será incorporado ao prompt do agente.
 
+Observação: no modo `--control`, o debate passa a aceitar intervenções do usuário entre as respostas, mas continua gravando os turnos dentro da mesma estrutura de rodadas e agentes.
+
 ### DebateConfig
 
 - `agents`

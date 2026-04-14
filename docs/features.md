@@ -52,7 +52,7 @@ Depende de: autenticação Adapta e cliente de listagem de arquivos.
 
 Status: planejado
 
-Descrição: expõe o comando `debate` para executar múltiplos agentes por rodadas, com configuração por arquivo JSON, variável de ambiente ou fluxo interativo, conclusão final consolidada e saída no terminal ou em arquivo. No JSON de configuração, cada agente pode definir opcionalmente `persona` apontando para um arquivo de persona cujo conteúdo é incorporado ao prompt do agente. Também aceita `--file` com 1 a 5 anexos separados por vírgula, faz upload único no início da execução e reutiliza esses arquivos em todas as mensagens dos agentes.
+Descrição: expõe o comando `debate` para executar múltiplos agentes por rodadas, com configuração por arquivo JSON, variável de ambiente ou fluxo interativo, conclusão final consolidada e saída no terminal ou em arquivo. No JSON de configuração, cada agente pode definir opcionalmente `persona` apontando para um arquivo de persona cujo conteúdo é incorporado ao prompt do agente. Também aceita `--file` com 1 a 5 anexos separados por vírgula, faz upload único no início da execução e reutiliza esses arquivos em todas as mensagens dos agentes. Com `--control`, o usuário pode intervir a cada resposta para continuar o fluxo atual, responder um agente, responder todos, fazer um agente responder a outro, fazer um agente responder a todos ou encerrar imediatamente com conclusão final.
 
 Depende de: autenticação Adapta, registro de modelos, cliente de chat, persistência local de saída e validação interativa de entrada.
 

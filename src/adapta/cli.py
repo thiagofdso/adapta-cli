@@ -15,11 +15,13 @@ from adapta.services.chat_service import (
     send_chat_message,
 )
 from adapta.services.debate_service import (
+    DebateControlDecision,
     build_debate_config,
     format_turn_label,
     load_debate_agents,
     persist_debate_agents,
     resolve_debate_config_path,
+    run_controlled_debate,
     run_debate,
 )
 from adapta.services.destilador_service import (
@@ -242,6 +244,67 @@ def _parse_file_option(value: str | None) -> list[Path]:
     return normalize_file_paths(parts)
 
 
+def _select_agent_id(agents: list[DebateAgentConfig], label: str) -> str:
+    typer.echo(label)
+    for index, agent in enumerate(agents, start=1):
+        typer.echo(f"{index}. {agent.agent_id}")
+    raw_choice = typer.prompt("Seleção").strip()
+    try:
+        selected = agents[int(raw_choice) - 1]
+        return selected.agent_id
+    except (ValueError, IndexError):
+        for agent in agents:
+            if agent.agent_id == raw_choice:
+                return agent.agent_id
+    raise ValueError(f"Agente inválido: {raw_choice}")
+
+
+def _prompt_control_decision(
+    turn,
+    agents: list[DebateAgentConfig],
+) -> DebateControlDecision:
+    typer.echo("1. Continuar fluxo atual")
+    typer.echo("2. Responder um agente")
+    typer.echo("3. Responder todos os agentes")
+    typer.echo("4. Fazer um agente responder a outro")
+    typer.echo("5. Fazer um agente responder a todos")
+    typer.echo("6. Concluir debate")
+    choice = typer.prompt("Ação após a resposta").strip()
+
+    if choice == "1":
+        return DebateControlDecision(action="continue")
+    if choice == "2":
+        target_agent_id = _select_agent_id(agents, "Qual agente deve responder?")
+        user_message = typer.prompt("Sua resposta para esse agente").strip()
+        return DebateControlDecision(
+            action="respond_one",
+            target_agent_id=target_agent_id,
+            user_message=user_message,
+        )
+    if choice == "3":
+        user_message = typer.prompt("Sua resposta para todos os agentes").strip()
+        return DebateControlDecision(action="respond_all", user_message=user_message)
+    if choice == "4":
+        target_agent_id = _select_agent_id(agents, "Qual agente vai responder?")
+        source_agent_id = _select_agent_id(agents, "A qual agente ele deve responder?")
+        return DebateControlDecision(
+            action="agent_to_agent",
+            target_agent_id=target_agent_id,
+            source_agent_id=source_agent_id,
+        )
+    if choice == "5":
+        target_agent_id = _select_agent_id(
+            agents, "Qual agente deve responder a todos?"
+        )
+        return DebateControlDecision(
+            action="agent_to_all",
+            target_agent_id=target_agent_id,
+        )
+    if choice == "6":
+        return DebateControlDecision(action="conclude")
+    raise ValueError(f"Ação inválida: {choice}")
+
+
 @app.command()
 def models() -> None:
     for option in list_model_options():
@@ -404,6 +467,7 @@ def debate(
     prompt: str | None = typer.Option(None, "--prompt"),
     model_conclusion: str | None = typer.Option(None, "--model-conclusion"),
     file: str | None = typer.Option(None, "--file"),
+    control: bool = typer.Option(False, "--control"),
 ) -> None:
     try:
         settings = load_settings()
@@ -450,11 +514,19 @@ def debate(
 
         async def _run() -> tuple[str, Path | None, list[str]]:
             async with create_client(settings) as client:
-                result = await run_debate(
-                    client,
-                    debate_config,
-                    emit_turn=_emit_turn if output is None else None,
-                )
+                if control:
+                    result = await run_controlled_debate(
+                        client,
+                        debate_config,
+                        control_callback=_prompt_control_decision,
+                        emit_turn=_emit_turn,
+                    )
+                else:
+                    result = await run_debate(
+                        client,
+                        debate_config,
+                        emit_turn=_emit_turn if output is None else None,
+                    )
                 return (
                     result.final_conclusion,
                     result.saved_path,

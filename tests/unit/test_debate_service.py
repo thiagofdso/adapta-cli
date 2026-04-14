@@ -7,9 +7,11 @@ import pytest
 
 from adapta.models import DebateConfig
 from adapta.services.debate_service import (
+    DebateControlDecision,
     format_turn_label,
     load_debate_agents,
     persist_debate_agents,
+    run_controlled_debate,
     run_debate,
 )
 
@@ -257,6 +259,51 @@ async def test_run_debate_incorporates_persona_file_into_agent_prompt(
     first_prompt = client.chat_calls[0][2][0]["content"]
     assert "# Você é Cliente Cético" in first_prompt
     assert "Questione promessas." in first_prompt
+
+
+@pytest.mark.anyio
+async def test_run_controlled_debate_allows_manual_reply_and_early_conclusion(
+    tmp_path: Path,
+) -> None:
+    config_path = _write_config(
+        tmp_path / "debate.json",
+        {
+            "A1": {"model": "claude", "prompt": "arquiteto"},
+            "A2": {"model": "gpt", "prompt": "desenvolvedor"},
+        },
+    )
+    agents = load_debate_agents(config_path)
+    config = DebateConfig(
+        agents=agents,
+        rounds=2,
+        topic_prompt="Avalie uma proposta",
+        conclusion_model_key="gemini",
+        output_path=None,
+        config_source="argument",
+    )
+    decisions = iter(
+        [
+            DebateControlDecision(
+                action="respond_one",
+                target_agent_id="A2",
+                user_message="Responda ao meu contra-argumento.",
+            ),
+            DebateControlDecision(action="conclude"),
+        ]
+    )
+    client = DummyDebateClient()
+
+    result = await run_controlled_debate(
+        client,
+        config,
+        control_callback=lambda turn, agents: next(decisions),
+    )
+
+    assert result.final_conclusion == "conclusao-GEMINI_3_PRO_PREVIEW"
+    assert len(result.rounds) == 1
+    assert len(result.rounds[0].turns) == 2
+    assert len(client.chat_calls) == 2
+    assert "Responda ao meu contra-argumento." in client.chat_calls[1][2][-1]["content"]
 
 
 def test_format_turn_label_uses_agent_and_round() -> None:

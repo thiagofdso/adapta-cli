@@ -272,3 +272,49 @@ def test_debate_command_accepts_persona_short_name(monkeypatch, tmp_path: Path) 
     assert result.exit_code == 0, result.stderr
     first_prompt = client.chat_calls[0][2][0]["content"]
     assert "# Você é Cliente Cético" in first_prompt
+
+
+def test_debate_command_supports_control_mode(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    config_path = tmp_path / "debate.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "A1": {"model": "claude", "prompt": "arquiteto"},
+                "A2": {"model": "gpt", "prompt": "dev"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+
+    result = runner.invoke(
+        app,
+        [
+            "debate",
+            "--config",
+            str(config_path),
+            "--prompt",
+            "Defina uma arquitetura",
+            "--rounds",
+            "2",
+            "--control",
+        ],
+        input="1\n6\n",
+    )
+
+    assert result.exit_code == 0, result.stderr
+    assert "1. Continuar fluxo atual" in result.stdout
+    assert "Conclusão Final" in result.stdout
