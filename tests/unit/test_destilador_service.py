@@ -140,6 +140,7 @@ async def test_distill_documents_writes_output_and_cleans_remote_file(
     assert result.final_output_paths == [tmp_path / "saida.md"]
     assert "resposta longa dimensão 1" in output_text
     assert client.deleted_files == ["uploads/livro.pdf"]
+    assert client.deleted_chats
 
 
 @pytest.mark.anyio
@@ -162,6 +163,7 @@ async def test_distill_documents_preserves_partials_when_output_dir_used(
     assert result.final_output_paths == [output_dir / "livro.md"]
     assert (output_dir / "livro" / "dimensao1.txt").exists()
     assert (output_dir / "livro" / "dimensao7.txt").exists()
+    assert client.deleted_chats
 
 
 @pytest.mark.anyio
@@ -181,3 +183,4 @@ async def test_distill_documents_inlines_txt_without_upload(tmp_path: Path) -> N
     assert result.final_output_paths == [tmp_path / "saida.md"]
     assert client.uploaded == []
     assert client.deleted_files == []
+    assert client.deleted_chats

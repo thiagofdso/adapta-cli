@@ -15,6 +15,7 @@ from adapta.services.pipeline_service import (
 class DummyPipelineClient:
     def __init__(self) -> None:
         self.deleted_files: list[str] = []
+        self.deleted_chats: list[str] = []
         self.prompts: list[str] = []
         self.uploaded: list[Path] = []
 
@@ -49,6 +50,20 @@ class DummyPipelineClient:
             )
         return f"# Conhecimento\n\nGerado a partir de {files[0]['filename']}\n"
 
+    async def prompt_with_files_ephemeral(
+        self,
+        *,
+        model_backend: str,
+        prompt: str,
+        files: list[dict[str, object]],
+    ) -> str:
+        self.deleted_chats.append("ephemeral-with-files")
+        return await self.prompt_with_files(
+            model_backend=model_backend,
+            prompt=prompt,
+            files=files,
+        )
+
     async def prompt(self, *, model_backend: str, prompt: str) -> str:
         self.prompts.append(prompt)
         if "OUTPUT FORMAT SAMPLE" in prompt:
@@ -58,6 +73,10 @@ class DummyPipelineClient:
                 "]}"
             )
         return "# Conhecimento\n\nGerado a partir de texto inline\n"
+
+    async def prompt_ephemeral(self, *, model_backend: str, prompt: str) -> str:
+        self.deleted_chats.append("ephemeral")
+        return await self.prompt(model_backend=model_backend, prompt=prompt)
 
 
 def test_build_pipeline_request_rejects_missing_directories(tmp_path: Path) -> None:
@@ -135,6 +154,7 @@ async def test_run_pipeline_writes_indexes_docs_and_database(tmp_path: Path) -> 
     assert int(cursor.fetchone()[0]) >= 2
     connection.close()
     assert client.deleted_files == ["uploads/a.pdf", "uploads/a.pdf"]
+    assert client.deleted_chats
 
 
 @pytest.mark.anyio
@@ -181,4 +201,5 @@ async def test_run_pipeline_inlines_txt_without_upload(tmp_path: Path) -> None:
     assert result.generated_documents
     assert client.uploaded == []
     assert client.deleted_files == []
+    assert client.deleted_chats
     assert any("ARQUIVOS TXT INLINE" in prompt for prompt in client.prompts)
