@@ -114,6 +114,106 @@ def test_debate_command_runs_with_config_file(monkeypatch, tmp_path: Path) -> No
     assert "Conclusão Final" in result.stdout
 
 
+def test_debate_command_accepts_prompt_file(monkeypatch, tmp_path: Path) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    config_path = tmp_path / "debate.json"
+    prompt_path = tmp_path / "tema.txt"
+    prompt_path.write_text(
+        "Defina uma arquitetura orientada a eventos", encoding="utf-8"
+    )
+    config_path.write_text(
+        json.dumps(
+            {
+                "A1": {"model": "claude", "prompt": "arquiteto"},
+                "A2": {"model": "gpt", "prompt": "dev"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+
+    result = runner.invoke(
+        app,
+        [
+            "debate",
+            "--config",
+            str(config_path),
+            "--prompt-file",
+            str(prompt_path),
+            "--rounds",
+            "1",
+        ],
+    )
+
+    assert result.exit_code == 0, result.stderr
+    first_prompt = client.chat_calls[0][2][0]["content"]
+    expected_topic = 'Tema do debate: "Defina uma arquitetura orientada a eventos".'
+    assert expected_topic in first_prompt
+
+
+def test_debate_command_rejects_multiple_prompt_sources(
+    monkeypatch, tmp_path: Path
+) -> None:
+    runner = CliRunner()
+    client = DummyClient()
+    config_path = tmp_path / "debate.json"
+    prompt_path = tmp_path / "tema.txt"
+    prompt_path.write_text(
+        "Defina uma arquitetura orientada a eventos", encoding="utf-8"
+    )
+    config_path.write_text(
+        json.dumps(
+            {
+                "A1": {"model": "claude", "prompt": "arquiteto"},
+                "A2": {"model": "gpt", "prompt": "dev"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: Settings(
+            adapta_login="user@example.com",
+            adapta_password="secret",
+            adapta_model=None,
+            env_file_path=tmp_path / ".env",
+        ),
+    )
+    monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
+
+    result = runner.invoke(
+        app,
+        [
+            "debate",
+            "--config",
+            str(config_path),
+            "--prompt",
+            "Tema inline",
+            "--prompt-file",
+            str(prompt_path),
+            "--rounds",
+            "1",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Use apenas uma das opções: --prompt ou --prompt-file." in result.stderr
+
+
 def test_debate_command_accepts_file_attachments(monkeypatch, tmp_path: Path) -> None:
     runner = CliRunner()
     client = DummyClient()

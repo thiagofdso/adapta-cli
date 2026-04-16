@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 import pytest
@@ -184,3 +185,50 @@ async def test_distill_documents_inlines_txt_without_upload(tmp_path: Path) -> N
     assert client.uploaded == []
     assert client.deleted_files == []
     assert client.deleted_chats
+
+
+@pytest.mark.anyio
+async def test_distill_documents_processes_items_in_parallel(
+    monkeypatch, tmp_path: Path
+) -> None:
+    class ParallelDistillationClient(DummyDistillationClient):
+        def __init__(self) -> None:
+            super().__init__()
+            self.in_flight = 0
+            self.max_in_flight = 0
+            self.release_event = asyncio.Event()
+
+        async def chat(
+            self, *, model_backend: str, messages: list[dict[str, object]], chat_id: str
+        ) -> str:
+            self.calls.append((model_backend, chat_id))
+            self.in_flight += 1
+            self.max_in_flight = max(self.max_in_flight, self.in_flight)
+            if self.in_flight >= 2:
+                self.release_event.set()
+            await asyncio.wait_for(self.release_event.wait(), timeout=1)
+            self.in_flight -= 1
+            return "conteudo paralelo"
+
+    input_dir = tmp_path / "livros"
+    output_dir = tmp_path / "saida"
+    input_dir.mkdir()
+    (input_dir / "a.txt").write_text("conteudo A", encoding="utf-8")
+    (input_dir / "b.txt").write_text("conteudo B", encoding="utf-8")
+    request = build_distillation_request(
+        input_path=None,
+        input_dir=input_dir,
+        output_path=None,
+        output_dir=output_dir,
+    )
+    client = ParallelDistillationClient()
+    monkeypatch.setattr(
+        "adapta.services.destilador_service.DISTILLATION_ITERATIONS", 1
+    )
+    monkeypatch.setattr(
+        "adapta.services.destilador_service.DISTILLATION_RETRY_LIMIT", 1
+    )
+
+    await distill_documents(client, request)
+
+    assert client.max_in_flight >= 2

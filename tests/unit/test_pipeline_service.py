@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import sqlite3
 from pathlib import Path
 
@@ -154,7 +155,7 @@ async def test_run_pipeline_writes_indexes_docs_and_database(tmp_path: Path) -> 
     assert int(cursor.fetchone()[0]) >= 2
     connection.close()
     assert client.deleted_files == ["uploads/a.pdf", "uploads/a.pdf"]
-    assert client.deleted_chats
+    assert client.deleted_chats == []
 
 
 @pytest.mark.anyio
@@ -201,5 +202,61 @@ async def test_run_pipeline_inlines_txt_without_upload(tmp_path: Path) -> None:
     assert result.generated_documents
     assert client.uploaded == []
     assert client.deleted_files == []
-    assert client.deleted_chats
+    assert client.deleted_chats == []
     assert any("ARQUIVOS TXT INLINE" in prompt for prompt in client.prompts)
+
+
+@pytest.mark.anyio
+async def test_run_pipeline_generates_stage2_in_parallel(
+    monkeypatch, tmp_path: Path
+) -> None:
+    class ParallelPipelineClient(DummyPipelineClient):
+        def __init__(self) -> None:
+            super().__init__()
+            self.in_flight = 0
+            self.max_in_flight = 0
+            self.release_event = asyncio.Event()
+
+        async def prompt_with_files(
+            self,
+            *,
+            model_backend: str,
+            prompt: str,
+            files: list[dict[str, object]],
+        ) -> str:
+            self.prompts.append(prompt)
+            if "OUTPUT FORMAT SAMPLE" in prompt:
+                file_name = str(files[0]["filename"])
+                return (
+                    '{"knowledges": ['
+                    f'{{"name": "Conceito {Path(file_name).stem} A", "description": "Descricao A", "files": ["{file_name}"]}},'
+                    f'{{"name": "Conceito {Path(file_name).stem} B", "description": "Descricao B", "files": ["{file_name}"]}}'
+                    "]}"
+                )
+            self.in_flight += 1
+            self.max_in_flight = max(self.max_in_flight, self.in_flight)
+            if self.in_flight >= 2:
+                self.release_event.set()
+            await asyncio.wait_for(self.release_event.wait(), timeout=1)
+            self.in_flight -= 1
+            return f"# Conhecimento\n\nGerado a partir de {files[0]['filename']}\n"
+
+    input_dir = tmp_path / "livros"
+    output_dir = tmp_path / "saida"
+    input_dir.mkdir()
+    (input_dir / "a.pdf").write_bytes(b"%PDF-1.4\n")
+    request = build_pipeline_request(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        db_path=tmp_path / "pipeline.db",
+        mode="upload",
+        job=None,
+        keep_chat=False,
+        log=False,
+    )
+    client = ParallelPipelineClient()
+    monkeypatch.setattr("adapta.services.pipeline_service.PIPELINE_STAGE2_CONCURRENCY", 2)
+
+    await run_pipeline(client, request)
+
+    assert client.max_in_flight >= 2

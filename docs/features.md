@@ -52,7 +52,7 @@ Depende de: autenticação Adapta e cliente de listagem de arquivos.
 
 Status: planejado
 
-Descrição: expõe o comando `debate` para executar múltiplos agentes por rodadas, com configuração por arquivo JSON, variável de ambiente ou fluxo interativo, conclusão final consolidada e saída no terminal ou em arquivo. No JSON de configuração, cada agente pode definir opcionalmente `persona` apontando para um arquivo de persona cujo conteúdo é incorporado ao prompt do agente. Também aceita `--file` com 1 a 5 anexos separados por vírgula, faz upload único no início da execução e reutiliza esses arquivos em todas as mensagens dos agentes. Com `--control`, o usuário pode intervir a cada resposta para continuar o fluxo atual, responder um agente, responder todos, fazer um agente responder a outro, fazer um agente responder a todos ou encerrar imediatamente com conclusão final.
+Descrição: expõe o comando `debate` para executar múltiplos agentes por rodadas, com configuração por arquivo JSON, variável de ambiente ou fluxo interativo, conclusão final consolidada e saída no terminal ou em arquivo. O tema principal pode ser informado por `--prompt` ou `--prompt-file` (exclusivos entre si). No JSON de configuração, cada agente pode definir opcionalmente `persona` apontando para um arquivo de persona cujo conteúdo é incorporado ao prompt do agente. Também aceita `--file` com 1 a 5 anexos separados por vírgula, faz upload único no início da execução e reutiliza esses arquivos em todas as mensagens dos agentes. No modo normal, os agentes de cada rodada respondem em paralelo e o resultado continua sendo emitido na ordem configurada. Com `--control`, o usuário pode intervir a cada resposta para continuar o fluxo atual, responder um agente, responder todos, fazer um agente responder a outro, fazer um agente responder a todos ou encerrar imediatamente com conclusão final.
 
 Depende de: autenticação Adapta, registro de modelos, cliente de chat, persistência local de saída e validação interativa de entrada.
 
@@ -60,7 +60,7 @@ Depende de: autenticação Adapta, registro de modelos, cliente de chat, persist
 
 Status: ativo
 
-Descrição: expõe o comando `pipeline` para processar lotes em `--input-dir` e gravar artefatos compatíveis com o pipeline legado em `--output-dir`, preservando o formato funcional de entrada e saída. O comando usa SQLite local para estado operacional, com caminho padrão em `~/.local/state/adapta-cli/pipeline.db`, customização por `ADAPTA_PIPELINE_DB_PATH` e precedência do parâmetro `--db-path` quando informado. Arquivos `.txt` são enviados inline no prompt, sem upload remoto.
+Descrição: expõe o comando `pipeline` para processar lotes em `--input-dir` e gravar artefatos compatíveis com o pipeline legado em `--output-dir`, preservando o formato funcional de entrada e saída. O comando usa SQLite local para estado operacional, com caminho padrão em `~/.local/state/adapta-cli/pipeline.db`, customização por `ADAPTA_PIPELINE_DB_PATH` e precedência do parâmetro `--db-path` quando informado. Arquivos `.txt` são enviados inline no prompt, sem upload remoto. Após a etapa sequencial de indexação por pasta, a geração dos markdowns pendentes de cada pasta passa a rodar em paralelo.
 
 Depende de: autenticação Adapta, upload de arquivo, prompts internalizados de extração e criação de conhecimento, persistência local em SQLite e escrita de artefatos em filesystem.
 
@@ -76,7 +76,7 @@ Depende de: filesystem local e formato JSON compatível de export de cookies.
 
 Status: ativo
 
-Descrição: expõe o comando `destilador` para processar um PDF ou `.txt` único com `--input` e `--output`, um item único com `--input` e `--output-dir`, ou um lote com `--input-dir` e `--output-dir`, internalizando no próprio CLI a lógica de destilação em 7 dimensões para gerar um markdown consolidado por item. Antes do upload, o cliente consulta a listagem remota de arquivos e reaproveita o artefato existente quando o mesmo nome já está presente. Quando o arquivo é `.txt`, o conteúdo é incluído diretamente no prompt e nenhum upload remoto é feito. No modo `--input` com `--output-dir`, o comando também preserva os arquivos parciais por dimensão.
+Descrição: expõe o comando `destilador` para processar um PDF ou `.txt` único com `--input` e `--output`, um item único com `--input` e `--output-dir`, ou um lote com `--input-dir` e `--output-dir`, internalizando no próprio CLI a lógica de destilação em 7 dimensões para gerar um markdown consolidado por item. Antes do upload, o cliente consulta a listagem remota de arquivos e reaproveita o artefato existente quando o mesmo nome já está presente. Quando o arquivo é `.txt`, o conteúdo é incluído diretamente no prompt e nenhum upload remoto é feito. No modo `--input` com `--output-dir`, o comando também preserva os arquivos parciais por dimensão. No modo por diretório, itens independentes passam a ser processados em paralelo com limite interno de concorrência.
 
 Depende de: autenticação Adapta, upload de arquivo, prompts de destilação internalizados em `src/adapta/prompts/livro/`, persistência local de saída e limpeza best-effort de artefatos temporários e remotos.
 

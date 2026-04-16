@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
 import pytest
 
 from adapta.models import DebateConfig
+from adapta.registry import get_model_option
 from adapta.services.debate_service import (
     DebateControlDecision,
     format_turn_label,
@@ -100,8 +102,8 @@ def test_persist_debate_agents_writes_expected_json(tmp_path: Path) -> None:
 
     saved = json.loads(destination.read_text(encoding="utf-8"))
     assert saved == {
-        "A1": {"model": "claude", "prompt": "arquiteto"},
-        "A2": {"model": "gpt", "prompt": "desenvolvedor"},
+        "A1": {"model": "claude46", "prompt": "arquiteto"},
+        "A2": {"model": "gpt54", "prompt": "desenvolvedor"},
     }
 
 
@@ -179,7 +181,9 @@ async def test_run_debate_orchestrates_rounds_and_cleanup(tmp_path: Path) -> Non
     )
 
     assert len(result.rounds) == 2
-    assert result.final_conclusion == "conclusao-GEMINI_3_PRO_PREVIEW"
+    assert result.final_conclusion == (
+        f"conclusao-{get_model_option('gemini').backend_name}"
+    )
     assert emitted == [
         "A1 Rodada 1",
         "A2 Rodada 1",
@@ -299,7 +303,9 @@ async def test_run_controlled_debate_allows_manual_reply_and_early_conclusion(
         control_callback=lambda turn, agents: next(decisions),
     )
 
-    assert result.final_conclusion == "conclusao-GEMINI_3_PRO_PREVIEW"
+    assert result.final_conclusion == (
+        f"conclusao-{get_model_option('gemini').backend_name}"
+    )
     assert len(result.rounds) == 1
     assert len(result.rounds[0].turns) == 2
     assert len(client.chat_calls) == 2
@@ -329,3 +335,47 @@ def test_format_turn_label_uses_agent_and_round() -> None:
     )
 
     assert format_turn_label(turn) == "Agente 1 Rodada 1"
+
+
+@pytest.mark.anyio
+async def test_run_debate_executes_agents_in_parallel(tmp_path: Path) -> None:
+    class ParallelDebateClient(DummyDebateClient):
+        def __init__(self) -> None:
+            super().__init__()
+            self.in_flight = 0
+            self.max_in_flight = 0
+            self.release_event = asyncio.Event()
+
+        async def chat(
+            self, *, model_backend: str, messages: list[dict[str, str]], chat_id: str
+        ) -> str:
+            self.chat_calls.append((model_backend, chat_id, list(messages), None))
+            self.in_flight += 1
+            self.max_in_flight = max(self.max_in_flight, self.in_flight)
+            if self.in_flight >= 2:
+                self.release_event.set()
+            await asyncio.wait_for(self.release_event.wait(), timeout=1)
+            self.in_flight -= 1
+            return f"resposta-{model_backend}-{len(messages)}"
+
+    config_path = _write_config(
+        tmp_path / "debate.json",
+        {
+            "A1": {"model": "claude", "prompt": "arquiteto"},
+            "A2": {"model": "gpt", "prompt": "desenvolvedor"},
+        },
+    )
+    agents = load_debate_agents(config_path)
+    config = DebateConfig(
+        agents=agents,
+        rounds=1,
+        topic_prompt="Defina uma arquitetura",
+        conclusion_model_key="gemini",
+        output_path=None,
+        config_source="argument",
+    )
+    client = ParallelDebateClient()
+
+    await run_debate(client, config)
+
+    assert client.max_in_flight >= 2

@@ -246,6 +246,32 @@ def _parse_file_option(value: str | None) -> list[Path]:
     return normalize_file_paths(parts)
 
 
+def _resolve_debate_topic_prompt(
+    prompt: str | None,
+    prompt_file: Path | None,
+) -> str:
+    if prompt is not None and prompt_file is not None:
+        raise ValueError("Use apenas uma das opções: --prompt ou --prompt-file.")
+
+    if prompt_file is not None:
+        try:
+            content = prompt_file.read_text(encoding="utf-8").strip()
+        except OSError as exc:
+            raise ValueError(
+                f"Não foi possível ler o arquivo de prompt: {prompt_file}"
+            ) from exc
+        if not content:
+            raise ValueError("Arquivo de prompt vazio.")
+        return content
+
+    normalized_prompt = (prompt or "").strip()
+    if not normalized_prompt:
+        raise ValueError(
+            "Informe o prompt principal do debate via --prompt ou --prompt-file."
+        )
+    return normalized_prompt
+
+
 def _load_persona_prompt_text(identifier: str) -> str:
     persona_path = resolve_persona_output_path(identifier)
     if not persona_path.exists():
@@ -528,6 +554,7 @@ def debate(
     rounds: int | None = typer.Option(None, "--rounds"),
     output: Path | None = typer.Option(None, "--output"),
     prompt: str | None = typer.Option(None, "--prompt"),
+    prompt_file: Path | None = typer.Option(None, "--prompt-file"),
     model_conclusion: str | None = typer.Option(None, "--model-conclusion"),
     file: str | None = typer.Option(None, "--file"),
     control: bool = typer.Option(False, "--control"),
@@ -563,7 +590,7 @@ def debate(
         debate_config = build_debate_config(
             agents=agents,
             rounds=rounds,
-            topic_prompt=(prompt or ""),
+            topic_prompt=_resolve_debate_topic_prompt(prompt, prompt_file),
             conclusion_model_key=model_conclusion,
             output_path=output,
             config_source=config_source,

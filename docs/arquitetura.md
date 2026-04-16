@@ -17,10 +17,10 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 - comandos de CLI recebem opções, resolvem configuração, validam anexos opcionais e delegam para serviços
 - serviços orquestram chamadas ao cliente Adapta e retornam respostas normalizadas
 - o cliente encapsula autenticação, envio de prompts e exclusão de chats em classes com objetivos específicos
-- no debate, cada agente mantém uma sessão de chat própria por toda a execução, pode incorporar opcionalmente o conteúdo de um arquivo de persona ao seu prompt, pode receber intervenções manuais do usuário no modo `--control`, e a conclusão final é gerada a partir das respostas acumuladas das rodadas
+- no debate, cada agente mantém uma sessão de chat própria por toda a execução, pode incorporar opcionalmente o conteúdo de um arquivo de persona ao seu prompt, pode receber intervenções manuais do usuário no modo `--control`, e a conclusão final é gerada a partir das respostas acumuladas das rodadas; no modo normal, as respostas dos agentes de uma mesma rodada são solicitadas em paralelo
 - no comando `persona`, a CLI coleta respostas interativas, também pode ler respostas de `--input-file` ou reabrir uma persona com `--update`, resolve o modelo padrão ou um `--model` explícito pelo registro interno, gera um único markdown em chat efêmero e salva o resultado junto do JSON de respostas em uma pasta sob o diretório home real do usuário
-- no destilador, a CLI internaliza o pipeline em 7 dimensões, carrega prompts especializados de `src/adapta/prompts/livro/` e usa upload de arquivo para gerar um consolidado por item
-- no pipeline, a CLI internaliza um fluxo de extração e escrita de conhecimentos por diretório, usa prompts especializados em `src/adapta/prompts/pipeline/`, persiste estado operacional em SQLite local e grava índices e documentos dentro do diretório de saída informado
+- no destilador, a CLI internaliza o pipeline em 7 dimensões, carrega prompts especializados de `src/adapta/prompts/livro/`, usa upload de arquivo para gerar um consolidado por item e paraleliza itens independentes no modo por diretório
+- no pipeline, a CLI internaliza um fluxo de extração e escrita de conhecimentos por diretório, usa prompts especializados em `src/adapta/prompts/pipeline/`, persiste estado operacional em SQLite local e grava índices e documentos dentro do diretório de saída informado; a escrita de markdowns por conhecimento é paralelizada depois que o índice da pasta está consolidado
 
 ## Tecnologias
 

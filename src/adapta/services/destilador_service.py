@@ -21,6 +21,7 @@ DEFAULT_MODEL_KEY = "claude"
 DISTILLATION_ITERATIONS = 2
 DISTILLATION_RETRY_LIMIT = 3
 DISTILLATION_RETRY_DELAY_SECONDS = 2.0
+DISTILLATION_ITEM_CONCURRENCY = 3
 SUPPORTED_INPUT_SUFFIXES = {".pdf", ".txt"}
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts" / "livro"
 
@@ -131,17 +132,24 @@ async def distill_documents(
     output_paths: list[Path] = []
     cleanup_warnings: list[str] = []
     preserved_artifacts: list[DistillationArtifact] = []
+    semaphore = asyncio.Semaphore(max(1, min(DISTILLATION_ITEM_CONCURRENCY, len(items))))
 
-    for item in items:
-        if progress_callback is not None:
-            progress_callback(f"Processando {item.source_path.name}")
-        item_result = await _distill_single_item(
-            client,
-            item,
-            model_backend=model_backend,
-            upload_delay_seconds=request.upload_delay_seconds,
-            progress_callback=progress_callback,
-        )
+    async def _run_item(
+        item: DistillationInputItem,
+    ) -> tuple[list[DistillationDimension], Path, list[str], list[DistillationArtifact]]:
+        async with semaphore:
+            if progress_callback is not None:
+                progress_callback(f"Processando {item.source_path.name}")
+            return await _distill_single_item(
+                client,
+                item,
+                model_backend=model_backend,
+                upload_delay_seconds=request.upload_delay_seconds,
+                progress_callback=progress_callback,
+            )
+
+    item_results = await asyncio.gather(*[_run_item(item) for item in items])
+    for item_result in item_results:
         all_dimensions.extend(item_result[0])
         output_paths.append(item_result[1])
         cleanup_warnings.extend(item_result[2])

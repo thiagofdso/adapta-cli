@@ -231,6 +231,30 @@ Persistir `session_id`, cookies e cabeçalhos úteis em `~/.adapta/cookies.json`
 - o caminho precisa depender de `Path.home()` para funcionar em Linux e Windows
 - qualquer `401` com sessão reaproveitada deve invalidar o cache local e forçar novo login antes de repetir a chamada
 
+## 2026-04-15 - Paralelizar apenas etapas independentes dos fluxos longos
+
+### Problema
+
+Os comandos `debate`, `destilador` e `pipeline` ainda executavam partes independentes em série, aumentando o tempo total mesmo quando o backend já suportava múltiplas chamadas simultâneas.
+
+### Causa
+
+O desenho inicial priorizou previsibilidade do fluxo antes de distinguir quais etapas tinham dependência real entre si.
+
+### Solucao
+
+Paralelizar somente os pontos independentes: agentes da mesma rodada no `debate` normal, itens independentes no `destilador` por diretório e markdowns da etapa 2 no `pipeline`, mantendo em série as etapas que dependem de estado acumulado, como intervenções controladas e indexação.
+
+### ❌ NAO FAZER
+
+- paralelizar etapas que dependem de estado incremental compartilhado, como merge do índice do `pipeline`
+- perder a ordem observável de emissão quando o usuário espera sequência estável
+
+### ✅ FAZER
+
+- preservar a ordem lógica do resultado mesmo quando as chamadas internas rodam em paralelo
+- concentrar cleanup e persistência depois da coleta dos resultados concorrentes
+
 ## 2026-04-14 - Testes de instalação devem validar o contrato dos scripts, não um venv implícito do teste
 
 ### Problema

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 import sqlite3
@@ -19,6 +20,7 @@ from adapta.registry import get_model_option
 
 
 DEFAULT_PIPELINE_MODEL_KEY = "claude"
+PIPELINE_STAGE2_CONCURRENCY = 3
 SUPPORTED_PIPELINE_SUFFIXES = {".pdf", ".txt"}
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts" / "pipeline"
 
@@ -320,34 +322,50 @@ async def _run_stage2_for_folder(
     )
     docs_dir = _docs_dir_for_folder(request, folder_path)
     docs_dir.mkdir(parents=True, exist_ok=True)
+    semaphore = asyncio.Semaphore(
+        max(1, min(PIPELINE_STAGE2_CONCURRENCY, len(knowledges)))
+    )
 
-    for knowledge in knowledges:
-        if progress_callback is not None:
-            progress_callback(f"Gerando conhecimento {knowledge['name']}")
-        file_names = _get_files_for_knowledge(connection, int(knowledge["id"]))
-        source_paths = _resolve_source_paths(folder_path, file_names)
-        prompt = _build_creation_prompt(
-            knowledge_name=str(knowledge["name"]),
-            index_knowledge=index_json,
-        )
-        prompt, upload_infos = await _prepare_prompt_and_uploads(
-            client, prompt, source_paths
-        )
-        try:
-            markdown = await _call_pipeline_prompt(
-                client,
-                model_backend=model_backend,
-                prompt=prompt,
-                upload_infos=upload_infos,
+    async def _generate_knowledge_markdown(
+        knowledge: sqlite3.Row,
+    ) -> tuple[int, Path, str, list[str]]:
+        async with semaphore:
+            if progress_callback is not None:
+                progress_callback(f"Gerando conhecimento {knowledge['name']}")
+            file_names = _get_files_for_knowledge(connection, int(knowledge["id"]))
+            source_paths = _resolve_source_paths(folder_path, file_names)
+            prompt = _build_creation_prompt(
+                knowledge_name=str(knowledge["name"]),
+                index_knowledge=index_json,
             )
-        finally:
-            for upload_info in upload_infos:
-                await _cleanup_remote_upload(client, upload_info, cleanup_warnings)
+            prompt, upload_infos = await _prepare_prompt_and_uploads(
+                client, prompt, source_paths
+            )
+            local_cleanup_warnings: list[str] = []
+            try:
+                markdown = await _call_pipeline_prompt(
+                    client,
+                    model_backend=model_backend,
+                    prompt=prompt,
+                    upload_infos=upload_infos,
+                )
+            finally:
+                for upload_info in upload_infos:
+                    await _cleanup_remote_upload(
+                        client, upload_info, local_cleanup_warnings
+                    )
 
-        output_path = docs_dir / f"{_sanitize_filename(str(knowledge['name']))}.md"
+            output_path = docs_dir / f"{_sanitize_filename(str(knowledge['name']))}.md"
+            return int(knowledge["id"]), output_path, markdown, local_cleanup_warnings
+
+    knowledge_results = await asyncio.gather(
+        *[_generate_knowledge_markdown(knowledge) for knowledge in knowledges]
+    )
+    for knowledge_id, output_path, markdown, local_cleanup_warnings in knowledge_results:
         output_path.write_text(_strip_markdown_fences(markdown), encoding="utf-8")
         generated_paths.append(output_path)
-        _update_knowledge_status(connection, int(knowledge["id"]), status_id=3)
+        cleanup_warnings.extend(local_cleanup_warnings)
+        _update_knowledge_status(connection, knowledge_id, status_id=3)
 
     return generated_paths
 

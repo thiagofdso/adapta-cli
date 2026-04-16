@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from collections import OrderedDict
@@ -150,7 +151,9 @@ def build_debate_config(
 ) -> DebateConfig:
     normalized_prompt = topic_prompt.strip()
     if not normalized_prompt:
-        raise ValueError("Informe o prompt principal do debate via --prompt.")
+        raise ValueError(
+            "Informe o prompt principal do debate via --prompt ou --prompt-file."
+        )
     if len(agents) < 2:
         raise ValueError("O debate exige ao menos 2 agentes.")
     if rounds < 1:
@@ -343,26 +346,28 @@ async def run_debate(
 
     try:
         for round_number in range(1, config.rounds + 1):
-            turns: list[DebateTurn] = []
+            turns = await asyncio.gather(
+                *[
+                    _send_turn(
+                        client=client,
+                        config=config,
+                        session=sessions[agent.agent_id],
+                        agent=agent,
+                        round_number=round_number,
+                        prompt_text=_build_turn_prompt(
+                            config=config,
+                            agent=agent,
+                            round_number=round_number,
+                            previous_responses=previous_responses,
+                        ),
+                        uploaded_files=uploaded_files,
+                    )
+                    for agent in config.agents
+                ]
+            )
             current_responses: dict[str, str] = {}
-            for agent in config.agents:
-                prompt_text = _build_turn_prompt(
-                    config=config,
-                    agent=agent,
-                    round_number=round_number,
-                    previous_responses=previous_responses,
-                )
-                turn = await _send_turn(
-                    client=client,
-                    config=config,
-                    session=sessions[agent.agent_id],
-                    agent=agent,
-                    round_number=round_number,
-                    prompt_text=prompt_text,
-                    uploaded_files=uploaded_files,
-                )
-                turns.append(turn)
-                current_responses[agent.agent_id] = turn.response_text
+            for turn in turns:
+                current_responses[turn.agent_id] = turn.response_text
 
                 if emit_turn is not None:
                     emit_turn(turn)
