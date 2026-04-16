@@ -7,21 +7,12 @@ A Adapta CLI é uma ferramenta Python 3.11 (Typer) que autentica no serviço Ada
 - `pipeline`: opera em diretório com SQLite local (`~/.local/state/adapta-cli/pipeline.db`), possui modos e logging.
 - `models`: lista catálogo atualizado (ONE, ONE Pro, ONE Superfast, GPT-5.4, GPT-5.1, Gemini 3.1 Pro Preview, Gemini 3 Flash, Claude 4.6 Sonnet, Claude 4.5 Haiku, DeepSeek V3.2 Reasoner, DeepSeek V3.2, Grok 4.1, Kimi K2.5, MiniMax M2.7, GLM-5, Llama 4 Maverick, Sonar Pro, Qwen 3.5 Plus) com descrições.
 - `list-files`: lista uploads remotos; `import-cookies`: converte export do navegador para `~/.adapta/cookies.json`.
-- Scripts auxiliares (`adapta_prompt.sh`, `adapta_persona.sh`, `adapta_debate.sh`) padronizam execuções e reforçam salvamento em `debate/`.
 
-Objetivo: gerar um roadmap evolutivo da CLI cobrindo DX, governança, integrações externas (GitHub/Jira, observabilidade, caching), performance e novos subcomandos. Cada agente recebe persona diferente e precisa:
-1. Resumir entendimento da CLI a partir deste contexto.
-2. Identificar lacunas por domínio (automação operacional, arquitetura/governança, tooling/DX).
-3. Brainstormar novas funcionalidades ou melhorias (no mínimo 5 ideias por agente) com avaliação de impacto, esforço, risco e dependências.
-4. Sugerir métricas para acompanhar cada iniciativa.
-5. Listar próximos passos acionáveis (máx. 3 por agente).
+Faça um brainstorm de ideias de novos comandos para adicionar na cli, lembrando que ela só suporta entrata de texto e arquivos de imagem/texto.
 
-Formato por agente:
-- Seção "Visão da CLI" (1 parágrafo).
-- Tabela "Oportunidades" (colunas: Ideia, Benefício, Impacto, Esforço, Riscos/Dependências, Métricas sugeridas).
-- Lista "Ações imediatas" (3 itens).
+Priorize ideias de maior impacto.
 
-Após todas as rodadas, produzam uma conclusão consolidada que:
-- Reforce o entendimento compartilhado da CLI hoje.
-- Destaque as top 3 apostas com justificativa.
-- Defina próximos passos para validação e owners sugeridos.
+Foque em soluções viáveis e adequadas para uso pessoal.
+
+
+Esse é o comando geral, mas mantenha em foco o seu comando <principal>.

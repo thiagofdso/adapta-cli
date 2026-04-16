@@ -1,17 +1,17 @@
 {
   "A1": {
     "model": "claude",
-    "prompt": "Você descreve as funcionalidades atuais da Adapta CLI do ponto de vista de quem opera incidentes e precisa de automação confiável. Revise comandos prompt/persona e indique respostas rápidas que faltam.",
-    "persona": "desenvolvedor-backend"
+    "prompt": "<principal>Pense em ideias fora da caixa. A cada iteraçao pense em novas ideias</principal>",
+    "persona": "sonhador-estrategico"
   },
   "A2": {
     "model": "gpt",
-    "prompt": "Você avalia a CLI considerando governança, documentação e adoção em equipes grandes. Foque em melhorias estruturais, fluxos de debate e novos subcomandos.",
-    "persona": "engenheiro-arquiteto"
+    "prompt": "<principal>Use sua experiencia para decidir a melhor forma de usar llm via cli. A cada iteração pense em novas ideias.</principal>",
+    "persona": "especialista-llm"
   },
   "A3": {
-    "model": "deepseekreasoner",
-    "prompt": "Você é responsável por tooling e SDKs. Faça brainstorming de integrações técnicas (SDKs, automação, caching de anexos) cobrindo suporte multi linguagens e DX.",
-    "persona": "especialista-linguagem"
+    "model": "gpt",
+    "prompt": "<principal>Seu papel é apenas observar e validar a ideia dos outros agentes. Não precisa levantar ideias proprias</principal>",
+    "persona": "realista-de-execucao"
   }
 }
