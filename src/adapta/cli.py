@@ -431,6 +431,7 @@ def prompt(
     prompt_file: Path | None = typer.Option(None, "--prompt-file"),
     output: Path | None = typer.Option(None, "--output"),
     file: str | None = typer.Option(None, "--file"),
+    session: str | None = typer.Option(None, "--session"),
     persona: str | None = typer.Option(
         None, "--persona", help="Nome ou slug da persona salva em ~/.adapta/persona/."
     ),
@@ -447,21 +448,25 @@ def prompt(
             prompt_file=prompt_file,
             output=output,
             files=_parse_file_option(file),
+            session_id=session,
         )
         if persona_text:
             combined = f"{persona_text.rstrip()}\n\n{request.prompt_text}".strip()
             request = replace(request, prompt_text=combined)
         option = get_model_option(model_key)
 
-        async def _run() -> str:
+        async def _run() -> tuple[str, str | None]:
             async with create_client(settings) as client:
                 response = await execute_prompt(
                     client, request, model_backend=option.backend_name
                 )
                 persist_output(response.text, request.output_path)
-                return response.text
+                return response.text, response.session_id
 
-        typer.echo(run_async(_run()))
+        response_text, session_id = run_async(_run())
+        if session_id:
+            typer.echo(f"Prompt session_id: {session_id}")
+        typer.echo(response_text)
     except (ValueError, RuntimeError) as exc:
         _fail(str(exc))
 

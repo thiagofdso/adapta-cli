@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 from adapta.models import PromptRequest, ResponseArtifact
+from adapta.services.chat_service import generate_chat_id
 
 
 MAX_PROMPT_FILES = 5
@@ -30,6 +31,7 @@ def build_prompt_request(
     prompt_file: Path | None,
     output: Path | None,
     files: list[Path] | None,
+    session_id: str | None = None,
 ) -> PromptRequest:
     if bool(prompt) == bool(prompt_file):
         raise ValueError("Informe apenas uma origem de prompt.")
@@ -46,6 +48,7 @@ def build_prompt_request(
             prompt_source="file",
             output_path=output,
             file_paths=file_paths,
+            session_id=(session_id or None),
         )
 
     normalized_prompt = (prompt or "").strip()
@@ -57,45 +60,37 @@ def build_prompt_request(
         prompt_source="inline",
         output_path=output,
         file_paths=file_paths,
+        session_id=(session_id or None),
     )
 
 
 async def execute_prompt(
     client, request: PromptRequest, model_backend: str
 ) -> ResponseArtifact:
-    cleanup_chat_id = "ephemeral"
-    text: str
-    cleanup_needed = True
-    try:
-        if request.file_paths:
-            files = [
-                await client.upload_file(file_path) for file_path in request.file_paths
-            ]
-            prompt_callable = getattr(client, "prompt_with_files_ephemeral", None)
-            if prompt_callable is not None:
-                cleanup_needed = False
-            else:
-                prompt_callable = getattr(client, "prompt_with_files")
-            text = await prompt_callable(
-                model_backend=model_backend,
-                prompt=request.prompt_text,
-                files=files,
-            )
-        else:
-            prompt_callable = getattr(client, "prompt_ephemeral", None)
-            if prompt_callable is not None:
-                cleanup_needed = False
-            else:
-                prompt_callable = getattr(client, "prompt")
-            text = await prompt_callable(
-                model_backend=model_backend, prompt=request.prompt_text
-            )
-    finally:
-        if cleanup_needed:
-            await _delete_ephemeral_chat(client, cleanup_chat_id)
+    session_id = request.session_id or generate_chat_id()
+    messages = [{"role": "user", "content": request.prompt_text}]
+
+    if request.file_paths:
+        files = [await client.upload_file(file_path) for file_path in request.file_paths]
+        text = await client.chat_with_files(
+            model_backend=model_backend,
+            messages=messages,
+            chat_id=session_id,
+            files=files,
+        )
+    else:
+        text = await client.chat(
+            model_backend=model_backend,
+            messages=messages,
+            chat_id=session_id,
+        )
+
     destination = "stdout" if request.output_path is None else "stdout+file"
     return ResponseArtifact(
-        text=text, destination=destination, saved_path=request.output_path
+        text=text,
+        destination=destination,
+        saved_path=request.output_path,
+        session_id=session_id,
     )
 
 

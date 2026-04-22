@@ -29,6 +29,7 @@ class PromptRequest:
     prompt_source: str
     output_path: Path | None
     file_paths: list[Path] = field(default_factory=list)
+    session_id: str | None = None
 
 
 @dataclass
@@ -44,6 +45,7 @@ class ResponseArtifact:
     text: str
     destination: str
     saved_path: Path | None = None
+    session_id: str | None = None
 
 
 @dataclass(frozen=True)
