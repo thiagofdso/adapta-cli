@@ -31,6 +31,7 @@ class PromptRequest:
     file_paths: list[Path] = field(default_factory=list)
     session_id: str | None = None
     stream: bool = False
+    folder_id: str | None = None
 
 
 @dataclass

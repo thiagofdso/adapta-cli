@@ -35,6 +35,8 @@ TOKEN_REFRESH_THROTTLE_SECONDS = 120.0
 FILE_UPLOAD_ENDPOINT = f"{API_AGENT_BASE_URL}/api/file/upload"
 FILES_LIST_ENDPOINT = f"{AGENT_BASE_URL}/api/files/v2"
 FILES_DELETE_ENDPOINT = f"{AGENT_BASE_URL}/api/files/delete/v1"
+FOLDERS_LIST_ENDPOINT = f"{AGENT_BASE_URL}/api/folders/v2"
+SKILLS_ENDPOINT = f"{AGENT_BASE_URL}/api/skills/v1"
 
 SUPPORTED_UPLOAD_FORMATS = {
     ".txt",
@@ -708,6 +710,7 @@ class AdaptaConversationClient:
         model: str = DEFAULT_MODEL,
         chat_id: str | None = None,
         files: list[dict[str, Any]] | None = None,
+        folder_id: str | None = None,
     ) -> ChatCompletionResult:
         if prompt is None and not messages:
             raise ValueError("call_model() requer prompt ou messages.")
@@ -721,6 +724,7 @@ class AdaptaConversationClient:
                     model=model,
                     chat_id=chat_id,
                     files=files,
+                    folder_id=folder_id,
                 ):
                     if event_type == "answer":
                         chunks.append(payload)
@@ -852,6 +856,161 @@ class AdaptaConversationClient:
 
         return files
 
+    async def list_folders(self) -> list[dict[str, Any]]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.get(
+            FOLDERS_LIST_ENDPOINT,
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            params={"type": "CHATS", "scope": "PERSONAL"},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get("data") or []
+
+    async def create_folder(self, name: str) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.post(
+            FOLDERS_LIST_ENDPOINT,
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "content-type": "application/json",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            json={"name": name, "type": "CHATS", "scope": "PERSONAL"},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def delete_folder(self, folder_id: str) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.request(
+            "DELETE",
+            f"{AGENT_BASE_URL}/api/folders/{folder_id}/v2",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def list_skills(self) -> list[dict[str, Any]]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.get(
+            SKILLS_ENDPOINT,
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+        )
+        response.raise_for_status()
+        payload = response.json()
+        data = payload.get("data") or {}
+        return data.get("skills") or []
+
+    async def get_skill(self, skill_id: str) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.get(
+            f"{AGENT_BASE_URL}/api/skills/{skill_id}/v1",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get("data") or {}
+
+    async def create_skill(
+        self, title: str, description: str, instruction: str
+    ) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.post(
+            SKILLS_ENDPOINT,
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "content-type": "application/json",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            json={
+                "title": title,
+                "description": description,
+                "instruction": instruction,
+            },
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def delete_skill(self, skill_id: str) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.request(
+            "DELETE",
+            f"{AGENT_BASE_URL}/api/skills/{skill_id}/v1",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def update_skill(self, skill_id: str, is_active: bool) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.patch(
+            f"{AGENT_BASE_URL}/api/skills/{skill_id}/v1",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "content-type": "application/json",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            json={"id": skill_id, "isActive": is_active},
+        )
+        response.raise_for_status()
+        return response.json()
+
     async def delete_file(self, file_paths: str | list[str]) -> dict[str, Any]:
         if isinstance(file_paths, str):
             normalized = [file_paths]
@@ -961,6 +1120,7 @@ class AdaptaConversationClient:
         model: str,
         chat_id: str | None,
         files: list[dict[str, Any]] | None = None,
+        folder_id: str | None = None,
     ):
         client = await self._session.ensure_client()
         await self._authenticator.ensure_authenticated()
@@ -986,11 +1146,38 @@ class AdaptaConversationClient:
             "contextsIds": [],
             "meetingContextsIds": [],
             "modelAi": model,
+            "preloadedData": {
+                "companyGlobalSettings": None,
+                "deactivatedToolNames": [],
+                "chatSummary": None,
+                "userProfile": None,
+                "chatFiles": {"images": [], "sheets": [], "presentations": []},
+                "projectAutoContext": {
+                    "contextsList": [],
+                    "meetingContexts": "",
+                    "chatFiles": {"images": [], "sheets": [], "presentations": []},
+                    "projectContextCount": 0,
+                    "projectFileCount": 0,
+                },
+                "chatDocument": {
+                    "activeDocument": None,
+                    "allDocuments": [],
+                    "activeDocumentId": None,
+                },
+                "isMemoriesEnabled": True,
+                "userDisabledTools": {},
+                "contextsList": [],
+                "meetingContexts": "",
+            },
+            "useMemoriesInChat": False,
             "id": chat_identifier,
             "messages": prepared_messages,
             "trigger": "submit-message",
             "messageId": message_identifier,
         }
+        if folder_id:
+            payload["folderId"] = folder_id
+
         headers = {
             "accept": "*/*",
             "authorization": f"Bearer {token}",
@@ -1131,27 +1318,28 @@ class AdaptaClientAdapter:
         await self._session.close()
         await self._authenticator.close()
 
-    async def prompt(self, *, model_backend: str, prompt: str) -> str:
+    async def prompt(self, *, model_backend: str, prompt: str, folder_id: str | None = None) -> str:
         result = await self._conversations.call_model(
-            prompt=prompt, model=model_backend
+            prompt=prompt, model=model_backend, folder_id=folder_id
         )
         return extract_answer_text(result)
 
     async def prompt_with_files(
-        self, *, model_backend: str, prompt: str, files: list[dict[str, Any]]
+        self, *, model_backend: str, prompt: str, files: list[dict[str, Any]], folder_id: str | None = None
     ) -> str:
         result = await self._conversations.call_model(
             prompt=prompt,
             model=model_backend,
             files=files,
+            folder_id=folder_id,
         )
         return extract_answer_text(result)
 
     async def chat(
-        self, *, model_backend: str, messages: list[dict[str, Any]], chat_id: str
+        self, *, model_backend: str, messages: list[dict[str, Any]], chat_id: str, folder_id: str | None = None
     ) -> str:
         result = await self._conversations.call_model(
-            messages=messages, model=model_backend, chat_id=chat_id
+            messages=messages, model=model_backend, chat_id=chat_id, folder_id=folder_id
         )
         return extract_answer_text(result)
 
@@ -1162,6 +1350,7 @@ class AdaptaClientAdapter:
         messages: list[dict[str, Any]],
         chat_id: str,
         files: list[dict[str, Any]] | None = None,
+        folder_id: str | None = None,
     ):
         async for event in self._conversations._chat_event_stream(
             prompt=None,
@@ -1169,6 +1358,7 @@ class AdaptaClientAdapter:
             model=model_backend,
             chat_id=chat_id,
             files=files,
+            folder_id=folder_id,
         ):
             yield event
 
@@ -1179,12 +1369,14 @@ class AdaptaClientAdapter:
         messages: list[dict[str, Any]],
         chat_id: str,
         files: list[dict[str, Any]],
+        folder_id: str | None = None,
     ) -> str:
         result = await self._conversations.call_model(
             messages=messages,
             model=model_backend,
             chat_id=chat_id,
             files=files,
+            folder_id=folder_id,
         )
         return extract_answer_text(result)
 
@@ -1196,6 +1388,32 @@ class AdaptaClientAdapter:
 
     async def list_files(self) -> list[dict[str, Any]]:
         return await self._conversations.list_files()
+
+    async def list_folders(self) -> list[dict[str, Any]]:
+        return await self._conversations.list_folders()
+
+    async def create_folder(self, name: str) -> dict[str, Any]:
+        return await self._conversations.create_folder(name)
+
+    async def delete_folder(self, folder_id: str) -> dict[str, Any]:
+        return await self._conversations.delete_folder(folder_id)
+
+    async def list_skills(self) -> list[dict[str, Any]]:
+        return await self._conversations.list_skills()
+
+    async def get_skill(self, skill_id: str) -> dict[str, Any]:
+        return await self._conversations.get_skill(skill_id)
+
+    async def create_skill(
+        self, title: str, description: str, instruction: str
+    ) -> dict[str, Any]:
+        return await self._conversations.create_skill(title, description, instruction)
+
+    async def delete_skill(self, skill_id: str) -> dict[str, Any]:
+        return await self._conversations.delete_skill(skill_id)
+
+    async def update_skill(self, skill_id: str, is_active: bool) -> dict[str, Any]:
+        return await self._conversations.update_skill(skill_id, is_active)
 
     async def delete_file(self, file_path: str | list[str]) -> None:
         await self._conversations.delete_file(file_path)

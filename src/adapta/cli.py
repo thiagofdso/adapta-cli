@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from pathlib import Path
+from typing import Any
 
 import typer
 
@@ -436,6 +437,8 @@ def prompt(
     persona: str | None = typer.Option(
         None, "--persona", help="Nome ou slug da persona salva em ~/.adapta/persona/."
     ),
+    folder_id: str | None = typer.Option(None, "--folder-id", help="ID da pasta onde o chat será criado."),
+    folder: str | None = typer.Option(None, "--folder", help="Nome da pasta onde o chat será criado."),
 ) -> None:
     try:
         settings = load_settings()
@@ -443,6 +446,25 @@ def prompt(
         persona_text: str | None = None
         if persona:
             persona_text = _load_persona_prompt_text(persona)
+
+        resolved_folder_id = folder_id
+
+        if folder:
+            if folder_id:
+                raise ValueError("Use apenas uma das opções: --folder ou --folder-id.")
+
+            async def _find_folder() -> str | None:
+                async with create_client(settings) as client:
+                    folders = await client.list_folders()
+                    for f in folders:
+                        if str(f.get("name")).lower() == folder.lower():
+                            return str(f.get("id"))
+                return None
+
+            resolved_folder_id = run_async(_find_folder())
+            if not resolved_folder_id:
+                _fail(f"Pasta '{folder}' não encontrada.")
+
         request = build_prompt_request(
             model_key=model_key,
             prompt=prompt,
@@ -451,6 +473,7 @@ def prompt(
             files=_parse_file_option(file),
             session_id=session,
             stream=stream,
+            folder_id=resolved_folder_id,
         )
         if persona_text:
             combined = f"{persona_text.rstrip()}\n\n{request.prompt_text}".strip()
@@ -734,6 +757,236 @@ def pipeline(
         for warning in cleanup_warnings:
             typer.echo(warning, err=True)
     except (ValueError, RuntimeError, FileNotFoundError) as exc:
+        _fail(str(exc))
+
+
+@app.command()
+def folder(
+    list_folders: bool = typer.Option(
+        False, "--list", help="Lista pastas da Adapta e retorna."
+    ),
+    create: bool = typer.Option(
+        False, "--create", help="Cria uma nova pasta na Adapta."
+    ),
+    delete: bool = typer.Option(
+        False, "--delete", help="Remove uma pasta da Adapta pelo nome."
+    ),
+    name: str | None = typer.Option(
+        None, "--name", help="Nome da pasta a ser criada ou deletada."
+    ),
+) -> None:
+    try:
+        settings = load_settings()
+
+        async def _run_list() -> list[dict[str, object]]:
+            async with create_client(settings) as client:
+                return await client.list_folders()
+
+        if list_folders:
+            folders = run_async(_run_list())
+            typer.echo("name\tid\tchats")
+            for folder_info in folders:
+                folder_name = str(folder_info.get("name") or "")
+                folder_id = str(folder_info.get("id") or "")
+                count_block = folder_info.get("_count")
+                chats = "0"
+                if isinstance(count_block, dict):
+                    chats = str(count_block.get("chats") or "0")
+                typer.echo(f"{folder_name}\t{folder_id}\t{chats}")
+            return
+
+        if create:
+            if not name:
+                _fail("O parâmetro --name é obrigatório para criar uma pasta.")
+
+            # Validação: verificar se já existe uma pasta com esse nome
+            existing_folders = run_async(_run_list())
+            for folder_info in existing_folders:
+                if str(folder_info.get("name")).lower() == name.lower():
+                    _fail(f"A pasta '{name}' já existe (ID: {folder_info.get('id')}).")
+
+            async def _run_create() -> dict[str, object]:
+                async with create_client(settings) as client:
+                    return await client.create_folder(name)
+
+            result = run_async(_run_create())
+            folder_data = result.get("data")
+            if isinstance(folder_data, dict):
+                created_name = folder_data.get("name")
+                created_id = folder_data.get("id")
+                typer.echo(f"Pasta criada com sucesso: {created_name} (ID: {created_id})")
+            else:
+                typer.echo("Pasta criada, mas o servidor não retornou os dados detalhados.")
+            return
+
+        if delete:
+            if not name:
+                _fail("O parâmetro --name é obrigatório para deletar uma pasta.")
+
+            # Localizar a pasta pelo nome para obter o ID
+            existing_folders = run_async(_run_list())
+            target_id = None
+            for folder_info in existing_folders:
+                if str(folder_info.get("name")).lower() == name.lower():
+                    target_id = str(folder_info.get("id"))
+                    break
+
+            if not target_id:
+                _fail(f"Pasta '{name}' não encontrada.")
+
+            async def _run_delete() -> dict[str, object]:
+                async with create_client(settings) as client:
+                    return await client.delete_folder(target_id)
+
+            run_async(_run_delete())
+            typer.echo(f"Pasta '{name}' deletada com sucesso.")
+            return
+
+        typer.echo("Use 'adapta folder --list' ou 'adapta folder --create --name <nome>' ou 'adapta folder --delete --name <nome>'.")
+    except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+
+@app.command()
+def skill(
+    list_skills: bool = typer.Option(
+        False, "--list", help="Lista skills da Adapta e retorna."
+    ),
+    detail: bool = typer.Option(
+        False, "--detail", help="Exibe as instruções de uma skill específica."
+    ),
+    status: bool = typer.Option(
+        False, "--status", help="Exibe se a skill está habilitada ou não."
+    ),
+    create: bool = typer.Option(
+        False, "--create", help="Cria uma nova skill na Adapta."
+    ),
+    delete: bool = typer.Option(
+        False, "--delete", help="Remove uma skill da Adapta."
+    ),
+    enable: bool = typer.Option(
+        False, "--enable", help="Habilita uma skill da Adapta."
+    ),
+    disable: bool = typer.Option(
+        False, "--disable", help="Desabilita uma skill da Adapta."
+    ),
+    id: str | None = typer.Option(
+        None, "--id", help="ID da skill."
+    ),
+    name: str | None = typer.Option(
+        None, "--name", help="Nome (título) da skill."
+    ),
+    title: str | None = typer.Option(
+        None, "--title", help="Título para criação de skill."
+    ),
+    description: str | None = typer.Option(
+        None, "--description", help="Descrição para criação de skill."
+    ),
+    instruction: str | None = typer.Option(
+        None, "--instruction", help="Instruções para criação de skill."
+    ),
+) -> None:
+    try:
+        settings = load_settings()
+
+        async def _run_list() -> list[dict[str, Any]]:
+            async with create_client(settings) as client:
+                return await client.list_skills()
+
+        if list_skills:
+            skills = run_async(_run_list())
+            typer.echo("id\ttitle\tactive\tdescription")
+            for s in skills:
+                s_id = str(s.get("id") or "")
+                s_title = str(s.get("title") or "")
+                s_active = "yes" if s.get("isActive") else "no"
+                s_desc = str(s.get("description") or "")
+                typer.echo(f"{s_id}\t{s_title}\t{s_active}\t{s_desc}")
+            return
+
+        if detail or status or delete or enable or disable:
+            if not id and not name:
+                _fail("É necessário informar o --id ou --name da skill.")
+
+            target_id = id
+            target_skill = None
+            if not target_id:
+                skills = run_async(_run_list())
+                for s in skills:
+                    if str(s.get("title")).lower() == name.lower():
+                        target_id = str(s.get("id"))
+                        target_skill = s
+                        break
+                if not target_id:
+                    _fail(f"Skill com nome '{name}' não encontrada.")
+
+            if status:
+                if not target_skill:
+                    async def _run_get() -> dict[str, Any]:
+                        async with create_client(settings) as client:
+                            return await client.get_skill(target_id)
+                    target_skill = run_async(_run_get())
+                
+                is_active = target_skill.get("isActive")
+                status_str = "habilitada" if is_active else "desabilitada"
+                typer.echo(f"A skill '{target_skill.get('title') or target_id}' está {status_str}.")
+                return
+
+            if detail:
+                async def _run_detail() -> dict[str, Any]:
+                    async with create_client(settings) as client:
+                        return await client.get_skill(target_id)
+
+                skill_data = run_async(_run_detail())
+                typer.echo(skill_data.get("instruction") or "Nenhuma instrução encontrada.")
+                return
+
+            if delete:
+                async def _run_delete() -> dict[str, Any]:
+                    async with create_client(settings) as client:
+                        return await client.delete_skill(target_id)
+
+                run_async(_run_delete())
+                typer.echo(f"Skill '{target_id}' deletada com sucesso.")
+                return
+
+            if enable or disable:
+                is_active = True if enable else False
+
+                async def _run_update() -> dict[str, Any]:
+                    async with create_client(settings) as client:
+                        return await client.update_skill(target_id, is_active)
+
+                run_async(_run_update())
+                status = "habilitada" if is_active else "desabilitada"
+                typer.echo(f"Skill '{target_id}' {status} com sucesso.")
+                return
+
+        if create:
+            if not title or not description or not instruction:
+                _fail("Os parâmetros --title, --description e --instruction são obrigatórios para criar uma skill.")
+
+            # Validação: verificar se já existe uma skill com esse título
+            existing_skills = run_async(_run_list())
+            for s in existing_skills:
+                if str(s.get("title")).lower() == title.lower():
+                    _fail(f"A skill '{title}' já existe (ID: {s.get('id')}).")
+
+            async def _run_create() -> dict[str, Any]:
+                async with create_client(settings) as client:
+                    return await client.create_skill(title, description, instruction)
+
+            result = run_async(_run_create())
+            data = result.get("data")
+            if isinstance(data, dict):
+                created_id = data.get("id")
+                typer.echo(f"Skill criada com sucesso (ID: {created_id}).")
+            else:
+                typer.echo("Skill criada, mas o servidor não retornou os dados detalhados.")
+            return
+
+        typer.echo("Use 'adapta skill --list', 'adapta skill --detail [--id|--name]', 'adapta skill --status [--id|--name]', 'adapta skill --create --title <t> --description <d> --instruction <i>', 'adapta skill --delete [--id|--name]', 'adapta skill --enable [--id|--name]' ou 'adapta skill --disable [--id|--name]'.")
+    except (ValueError, RuntimeError) as exc:
         _fail(str(exc))
 
 

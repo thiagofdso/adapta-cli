@@ -33,6 +33,7 @@ def build_prompt_request(
     files: list[Path] | None,
     session_id: str | None = None,
     stream: bool = False,
+    folder_id: str | None = None,
 ) -> PromptRequest:
     if bool(prompt) == bool(prompt_file):
         raise ValueError("Informe apenas uma origem de prompt.")
@@ -51,6 +52,7 @@ def build_prompt_request(
             file_paths=file_paths,
             session_id=(session_id or None),
             stream=stream,
+            folder_id=folder_id,
         )
 
     normalized_prompt = (prompt or "").strip()
@@ -64,6 +66,7 @@ def build_prompt_request(
         file_paths=file_paths,
         session_id=(session_id or None),
         stream=stream,
+        folder_id=folder_id,
     )
 
 
@@ -83,6 +86,7 @@ async def execute_prompt(
             messages=messages,
             chat_id=session_id,
             files=files,
+            folder_id=request.folder_id,
         ):
             if event_type == "answer" and payload:
                 print(payload, end="", flush=True)
@@ -97,12 +101,14 @@ async def execute_prompt(
                 messages=messages,
                 chat_id=session_id,
                 files=files,
+                folder_id=request.folder_id,
             )
         else:
             text = await client.chat(
                 model_backend=model_backend,
                 messages=messages,
                 chat_id=session_id,
+                folder_id=request.folder_id,
             )
 
     destination = "stdout" if request.output_path is None else "stdout+file"
