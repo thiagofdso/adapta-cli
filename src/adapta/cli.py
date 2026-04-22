@@ -432,6 +432,7 @@ def prompt(
     output: Path | None = typer.Option(None, "--output"),
     file: str | None = typer.Option(None, "--file"),
     session: str | None = typer.Option(None, "--session"),
+    stream: bool = typer.Option(False, "--stream", help="Exibe a resposta em streaming no terminal."),
     persona: str | None = typer.Option(
         None, "--persona", help="Nome ou slug da persona salva em ~/.adapta/persona/."
     ),
@@ -449,6 +450,7 @@ def prompt(
             output=output,
             files=_parse_file_option(file),
             session_id=session,
+            stream=stream,
         )
         if persona_text:
             combined = f"{persona_text.rstrip()}\n\n{request.prompt_text}".strip()
@@ -466,7 +468,8 @@ def prompt(
         response_text, session_id = run_async(_run())
         if session_id:
             typer.echo(f"Prompt session_id: {session_id}")
-        typer.echo(response_text)
+        if not stream:
+            typer.echo(response_text)
     except (ValueError, RuntimeError) as exc:
         _fail(str(exc))
 

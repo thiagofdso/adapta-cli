@@ -32,6 +32,7 @@ def build_prompt_request(
     output: Path | None,
     files: list[Path] | None,
     session_id: str | None = None,
+    stream: bool = False,
 ) -> PromptRequest:
     if bool(prompt) == bool(prompt_file):
         raise ValueError("Informe apenas uma origem de prompt.")
@@ -49,6 +50,7 @@ def build_prompt_request(
             output_path=output,
             file_paths=file_paths,
             session_id=(session_id or None),
+            stream=stream,
         )
 
     normalized_prompt = (prompt or "").strip()
@@ -61,6 +63,7 @@ def build_prompt_request(
         output_path=output,
         file_paths=file_paths,
         session_id=(session_id or None),
+        stream=stream,
     )
 
 
@@ -70,20 +73,37 @@ async def execute_prompt(
     session_id = request.session_id or generate_chat_id()
     messages = [{"role": "user", "content": request.prompt_text}]
 
-    if request.file_paths:
-        files = [await client.upload_file(file_path) for file_path in request.file_paths]
-        text = await client.chat_with_files(
+    if request.stream:
+        chunks: list[str] = []
+        files = None
+        if request.file_paths:
+            files = [await client.upload_file(file_path) for file_path in request.file_paths]
+        async for event_type, payload in client.chat_stream(
             model_backend=model_backend,
             messages=messages,
             chat_id=session_id,
             files=files,
-        )
+        ):
+            if event_type == "answer" and payload:
+                print(payload, end="", flush=True)
+                chunks.append(payload)
+        print(flush=True)
+        text = "".join(chunks)
     else:
-        text = await client.chat(
-            model_backend=model_backend,
-            messages=messages,
-            chat_id=session_id,
-        )
+        if request.file_paths:
+            files = [await client.upload_file(file_path) for file_path in request.file_paths]
+            text = await client.chat_with_files(
+                model_backend=model_backend,
+                messages=messages,
+                chat_id=session_id,
+                files=files,
+            )
+        else:
+            text = await client.chat(
+                model_backend=model_backend,
+                messages=messages,
+                chat_id=session_id,
+            )
 
     destination = "stdout" if request.output_path is None else "stdout+file"
     return ResponseArtifact(

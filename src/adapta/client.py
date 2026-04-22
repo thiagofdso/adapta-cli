@@ -1155,6 +1155,23 @@ class AdaptaClientAdapter:
         )
         return extract_answer_text(result)
 
+    async def chat_stream(
+        self,
+        *,
+        model_backend: str,
+        messages: list[dict[str, Any]],
+        chat_id: str,
+        files: list[dict[str, Any]] | None = None,
+    ):
+        async for event in self._conversations._chat_event_stream(
+            prompt=None,
+            messages=messages,
+            model=model_backend,
+            chat_id=chat_id,
+            files=files,
+        ):
+            yield event
+
     async def chat_with_files(
         self,
         *,
