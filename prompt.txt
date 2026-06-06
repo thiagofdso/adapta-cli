@@ -1,0 +1,46 @@
+Contexto obrigatório para esta pesquisa:
+- O foco principal deste tópico é desempenho operacional de modelos locais.
+- Use fontes principais sobre Ollama e inferência local.
+- Se OpenClaw aparecer, use-o apenas como contexto secundário de integração.
+
+```text
+Faça uma pesquisa técnica em português, com foco em fontes verificáveis, para apoiar a preparação de aulas técnicas de um curso para desenvolvedores.
+
+Tema: "Latência e throughput de modelos locais no Ollama".
+
+Contexto específico do módulo:
+- Este tópico pertence ao módulo "IA local e privacidade".
+- O foco é explicar como avaliar desempenho prático de modelos locais em uso real.
+- A resposta deve conectar tamanho de modelo, hardware, quantização, concorrência e experiência percebida.
+
+Objetivo da resposta:
+- Entregar material útil para aula técnica.
+- Ajudar o aluno a entender o que impacta tempo de resposta e capacidade de processamento.
+- Dar base para decisões de escolha de modelo e arquitetura local.
+
+Regras de evidência:
+- Para cada afirmação relevante, indique se ela é [DOCUMENTADO], [INFERIDO] ou [BOA PRÁTICA].
+- Se não houver evidência pública suficiente, diga isso explicitamente.
+- Não invente benchmarks específicos sem fonte.
+
+Escopo da resposta:
+1. Defina latência e throughput neste contexto.
+2. Explique fatores que impactam desempenho de modelos locais no Ollama.
+3. Mostre como medir, interpretar e comparar desempenho em ambiente real.
+4. Aponte tradeoffs entre velocidade, qualidade e custo computacional.
+
+Formato de saída:
+1. Resumo executivo
+2. Definições de latência e throughput
+3. Fatores que impactam desempenho
+4. Como medir e interpretar resultados
+5. Riscos, erros comuns e boas práticas
+6. Troubleshooting
+7. Checklist para aula
+8. Referências
+
+Regras finais:
+- Não faça perguntas de volta.
+- Não responda de forma genérica.
+- Foque em latência e throughput de modelos locais no Ollama.
+```

@@ -1,0 +1,75 @@
+You are a knowledge cataloger.
+Your objective is to:
+* Read the reference material provided INLINE in this prompt.
+* Identify the knowledge "{knowledge_name}" present in that material.
+* Create a markdown file exactly in the structure MARKDOWN STRUCTURE FOR EACH KNOWLEDGE PIECE.
+
+# RULES
+* Write in Portuguese.
+* Follow the template MARKDOWN STRUCTURE FOR EACH KNOWLEDGE PIECE without altering headings.
+* Use exclusively the information contained in the INLINE text provided at the end of this prompt under "# ARQUIVOS INLINE".
+* Preencha a secao "Conhecimentos Relacionados" usando os nomes do indice fornecido em CONTEXTO EXTRA, no formato [[Nome Conhecimento]].
+* Do NOT add comments; your output will be saved to a file.
+* Do NOT request uploads or file attachments; rely ONLY on the inline text.
+* For template sections that do not apply, write "Nao se aplica".
+
+# CONTEXTO EXTRA
+
+## Indice de Conhecimentos (JSON bruto)
+{index_knowledge}
+
+# MARKDOWN STRUCTURE FOR EACH KNOWLEDGE PIECE
+
+# [KNOWLEDGE TITLE]
+
+## 🎯 Categoria
+[Estrategia/Tecnica/Ferramenta/Processo/Framework/Case Study/Tip/...]
+
+## 📌 Sumário Executivo
+[Executive summary of the knowledge]
+
+## 📝 Descricao
+[Detailed explanation of the knowledge piece - DO NOT SUMMARIZE]
+
+## Complexidade
+[Complexity level, MUST be exactly one of: "Iniciante", "Intermediario", "Avancado"]
+
+## ⏱️ Templo de implementação
+[Time to understand and implement, Format EXACTLY as: "X-Y min para entender | Z-W horas para aplicar"]
+
+## ⚡Como Aplicar
+[Step-by-step implementation when applicable]
+
+## 💡 Exemplos Práticos
+[Pratical examples of the knowledge]
+
+## ⚠️ Armadilhas Comuns
+[Traps related to the knowledge when exists]
+
+## 📊 Metricas/Resultados
+[Expected outcomes, KPIs, or case study results when mentioned]
+
+## 🔧 Ferramentas Necessarias
+[Tools, platforms, or resources needed]
+
+## Consideracoes
+[Limitations, prerequisites, or important notes]
+
+## Entidades
+[Array of 3-5 key concepts/entities]
+
+## Pré-requisitos
+[Array of prerequisite knowledge names]
+
+## 🔗Conhecimentos Relacionados
+-   [[Conhecimento Relacionado 1]]
+-   [[Conhecimento Relacionado 2]]
+
+## 📚Fonte
+**Documento:** [Nome do arquivo fonte]
+**Pagina/Secao:** [Se aplicavel]
+
+## 🏷️ Tags
+#[categoria-especifica] #[canal/plataforma] #[tipo-de-conteudo]
+
+Use apenas os dados presentes no texto INLINE para gerar o markdown.

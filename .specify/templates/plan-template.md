@@ -33,6 +33,12 @@
 
 [Gates determined based on constitution file]
 
+**Documentation Impact**:
+
+- Identify which files in `docs/` must be created or updated for this feature.
+- At minimum evaluate impact on `docs/features.md`, `docs/code-map.md`, `docs/arquitetura.md`, `docs/modelo-dados.md`, `docs/integracoes.md`, and `docs/licoes-aprendidas.md`.
+- If the design introduces an architectural decision or trade-off, plan a new ADR in `docs/adr/`.
+
 ## Project Structure
 
 ### Documentation (this feature)
@@ -56,6 +62,16 @@ specs/[###-feature]/
 -->
 
 ```text
+docs/
+├── code-map.md
+├── arquitetura.md
+├── adr/
+├── features.md
+├── modelo-dados.md
+├── integracoes.md
+├── licoes-aprendidas.md
+└── guia-uso-documentacao.md
+
 # [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
 ├── models/

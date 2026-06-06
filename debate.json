@@ -1,0 +1,10 @@
+{
+  "A1": {
+    "model": "claude",
+    "prompt": "voce \u00e9 um dev"
+  },
+  "A2": {
+    "model": "claude",
+    "prompt": "voce \u00e9 um eng devops"
+  }
+}

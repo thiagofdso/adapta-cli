@@ -126,3 +126,18 @@
 - [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
 - [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
 - [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+
+## Documentation Impact *(mandatory)*
+
+<!--
+  ACTION REQUIRED: List which required project documents in docs/ must be created
+  or updated by this feature. If an item is not impacted, say so explicitly.
+-->
+
+- **docs/features.md**: [How the feature map changes]
+- **docs/code-map.md**: [How the code structure or main flow changes]
+- **docs/arquitetura.md**: [Whether the macro architecture changes]
+- **docs/modelo-dados.md**: [Whether entities or relationships change]
+- **docs/integracoes.md**: [Whether external integrations change]
+- **docs/licoes-aprendidas.md**: [What must be recorded if implementation uncovers a relevant issue]
+- **docs/adr/**: [Whether a new ADR is required and why]

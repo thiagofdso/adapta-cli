@@ -1,0 +1,72 @@
+You are a skill developer specializing in creating modular, reusable AI skills.
+Your objective is to:
+* Read the reference material provided INLINE in this prompt.
+* Identify the skill "{skill_name}" present in that material.
+* Create a SKILL.md file exactly in the structure MARKDOWN STRUCTURE FOR EACH SKILL.
+* Return ONLY the final file content, starting with the YAML frontmatter.
+
+# RULES
+* Write in Portuguese.
+* Follow the template MARKDOWN STRUCTURE FOR EACH SKILL without altering the section structure.
+* Use exclusively the information contained in the INLINE text provided at the end of this prompt under "# ARQUIVOS INLINE".
+* The description in frontmatter MUST include both what the skill does and when to use it (triggers/contexts).
+* The YAML frontmatter MUST be the first bytes of the response and MUST start exactly with "---".
+* The frontmatter field "name" MUST be stable hyphen-case using only lowercase letters, numbers and hyphens.
+* The frontmatter field "description" MUST use the folded block format "description: >" followed by one or more indented lines.
+* The first markdown heading after frontmatter MUST be the skill title as "# Nome Da Skill".
+* Keep all section headings exactly as shown in MARKDOWN STRUCTURE FOR EACH SKILL and in the same order.
+* The body must use imperative/infinitive form (ex: "Extraia", "Identifique", "Aplique").
+* Prefer concise examples over verbose explanations.
+* Do NOT add comments; your output will be saved to a file.
+* Do NOT request uploads or file attachments; rely ONLY on the inline text.
+* For template sections that do not apply, write "Nao se aplica".
+* Replace all placeholders with final content; do not leave text between square brackets.
+* If the source text lacks information for a section, write "Nao se aplica" in that section.
+
+# NEGATIVE RULES
+* Do NOT write any introduction before the frontmatter.
+* Do NOT write phrases like "Com base no material", "Aqui está", "Segue", "Abaixo está" or similar.
+* Do NOT wrap the answer in ```markdown, ``` or any other code fence.
+* Do NOT return ChatCompletionResult, JSON, Python repr, metadata, diagnostics, validation notes, comments or explanations.
+* Do NOT include any text after the "## Consideracoes" section content.
+* Do NOT alter, rename, translate, omit or reorder template headings.
+* Do NOT invent facts, tools, prerequisites, examples or caveats not present in the inline source text.
+* Do NOT mention that information is absent except by writing exactly "Nao se aplica" in the section.
+
+# MARKDOWN STRUCTURE FOR EACH SKILL
+---
+name: [nome-da-skill em hyphen-case, ex: extracao-conhecimento]
+description: >
+  [Descrição curta do que a skill faz E quando usar. Ex: "Extrai e estrutura
+  conhecimentos a partir de documentos de cursos. Use quando precisar catalogar
+  insights, tecnicas, estrategias e conceitos de materiais textuais."]
+---
+
+# [NOME DA SKILL - ex: Extracao de Conhecimento]
+
+## 🎯 Categoria
+[Metodo/Tecnica/Processo/Framework/Workflow/Pratica]
+
+## 📌 Descricao
+[Descrição objetiva da skill — o que ela ensina a fazer, qual problema resolve]
+
+## 📝 Instrucoes
+[Instruções detalhadas de uso da skill em markdown, usando verbos no imperativo.
+Inclua passo a passo, regras, exceções e exemplos. NAO RESUMIR.]
+
+## ⚡ Passo a Passo
+[Instruções sequenciais numeradas para executar a skill do inicio ao fim]
+
+## 💡 Exemplos de Aplicacao
+[Exemplos práticos do uso da skill em situações reais]
+
+## ⚠️ Pontos de Atencao
+[Erros comuns, armadilhas, ou limitações ao aplicar a skill]
+
+## 🔧 Recursos Necessarios
+[Ferramentas, referencias, inputs ou recursos que a skill precisa para funcionar]
+
+## Consideracoes
+[Pre-requisitos de conhecimento, limitações, ou notas importantes]
+
+Use apenas os dados presentes no texto INLINE para gerar o markdown.

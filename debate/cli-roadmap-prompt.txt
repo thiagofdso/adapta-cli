@@ -1,0 +1,18 @@
+Contexto completo para os agentes:
+A Adapta CLI é uma ferramenta Python 3.11 (Typer) que autentica no serviço Adapta via cookies (`adapta import-cookies`) e expõe comandos para automatizar trabalho de product/engineering:
+- `prompt`: envia prompts inline ou por arquivo, aceita 1-5 anexos, salva saída com `--output`, e agora suporta `--persona` para reaproveitar prompts prontos de `~/.adapta/persona/<slug>.md`.
+- `persona`: conduz questionário guiado (6 blocos), gera JSON/Markdown em `~/.adapta/persona`, pode importar (`--input-file`) ou atualizar existentes (`--update`) e exibe personas já salvas com `--list`.
+- `debate`: roda múltiplos agentes/personas (config JSON, anexos, opção `--control`), salva resultados com `--output` e é apoiado por scripts `.agents/skills/adapta-cli/scripts/*.sh` que listam outputs em `debate/`.
+- `destilador`: processa PDFs/TXT (single, diretório ou lote) usando prompts internos, reaproveitando uploads.
+- `pipeline`: opera em diretório com SQLite local (`~/.local/state/adapta-cli/pipeline.db`), possui modos e logging.
+- `models`: lista catálogo atualizado (ONE, ONE Pro, ONE Superfast, GPT-5.4, GPT-5.1, Gemini 3.1 Pro Preview, Gemini 3 Flash, Claude 4.6 Sonnet, Claude 4.5 Haiku, DeepSeek V3.2 Reasoner, DeepSeek V3.2, Grok 4.1, Kimi K2.5, MiniMax M2.7, GLM-5, Llama 4 Maverick, Sonar Pro, Qwen 3.5 Plus) com descrições.
+- `list-files`: lista uploads remotos; `import-cookies`: converte export do navegador para `~/.adapta/cookies.json`.
+
+Faça um brainstorm de ideias de novos comandos para adicionar na cli, lembrando que ela só suporta entrata de texto e arquivos de imagem/texto.
+
+Priorize ideias de maior impacto.
+
+Foque em soluções viáveis e adequadas para uso pessoal.
+
+
+Esse é o comando geral, mas mantenha em foco o seu comando <principal>.

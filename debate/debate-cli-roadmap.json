@@ -1,0 +1,17 @@
+{
+  "A1": {
+    "model": "claude",
+    "prompt": "<principal>Pense em ideias fora da caixa. A cada iteraçao pense em novas ideias</principal>",
+    "persona": "sonhador-estrategico"
+  },
+  "A2": {
+    "model": "gpt",
+    "prompt": "<principal>Use sua experiencia para decidir a melhor forma de usar llm via cli. A cada iteração pense em novas ideias.</principal>",
+    "persona": "especialista-llm"
+  },
+  "A3": {
+    "model": "gpt",
+    "prompt": "<principal>Seu papel é apenas observar e validar a ideia dos outros agentes. Não precisa levantar ideias proprias</principal>",
+    "persona": "realista-de-execucao"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "revisor-negocio": {
+    "model": "claude46",
+    "prompt": "Revise a proposta pelo valor de negocio. Questione se a promessa e relevante, clara, priorizada e defensavel para o decisor.",
+    "persona": "cliente-premium"
+  },
+  "revisor-risco": {
+    "model": "gpt54",
+    "prompt": "Revise a proposta procurando riscos, lacunas, ambiguidades, dependencias e pontos que podem comprometer a entrega ou a decisao.",
+    "persona": "critico-construtivo"
+  },
+  "revisor-clareza": {
+    "model": "gemini31",
+    "prompt": "Revise a proposta para melhorar clareza, compreensao executiva, traducao de termos tecnicos e utilidade para tomada de decisao.",
+    "persona": "tradutor-tecnico-para-negocios"
+  }
+}

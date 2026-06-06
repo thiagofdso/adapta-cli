@@ -1,0 +1,22 @@
+{
+  "financeiro": {
+    "model": "claude46",
+    "prompt": "Avalie a proposta sob a otica de retorno, alocacao de recursos, custo total, risco financeiro e sustentabilidade da decisao.",
+    "persona": "cfo-rigoroso"
+  },
+  "juridico": {
+    "model": "gpt54",
+    "prompt": "Avalie a proposta sob a otica de conformidade, risco contratual, responsabilidades e exposicao juridica.",
+    "persona": "juridico-preventivo"
+  },
+  "execucao": {
+    "model": "gemini31",
+    "prompt": "Avalie a proposta sob a otica de implementacao, dependencia, ordem de execucao, viabilidade pratica e clareza de dono.",
+    "persona": "realista-de-execucao"
+  },
+  "contraditorio": {
+    "model": "grok",
+    "prompt": "Atue como voz de contraditorio construtivo. Procure premissas escondidas, riscos ignorados, excesso de otimismo e pontos mal resolvidos.",
+    "persona": "critico-construtivo"
+  }
+}
