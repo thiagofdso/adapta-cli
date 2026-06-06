@@ -146,7 +146,7 @@ class AdaptaHttpSession:
             if (
                 self._client.is_closed
                 or self._client_loop is None
-                or self._client_loop is current_loop
+                or self._client_loop is not current_loop
             ):
                 await self._client.aclose()
                 self._client = None
