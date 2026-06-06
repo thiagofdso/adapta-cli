@@ -96,18 +96,16 @@ async def execute_prompt(
     else:
         if request.file_paths:
             files = [await client.upload_file(file_path) for file_path in request.file_paths]
-            text = await client.chat_with_files(
+            text = await client.prompt_with_files(
                 model_backend=model_backend,
-                messages=messages,
-                chat_id=session_id,
+                prompt=request.prompt_text,
                 files=files,
                 folder_id=request.folder_id,
             )
         else:
-            text = await client.chat(
+            text = await client.prompt(
                 model_backend=model_backend,
-                messages=messages,
-                chat_id=session_id,
+                prompt=request.prompt_text,
                 folder_id=request.folder_id,
             )
 

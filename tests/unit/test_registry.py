@@ -6,11 +6,11 @@ from adapta.registry import get_model_option, list_model_options, resolve_model_
 def test_get_model_option_supports_known_alias() -> None:
     option = get_model_option("gpt")
 
-    assert option.key == "gpt"
-    assert option.backend_name == "GPT_5"
+    assert option.key == "gpt54"
+    assert option.backend_name == "GPT_54"
 
 
-def test_list_model_options_returns_sorted_display_names() -> None:
+def test_list_model_options_returns_options() -> None:
     options = list_model_options()
 
     assert options
@@ -18,11 +18,11 @@ def test_list_model_options_returns_sorted_display_names() -> None:
 
 
 def test_resolve_model_key_prefers_explicit_value() -> None:
-    assert resolve_model_key(explicit="o3", default="gpt") == "o3"
+    assert resolve_model_key(explicit="claude46", default="gpt") == "claude46"
 
 
 def test_resolve_model_key_uses_default_when_explicit_missing() -> None:
-    assert resolve_model_key(explicit=None, default="gpt") == "gpt"
+    assert resolve_model_key(explicit=None, default="gpt") == "gpt54"
 
 
 def test_resolve_model_key_raises_when_missing() -> None:

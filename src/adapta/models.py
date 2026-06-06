@@ -20,6 +20,7 @@ class Settings:
     adapta_password: str
     adapta_model: str | None
     env_file_path: Path
+    data_dir: Path
 
 
 @dataclass(frozen=True)
@@ -157,6 +158,7 @@ class PipelineDocument:
     relative_path: str
     file_type: str
     job_id: int | None = None
+    stage_id: int = 1
 
 
 @dataclass(frozen=True)
@@ -172,6 +174,38 @@ class PipelineRunResult:
     processed_files: list[PipelineDocument]
     index_paths: list[Path]
     generated_documents: list[Path]
+    cleanup_warnings: list[str] = field(default_factory=list)
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class SkillCreateRequest:
+    input_dir_path: Path
+    output_dir_path: Path
+    db_path: Path
+    job_filter: int | None = None
+    keep_chat: bool = False
+    log_enabled: bool = False
+
+
+@dataclass(frozen=True)
+class SkillDocument:
+    source_path: Path
+    source_name: str
+    folder_path: Path
+    relative_path: str
+    file_type: str
+    job_id: int | None = None
+    stage_id: int = 1
+
+
+@dataclass(frozen=True)
+class SkillCreateRunResult:
+    request: SkillCreateRequest
+    processed_files: list[SkillDocument]
+    index_paths: list[Path]
+    generated_skills: list[Path]
     cleanup_warnings: list[str] = field(default_factory=list)
     started_at: datetime | None = None
     finished_at: datetime | None = None

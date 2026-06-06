@@ -39,6 +39,7 @@ class DummyPipelineClient:
         model_backend: str,
         prompt: str,
         files: list[dict[str, object]],
+        keep_chat: bool = True,
     ) -> str:
         self.prompts.append(prompt)
         if "OUTPUT FORMAT SAMPLE" in prompt:
@@ -65,7 +66,7 @@ class DummyPipelineClient:
             files=files,
         )
 
-    async def prompt(self, *, model_backend: str, prompt: str) -> str:
+    async def prompt(self, *, model_backend: str, prompt: str, keep_chat: bool = True) -> str:
         self.prompts.append(prompt)
         if "OUTPUT FORMAT SAMPLE" in prompt:
             return (
@@ -203,7 +204,7 @@ async def test_run_pipeline_inlines_txt_without_upload(tmp_path: Path) -> None:
     assert client.uploaded == []
     assert client.deleted_files == []
     assert client.deleted_chats == []
-    assert any("ARQUIVOS TXT INLINE" in prompt for prompt in client.prompts)
+    assert any("ARQUIVOS INLINE" in prompt for prompt in client.prompts)
 
 
 @pytest.mark.anyio
@@ -223,6 +224,7 @@ async def test_run_pipeline_generates_stage2_in_parallel(
             model_backend: str,
             prompt: str,
             files: list[dict[str, object]],
+            keep_chat: bool = True,
         ) -> str:
             self.prompts.append(prompt)
             if "OUTPUT FORMAT SAMPLE" in prompt:

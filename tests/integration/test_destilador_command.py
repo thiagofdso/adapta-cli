@@ -54,7 +54,7 @@ def test_destilador_command_generates_output_file(monkeypatch, tmp_path: Path) -
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: DummyClient())
@@ -90,7 +90,7 @@ def test_destilador_command_prints_progress_with_log(
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: DummyClient())
@@ -128,7 +128,7 @@ def test_destilador_command_uses_inline_txt_without_upload(
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)

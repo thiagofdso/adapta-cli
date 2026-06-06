@@ -67,7 +67,7 @@ def _patch_settings(monkeypatch, tmp_path: Path) -> None:
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
 

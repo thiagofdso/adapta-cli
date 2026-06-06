@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+from pathlib import Path
 
 
 CURRENT_LOG_LEVEL: str | None = None
@@ -17,7 +18,7 @@ def resolve_log_level(value: str | None) -> str | None:
     return normalized
 
 
-def configure_logging(log_level: str | None) -> None:
+def configure_logging(log_level: str | None, data_dir: Path | None = None) -> None:
     global CURRENT_LOG_LEVEL
 
     resolved = resolve_log_level(log_level)
@@ -28,7 +29,24 @@ def configure_logging(log_level: str | None) -> None:
         _configure_backend_logging(None)
         return
 
-    logging.basicConfig(level=getattr(logging, resolved, logging.INFO))
+    level = getattr(logging, resolved, logging.INFO)
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
+
+    if data_dir:
+        log_file = data_dir / "adapta.log"
+        try:
+            data_dir.mkdir(parents=True, exist_ok=True)
+            handlers.append(logging.FileHandler(log_file, encoding="utf-8"))
+        except OSError:
+            # Fallback to stream only if directory is not writable
+            pass
+
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=handlers,
+        force=True,
+    )
     _configure_backend_logging(resolved)
 
 

@@ -39,6 +39,7 @@ Extract knowledge pieces that are:
 * Respond only with the JSON code templated in <format>.
 * Knowledge names must start with the type, example Estudo de Caso ..., Conceito ..., Estrategia ..., etc
 * Each knowledge must contain exclusively the fields "name", "description" e "files".
+* O campo "name" deve conter apenas texto, sem pontuação ou caracteres especiais (como : - _).
 * Sempre inclua o arquivo atual na lista "files" e evite duplicar nomes.
 * Limite a lista "files" a no maximo 5 itens.
 * Mantenha cada peça de conhecimento focada em uma ideia; crie quantas entradas forem necessárias para cobrir o conteúdo.

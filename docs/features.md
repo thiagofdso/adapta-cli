@@ -64,6 +64,14 @@ Descrição: expõe o comando `pipeline` para processar lotes em `--input-dir` e
 
 Depende de: autenticação Adapta, upload de arquivo, prompts internalizados de extração e criação de conhecimento, persistência local em SQLite e escrita de artefatos em filesystem.
 
+## Gerador de skills por diretório
+
+Status: ativo
+
+Descrição: expõe o comando `skill-create` para processar lotes textuais em `--input-dir` e gerar skills reutilizáveis em `--output-dir`. O fluxo opera em duas fases: primeiro cria índices JSON por pasta com a chave `skills`, depois gera uma pasta por skill contendo `SKILL.md`. A entrada aceita arquivos `.txt` e `.md`, sempre enviados inline no prompt, sem upload remoto. O comando usa SQLite local próprio para estado operacional, com caminho padrão em `~/.adapta/state/skill-create.db`, customização por `ADAPTA_SKILL_CREATE_DB_PATH` e precedência do parâmetro `--db-path` quando informado.
+
+Depende de: autenticação Adapta, prompts internalizados de extração e criação de skills, persistência local em SQLite e escrita de artefatos em filesystem.
+
 ## Importação de cookies de sessão
 
 Status: ativo

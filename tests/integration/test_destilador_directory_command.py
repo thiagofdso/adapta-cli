@@ -53,7 +53,7 @@ def test_destilador_command_processes_directory(monkeypatch, tmp_path: Path) -> 
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: DummyClient())

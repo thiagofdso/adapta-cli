@@ -15,11 +15,6 @@ class DummyClient:
         self.calls.append((model_backend, prompt, None))
         return "2"
 
-    async def prompt_ephemeral(self, *, model_backend: str, prompt: str) -> str:
-        self.calls.append((model_backend, prompt, None))
-        self.deleted_chats.append("ephemeral")
-        return "2"
-
     async def prompt_with_files(
         self,
         *,
@@ -30,19 +25,6 @@ class DummyClient:
         self.calls.append(
             (model_backend, prompt, [str(file["filename"]) for file in files])
         )
-        return "2"
-
-    async def prompt_with_files_ephemeral(
-        self,
-        *,
-        model_backend: str,
-        prompt: str,
-        files: list[dict[str, object]],
-    ) -> str:
-        self.calls.append(
-            (model_backend, prompt, [str(file["filename"]) for file in files])
-        )
-        self.deleted_chats.append("ephemeral")
         return "2"
 
 
@@ -131,7 +113,6 @@ async def test_execute_prompt_calls_client() -> None:
 
     assert response.text == "2"
     assert client.calls == [("GPT_5", "quanto é 1+1 responda somente o valor", None)]
-    assert client.deleted_chats == ["ephemeral"]
 
 
 @pytest.mark.anyio
@@ -162,4 +143,3 @@ async def test_execute_prompt_calls_client_with_uploaded_files(tmp_path: Path) -
 
     assert response.text == "2"
     assert client.calls == [("GPT_5", "resuma o anexo", ["anexo.pdf"])]
-    assert client.deleted_chats == ["ephemeral"]

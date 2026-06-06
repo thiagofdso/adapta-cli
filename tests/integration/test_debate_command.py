@@ -90,7 +90,7 @@ def test_debate_command_runs_with_config_file(monkeypatch, tmp_path: Path) -> No
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
@@ -139,7 +139,7 @@ def test_debate_command_accepts_prompt_file(monkeypatch, tmp_path: Path) -> None
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
@@ -190,7 +190,7 @@ def test_debate_command_rejects_multiple_prompt_sources(
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
@@ -239,7 +239,7 @@ def test_debate_command_accepts_file_attachments(monkeypatch, tmp_path: Path) ->
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
@@ -296,7 +296,7 @@ def test_debate_command_accepts_optional_persona_file_per_agent(
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
@@ -350,7 +350,7 @@ def test_debate_command_accepts_persona_short_name(monkeypatch, tmp_path: Path) 
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
@@ -395,7 +395,7 @@ def test_debate_command_supports_control_mode(monkeypatch, tmp_path: Path) -> No
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)

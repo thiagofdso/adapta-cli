@@ -72,6 +72,7 @@ class AuthResult:
 @dataclass
 class ChatCompletionResult:
     messages: list[dict[str, str]]
+    chat_id: str | None = None
 
 
 class ToolExecutionError(RuntimeError):
@@ -123,9 +124,13 @@ def _first_non_none(*values: Any) -> Any:
     return None
 
 
-def _resolve_session_cache_path(path: Path | None = None) -> Path:
-    target = path or (Path.home() / SESSION_HOME_DIRNAME / SESSION_CACHE_FILENAME)
-    return target.expanduser().resolve()
+def _resolve_session_cache_path(
+    path: Path | None = None, data_dir: Path | None = None
+) -> Path:
+    if path is not None:
+        return path.expanduser().resolve()
+    base = data_dir or (Path.home() / SESSION_HOME_DIRNAME)
+    return (base / SESSION_CACHE_FILENAME).expanduser().resolve()
 
 
 class AdaptaHttpSession:
@@ -141,7 +146,7 @@ class AdaptaHttpSession:
             if (
                 self._client.is_closed
                 or self._client_loop is None
-                or self._client_loop is not current_loop
+                or self._client_loop is current_loop
             ):
                 await self._client.aclose()
                 self._client = None
@@ -189,6 +194,7 @@ class AdaptaAuthenticator:
         login: str,
         password: str,
         session_cache_path: Path | None = None,
+        data_dir: Path | None = None,
     ) -> None:
         if not login or not password:
             raise ValueError("ADAPTA_LOGIN e ADAPTA_PASSWORD são obrigatórios.")
@@ -203,7 +209,9 @@ class AdaptaAuthenticator:
         self._auth_lock = asyncio.Lock()
         self._login_rate_limiter = RateLimiter(LOGIN_THROTTLE_SECONDS)
         self._token_refresh_rate_limiter = RateLimiter(TOKEN_REFRESH_THROTTLE_SECONDS)
-        self._session_cache_path = _resolve_session_cache_path(session_cache_path)
+        self._session_cache_path = _resolve_session_cache_path(
+            session_cache_path, data_dir=data_dir
+        )
         self._cached_cookies: dict[str, str] = {}
         self._cached_headers: dict[str, str] = {}
         self._restore_session_cache()
@@ -717,6 +725,7 @@ class AdaptaConversationClient:
 
         for attempt in range(2):
             chunks: list[str] = []
+            final_chat_id: str | None = None
             try:
                 async for event_type, payload in self._chat_event_stream(
                     prompt=prompt,
@@ -726,10 +735,13 @@ class AdaptaConversationClient:
                     files=files,
                     folder_id=folder_id,
                 ):
-                    if event_type == "answer":
+                    if event_type == "chat_id":
+                        final_chat_id = payload
+                    elif event_type == "answer":
                         chunks.append(payload)
                 return ChatCompletionResult(
-                    messages=[{"kind": "answer", "text": "".join(chunks)}]
+                    messages=[{"kind": "answer", "text": "".join(chunks)}],
+                    chat_id=final_chat_id,
                 )
             except httpx.HTTPStatusError as exc:
                 status_code = exc.response.status_code if exc.response else None
@@ -1187,6 +1199,7 @@ class AdaptaConversationClient:
         }
 
         pending_surrogate: str | None = None
+        yield "chat_id", chat_identifier
         async with client.stream(
             "POST",
             f"{AGENT_BASE_URL}/api/chat/stream/v1",
@@ -1302,6 +1315,7 @@ class AdaptaClientAdapter:
             session=self._session,
             login=settings.adapta_login,
             password=settings.adapta_password,
+            data_dir=settings.data_dir,
         )
         self._conversations = AdaptaConversationClient(
             session=self._session,
@@ -1318,14 +1332,16 @@ class AdaptaClientAdapter:
         await self._session.close()
         await self._authenticator.close()
 
-    async def prompt(self, *, model_backend: str, prompt: str, folder_id: str | None = None) -> str:
+    async def prompt(self, *, model_backend: str, prompt: str, folder_id: str | None = None, keep_chat: bool = True) -> str:
         result = await self._conversations.call_model(
             prompt=prompt, model=model_backend, folder_id=folder_id
         )
+        if not keep_chat and result.chat_id:
+            await self._conversations.delete_chat(result.chat_id)
         return extract_answer_text(result)
 
     async def prompt_with_files(
-        self, *, model_backend: str, prompt: str, files: list[dict[str, Any]], folder_id: str | None = None
+        self, *, model_backend: str, prompt: str, files: list[dict[str, Any]], folder_id: str | None = None, keep_chat: bool = True
     ) -> str:
         result = await self._conversations.call_model(
             prompt=prompt,
@@ -1333,6 +1349,8 @@ class AdaptaClientAdapter:
             files=files,
             folder_id=folder_id,
         )
+        if not keep_chat and result.chat_id:
+            await self._conversations.delete_chat(result.chat_id)
         return extract_answer_text(result)
 
     async def chat(
@@ -1438,6 +1456,8 @@ def extract_answer_text(result: Any) -> str:
         ]
         if any(chunk.strip() for chunk in answers):
             return "".join(answers).strip()
+        if answers:
+            raise RuntimeError("Resposta do cliente Adapta contém texto vazio.")
     return str(result).strip()
 
 
@@ -1473,6 +1493,7 @@ def import_cookies_to_session_cache(
     source_path: Path,
     *,
     target_path: Path | None = None,
+    data_dir: Path | None = None,
 ) -> tuple[Path, dict[str, Any]]:
     raw_text = source_path.read_text(encoding="utf-8")
     payload = json.loads(raw_text)
@@ -1483,7 +1504,7 @@ def import_cookies_to_session_cache(
     if not session_id:
         raise RuntimeError("Não foi possível inferir o session_id dos cookies.")
 
-    destination = _resolve_session_cache_path(target_path)
+    destination = _resolve_session_cache_path(target_path, data_dir=data_dir)
     destination.parent.mkdir(parents=True, exist_ok=True)
 
     cache_payload: dict[str, Any] = {

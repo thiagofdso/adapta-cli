@@ -44,7 +44,7 @@ def test_persona_command_saves_minimal_persona(monkeypatch, tmp_path: Path) -> N
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
@@ -86,7 +86,7 @@ def test_persona_command_can_regenerate_from_input_file(
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
@@ -117,7 +117,7 @@ def test_persona_command_preserves_existing_file_when_overwrite_is_rejected(
             adapta_login="user@example.com",
             adapta_password="secret",
             adapta_model=None,
-            env_file_path=tmp_path / ".env",
+            env_file_path=tmp_path / ".env", data_dir=tmp_path / "data",
         ),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)

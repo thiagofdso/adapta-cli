@@ -11,7 +11,6 @@ from adapta.services.output_service import persist_output
 
 
 DEFAULT_PERSONA_MODEL_KEY = "claude"
-PERSONA_HOME_DIRNAME = ".adapta"
 PERSONA_OUTPUT_DIRNAME = "persona"
 PERSONA_CONTENT_START = "<<<PERSONA_CONTENT_START>>>"
 PERSONA_CONTENT_END = "<<<PERSONA_CONTENT_END>>>"
@@ -277,23 +276,18 @@ def build_persona_questionnaire(**answers: str) -> PersonaQuestionnaire:
     return PersonaQuestionnaire(**cleaned)
 
 
-def get_persona_directory(home_path: Path | None = None) -> Path:
-    base_path = home_path if home_path is not None else Path.home()
-    return (
-        (base_path / PERSONA_HOME_DIRNAME / PERSONA_OUTPUT_DIRNAME)
-        .expanduser()
-        .resolve()
-    )
+def get_persona_directory(data_dir: Path) -> Path:
+    return (data_dir / PERSONA_OUTPUT_DIRNAME).expanduser().resolve()
 
 
-def resolve_persona_answers_path(name: str, home_path: Path | None = None) -> Path:
+def resolve_persona_answers_path(name: str, data_dir: Path) -> Path:
     _, slug = normalize_persona_name(name)
-    return (get_persona_directory(home_path) / f"{slug}.json").resolve()
+    return (get_persona_directory(data_dir) / f"{slug}.json").resolve()
 
 
-def resolve_persona_output_path(name: str, home_path: Path | None = None) -> Path:
+def resolve_persona_output_path(name: str, data_dir: Path) -> Path:
     _, slug = normalize_persona_name(name)
-    return (get_persona_directory(home_path) / f"{slug}.md").resolve()
+    return (get_persona_directory(data_dir) / f"{slug}.md").resolve()
 
 
 def build_persona_prompt(questionnaire: PersonaQuestionnaire) -> str:

@@ -7,7 +7,11 @@ from typing import Any
 import typer
 
 from adapta.client import create_client, import_cookies_to_session_cache
-from adapta.config import load_settings
+from adapta.config import (
+    load_settings,
+    resolve_pipeline_db_path,
+    resolve_skill_create_db_path,
+)
 from adapta.models import DebateAgentConfig
 from adapta.registry import get_model_option, list_model_options, resolve_model_key
 from adapta.runtime import run_async
@@ -31,6 +35,7 @@ from adapta.services.destilador_service import (
     distill_documents,
 )
 from adapta.services.pipeline_service import build_pipeline_request, run_pipeline
+from adapta.services.skill_service import build_skill_create_request, run_skill_create
 from adapta.services.output_service import persist_output
 from adapta.services.persona_service import (
     PERSONA_BLOCKS,
@@ -114,11 +119,11 @@ def _confirm_overwrite(path: Path) -> bool:
         typer.echo("Responda com 's' ou 'n'.")
 
 
-def _prompt_persona_name() -> tuple[str, Path, bool]:
+def _prompt_persona_name(data_dir: Path) -> tuple[str, Path, bool]:
     while True:
         raw_name = typer.prompt("Qual é o nome da persona?")
         try:
-            output_path = resolve_persona_output_path(raw_name)
+            output_path = resolve_persona_output_path(raw_name, data_dir)
         except ValueError as exc:
             typer.echo(str(exc))
             continue
@@ -144,6 +149,7 @@ def _prompt_text_with_default(
 
 
 def _collect_persona_answers(
+    data_dir: Path,
     existing: dict[str, str] | None = None,
 ) -> tuple[dict[str, str], Path, bool]:
     defaults = existing or {}
@@ -156,13 +162,13 @@ def _collect_persona_answers(
                 empty_message="Nome da persona inválido: informe um valor não vazio.",
             )
         else:
-            raw_name, output_path, overwrite = _prompt_persona_name()
+            raw_name, output_path, overwrite = _prompt_persona_name(data_dir)
             defaults = {**defaults, "nome": raw_name}
             if output_path.exists() and not overwrite:
                 return {"nome": raw_name}, output_path, overwrite
             break
         try:
-            output_path = resolve_persona_output_path(raw_name)
+            output_path = resolve_persona_output_path(raw_name, data_dir)
             overwrite = True
             if output_path.exists():
                 overwrite = _confirm_overwrite(output_path)
@@ -195,15 +201,15 @@ def _collect_persona_answers(
 
 
 def _resolve_persona_source(
-    *, input_file: Path | None, update: bool
+    data_dir: Path, *, input_file: Path | None, update: bool
 ) -> tuple[dict[str, str], Path, Path, bool]:
     if input_file is not None and update:
         raise ValueError("Use apenas uma das opções: --input-file ou --update.")
 
     if input_file is not None:
         questionnaire = load_persona_questionnaire_from_file(input_file)
-        output_path = resolve_persona_output_path(questionnaire.nome)
-        answers_path = resolve_persona_answers_path(questionnaire.nome)
+        output_path = resolve_persona_output_path(questionnaire.nome, data_dir)
+        answers_path = resolve_persona_answers_path(questionnaire.nome, data_dir)
         overwrite = True
         if output_path.exists() or answers_path.exists():
             overwrite = _confirm_overwrite(output_path)
@@ -219,23 +225,24 @@ def _resolve_persona_source(
             "Qual persona deseja atualizar?",
             "Informe o nome da persona que deseja atualizar.",
         )
-        answers_path = resolve_persona_answers_path(update_name)
+        answers_path = resolve_persona_answers_path(update_name, data_dir)
         questionnaire = load_persona_questionnaire_from_file(answers_path)
         answers, output_path, overwrite = _collect_persona_answers(
+            data_dir,
             questionnaire_to_dict(questionnaire)
         )
         return (
             answers,
             output_path,
-            resolve_persona_answers_path(answers["nome"]),
+            resolve_persona_answers_path(answers["nome"], data_dir),
             overwrite,
         )
 
-    answers, output_path, overwrite = _collect_persona_answers()
+    answers, output_path, overwrite = _collect_persona_answers(data_dir)
     return (
         answers,
         output_path,
-        resolve_persona_answers_path(answers["nome"]),
+        resolve_persona_answers_path(answers["nome"], data_dir),
         overwrite,
     )
 
@@ -273,8 +280,8 @@ def _resolve_debate_topic_prompt(
     return normalized_prompt
 
 
-def _load_persona_prompt_text(identifier: str) -> str:
-    persona_path = resolve_persona_output_path(identifier)
+def _load_persona_prompt_text(identifier: str, data_dir: Path) -> str:
+    persona_path = resolve_persona_output_path(identifier, data_dir)
     if not persona_path.exists():
         raise ValueError(
             f"Persona não encontrada: {persona_path}. Use 'adapta persona --list' para listar."
@@ -285,8 +292,8 @@ def _load_persona_prompt_text(identifier: str) -> str:
     return content
 
 
-def _list_personas() -> None:
-    directory = get_persona_directory()
+def _list_personas(data_dir: Path) -> None:
+    directory = get_persona_directory(data_dir)
     if not directory.exists():
         typer.echo(f"Nenhuma persona encontrada em {directory}")
         return
@@ -417,7 +424,10 @@ def import_cookies(
     input: Path = typer.Option(..., "--input"),
 ) -> None:
     try:
-        destination, payload = import_cookies_to_session_cache(input)
+        settings = load_settings()
+        destination, payload = import_cookies_to_session_cache(
+            input, data_dir=settings.data_dir
+        )
         typer.echo(f"Cookies importados para {destination}")
         typer.echo(f"session_id: {payload['session_id']}")
         typer.echo(f"cookies: {len(payload['cookies'])}")
@@ -435,7 +445,7 @@ def prompt(
     session: str | None = typer.Option(None, "--session"),
     stream: bool = typer.Option(False, "--stream", help="Exibe a resposta em streaming no terminal."),
     persona: str | None = typer.Option(
-        None, "--persona", help="Nome ou slug da persona salva em ~/.adapta/persona/."
+        None, "--persona", help="Nome ou slug da persona salva."
     ),
     folder_id: str | None = typer.Option(None, "--folder-id", help="ID da pasta onde o chat será criado."),
     folder: str | None = typer.Option(None, "--folder", help="Nome da pasta onde o chat será criado."),
@@ -445,7 +455,7 @@ def prompt(
         model_key = _resolve_model(model, settings.adapta_model)
         persona_text: str | None = None
         if persona:
-            persona_text = _load_persona_prompt_text(persona)
+            persona_text = _load_persona_prompt_text(persona, settings.data_dir)
 
         resolved_folder_id = folder_id
 
@@ -507,12 +517,13 @@ def persona(
     ),
 ) -> None:
     try:
-        if list_existing:
-            _list_personas()
-            return
         settings = load_settings()
+        if list_existing:
+            _list_personas(settings.data_dir)
+            return
         model_key = get_model_option(model or "claude").key
         answers, output_path, answers_path, overwrite = _resolve_persona_source(
+            settings.data_dir,
             input_file=input_file,
             update=update,
         )
@@ -595,7 +606,7 @@ def debate(
         config_path, config_source = resolve_debate_config_path(config)
 
         if config_path is not None:
-            agents = load_debate_agents(config_path)
+            agents = load_debate_agents(config_path, settings.data_dir)
         else:
             agent_count = _prompt_int("Número de agentes", minimum=2)
             agents = []
@@ -718,16 +729,16 @@ def pipeline(
     log: bool = typer.Option(False, "--log"),
 ) -> None:
     try:
+        settings = load_settings()
         request = build_pipeline_request(
             input_dir=input_dir,
             output_dir=output_dir,
-            db_path=db_path,
+            db_path=resolve_pipeline_db_path(db_path, settings.data_dir),
             mode=mode,
             job=job,
             keep_chat=keep_chat,
             log=log,
         )
-        settings = load_settings()
 
         def _progress(message: str) -> None:
             if log:
@@ -987,6 +998,57 @@ def skill(
 
         typer.echo("Use 'adapta skill --list', 'adapta skill --detail [--id|--name]', 'adapta skill --status [--id|--name]', 'adapta skill --create --title <t> --description <d> --instruction <i>', 'adapta skill --delete [--id|--name]', 'adapta skill --enable [--id|--name]' ou 'adapta skill --disable [--id|--name]'.")
     except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+
+@app.command("skill-create")
+def skill_create(
+    input_dir: Path | None = typer.Option(None, "--input-dir"),
+    output_dir: Path | None = typer.Option(None, "--output-dir"),
+    db_path: Path | None = typer.Option(None, "--db-path"),
+    job: int | None = typer.Option(None, "--job"),
+    keep_chat: bool = typer.Option(False, "--keep-chat"),
+    log: bool = typer.Option(False, "--log"),
+) -> None:
+    try:
+        settings = load_settings()
+        request = build_skill_create_request(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            db_path=resolve_skill_create_db_path(db_path, settings.data_dir),
+            job=job,
+            keep_chat=keep_chat,
+            log=log,
+        )
+
+        def _progress(message: str) -> None:
+            if log:
+                typer.echo(message)
+
+        async def _run() -> tuple[list[Path], list[Path], list[str]]:
+            async with create_client(settings) as client:
+                result = await run_skill_create(
+                    client,
+                    request,
+                    progress_callback=_progress if log else None,
+                )
+                return (
+                    result.index_paths,
+                    result.generated_skills,
+                    result.cleanup_warnings,
+                )
+
+        index_paths, generated_skills, cleanup_warnings = run_async(_run())
+        typer.echo(
+            f"Skill-create concluído: {len(index_paths)} índice(s), {len(generated_skills)} skill(s) gerada(s)."
+        )
+        for path in index_paths:
+            typer.echo(f"Índice salvo em {path}")
+        for path in generated_skills:
+            typer.echo(f"Skill salva em {path}")
+        for warning in cleanup_warnings:
+            typer.echo(warning, err=True)
+    except (ValueError, RuntimeError, FileNotFoundError) as exc:
         _fail(str(exc))
 
 

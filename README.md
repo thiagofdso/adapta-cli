@@ -111,6 +111,12 @@ Rodar testes de integração:
 pytest tests/integration
 ```
 
+Rodar teste real de paralelismo progressivo do GPT:
+
+```bash
+ADAPTA_RUN_PARALLEL_GPT_TESTS=1 ADAPTA_PARALLEL_GPT_START=3 ADAPTA_PARALLEL_GPT_STEP=3 ADAPTA_PARALLEL_GPT_MAX=30 .venv/bin/pytest -s tests/integration/test_gpt_parallel_limit.py
+```
+
 Documentação complementar:
 
 - `docs/features.md`

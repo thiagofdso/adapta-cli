@@ -4,6 +4,7 @@ import asyncio
 import json
 import re
 import sqlite3
+import httpx
 from collections import defaultdict
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -42,8 +43,8 @@ def build_pipeline_request(
     resolved_output = output_dir.expanduser().resolve()
     resolved_mode = (mode or "upload").strip().lower()
 
-    if resolved_mode not in {"upload", "docling"}:
-        raise ValueError("Informe um valor válido para --mode: upload ou docling.")
+    if resolved_mode not in {"upload", "docling", "plain"}:
+        raise ValueError("Informe um valor válido para --mode: upload, docling ou plain.")
     if not resolved_input.exists() or not resolved_input.is_dir():
         raise ValueError(f"Diretório de entrada não encontrado: {resolved_input}")
 
@@ -212,7 +213,7 @@ def _register_documents(
     cursor = connection.cursor()
     for document in documents:
         cursor.execute(
-            "SELECT id FROM jobs WHERE file_path = ?", (str(document.source_path),)
+            "SELECT id, stage_id FROM jobs WHERE file_path = ?", (str(document.source_path),)
         )
         row = cursor.fetchone()
         if row is None:
@@ -227,9 +228,11 @@ def _register_documents(
                 ),
             )
             job_id = int(cursor.lastrowid)
+            stage_id = 1
         else:
             job_id = int(row["id"])
-        registered.append(replace(document, job_id=job_id))
+            stage_id = int(row["stage_id"])
+        registered.append(replace(document, job_id=job_id, stage_id=stage_id))
     connection.commit()
     return registered
 
@@ -272,29 +275,62 @@ async def _run_stage1_for_folder(
     existing_entries = _load_index_data(index_path)
 
     for document in documents:
+        if document.stage_id >= 2:
+            if progress_callback is not None:
+                progress_callback(f"Ignorando (já indexado): {document.source_name}")
+            continue
+
         if progress_callback is not None:
             progress_callback(f"Processando {document.source_name}")
-        prompt = _build_extraction_prompt(document.source_name, existing_entries)
+        prompt = _build_extraction_prompt(document.source_name, existing_entries, mode=request.mode)
         prompt, upload_infos = await _prepare_prompt_and_uploads(
-            client, prompt, [document.source_path]
+            client, prompt, [document.source_path], mode=request.mode
         )
         try:
-            raw_text = await _call_pipeline_prompt(
-                client,
-                model_backend=model_backend,
-                prompt=prompt,
-                upload_infos=upload_infos,
-            )
+            merged_entries = None
+            max_attempts = 3
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    # Valida o JSON de origem atual
+                    _validate_knowledge_entries(existing_entries)
+
+                    raw_text = await _call_pipeline_prompt(
+                        client,
+                        model_backend=model_backend,
+                        prompt=prompt,
+                        upload_infos=upload_infos,
+                        keep_chat=request.keep_chat,
+                    )
+                    
+                    # Extrai e valida o JSON recebido (antes do patch)
+                    extracted_entries = _parse_knowledge_json(
+                        raw_text, current_file_name=document.source_name
+                    )
+                    _validate_knowledge_entries(extracted_entries)
+                    
+                    # Realiza o patch
+                    attempted_merge = _merge_knowledge_entries(existing_entries, extracted_entries)
+                    
+                    # Valida o resultado após o patch
+                    _validate_knowledge_entries(attempted_merge)
+                    
+                    merged_entries = attempted_merge
+                    break
+                except (httpx.HTTPError, RuntimeError, ValueError) as exc:
+                    if attempt < max_attempts:
+                        if progress_callback is not None:
+                            progress_callback(f"Aviso: falha na tentativa {attempt} para {document.source_name}. Retentando... ({exc})")
+                        await asyncio.sleep(2.0)
+                    else:
+                        raise
         finally:
             for upload_info in upload_infos:
                 await _cleanup_remote_upload(client, upload_info, cleanup_warnings)
 
-        extracted_entries = _parse_knowledge_json(
-            raw_text, current_file_name=document.source_name
-        )
-        existing_entries = _merge_knowledge_entries(existing_entries, extracted_entries)
-        _save_index_data(index_path, existing_entries)
-        _upsert_knowledges(connection, str(folder_path), existing_entries)
+        if merged_entries is not None:
+            existing_entries = merged_entries
+            _save_index_data(index_path, existing_entries)
+            _upsert_knowledges(connection, str(folder_path), existing_entries)
         _update_job_state(connection, document.job_id, stage_id=2, status_id=3)
 
     return index_path
@@ -328,7 +364,7 @@ async def _run_stage2_for_folder(
 
     async def _generate_knowledge_markdown(
         knowledge: sqlite3.Row,
-    ) -> tuple[int, Path, str, list[str]]:
+    ) -> None:
         async with semaphore:
             if progress_callback is not None:
                 progress_callback(f"Gerando conhecimento {knowledge['name']}")
@@ -337,9 +373,10 @@ async def _run_stage2_for_folder(
             prompt = _build_creation_prompt(
                 knowledge_name=str(knowledge["name"]),
                 index_knowledge=index_json,
+                mode=request.mode,
             )
             prompt, upload_infos = await _prepare_prompt_and_uploads(
-                client, prompt, source_paths
+                client, prompt, source_paths, mode=request.mode
             )
             local_cleanup_warnings: list[str] = []
             try:
@@ -348,6 +385,7 @@ async def _run_stage2_for_folder(
                     model_backend=model_backend,
                     prompt=prompt,
                     upload_infos=upload_infos,
+                    keep_chat=request.keep_chat,
                 )
             finally:
                 for upload_info in upload_infos:
@@ -356,24 +394,27 @@ async def _run_stage2_for_folder(
                     )
 
             output_path = docs_dir / f"{_sanitize_filename(str(knowledge['name']))}.md"
-            return int(knowledge["id"]), output_path, markdown, local_cleanup_warnings
+            output_path.write_text(_strip_markdown_fences(markdown), encoding="utf-8")
+            generated_paths.append(output_path)
+            cleanup_warnings.extend(local_cleanup_warnings)
+            _update_knowledge_status(connection, int(knowledge["id"]), status_id=3)
 
     knowledge_results = await asyncio.gather(
-        *[_generate_knowledge_markdown(knowledge) for knowledge in knowledges]
+        *[_generate_knowledge_markdown(knowledge) for knowledge in knowledges],
+        return_exceptions=True,
     )
-    for knowledge_id, output_path, markdown, local_cleanup_warnings in knowledge_results:
-        output_path.write_text(_strip_markdown_fences(markdown), encoding="utf-8")
-        generated_paths.append(output_path)
-        cleanup_warnings.extend(local_cleanup_warnings)
-        _update_knowledge_status(connection, knowledge_id, status_id=3)
+    for result in knowledge_results:
+        if isinstance(result, Exception):
+            cleanup_warnings.append(f"Erro na geração de conhecimento: {result}")
 
     return generated_paths
 
 
 def _build_extraction_prompt(
-    current_file_name: str, existing_entries: list[dict[str, Any]]
+    current_file_name: str, existing_entries: list[dict[str, Any]], mode: str = "upload"
 ) -> str:
-    template = _load_prompt_template("knowledge_extraction.txt")
+    template_name = "knowledge_extraction_plain.txt" if mode == "plain" else "knowledge_extraction.txt"
+    template = _load_prompt_template(template_name)
     index_listing = "- nenhum (primeira execucao)"
     bounds_info = (
         "The current index is empty; append new knowledges in the returned JSON."
@@ -391,8 +432,9 @@ def _build_extraction_prompt(
     )
 
 
-def _build_creation_prompt(*, knowledge_name: str, index_knowledge: str) -> str:
-    template = _load_prompt_template("knowledge_creation.txt")
+def _build_creation_prompt(*, knowledge_name: str, index_knowledge: str, mode: str = "upload") -> str:
+    template_name = "knowledge_creation_plain.txt" if mode == "plain" else "knowledge_creation.txt"
+    template = _load_prompt_template(template_name)
     return template.replace("{knowledge_name}", knowledge_name).replace(
         "{index_knowledge}", index_knowledge
     )
@@ -404,30 +446,32 @@ async def _call_pipeline_prompt(
     model_backend: str,
     prompt: str,
     upload_infos: list[dict[str, Any]],
+    keep_chat: bool = True,
 ) -> str:
     if upload_infos:
         return await client.prompt_with_files(
             model_backend=model_backend,
             prompt=prompt,
             files=upload_infos,
+            keep_chat=keep_chat,
         )
-    return await client.prompt(model_backend=model_backend, prompt=prompt)
+    return await client.prompt(model_backend=model_backend, prompt=prompt, keep_chat=keep_chat)
 
 
 async def _prepare_prompt_and_uploads(
-    client: Any, prompt: str, source_paths: list[Path]
+    client: Any, prompt: str, source_paths: list[Path], mode: str = "upload"
 ) -> tuple[str, list[dict[str, Any]]]:
     inline_blocks: list[str] = []
     upload_infos: list[dict[str, Any]] = []
     for source_path in source_paths:
-        if source_path.suffix.lower() == ".txt":
+        if mode == "plain" or source_path.suffix.lower() in {".txt", ".md"}:
             inline_blocks.append(_build_inline_text_block(source_path))
         else:
             upload_infos.append(await client.upload_file(source_path))
 
     final_prompt = prompt
     if inline_blocks:
-        final_prompt = f"{prompt}\n\n# ARQUIVOS TXT INLINE\n\n" + "\n\n".join(
+        final_prompt = f"{prompt}\n\n# ARQUIVOS INLINE\n\n" + "\n\n".join(
             inline_blocks
         )
     return final_prompt, upload_infos
@@ -478,11 +522,29 @@ def _docs_dir_for_folder(request: PipelineRequest, folder_path: Path) -> Path:
 def _load_index_data(index_path: Path) -> list[dict[str, Any]]:
     if not index_path.exists():
         return []
-    raw = json.loads(index_path.read_text(encoding="utf-8"))
+    try:
+        raw = json.loads(index_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"Falha ao interpretar JSON de origem ({index_path}): {exc}") from exc
     if not isinstance(raw, dict) or not isinstance(raw.get("knowledges"), list):
-        return []
-    return [_sanitize_knowledge_entry(entry) for entry in raw.get("knowledges") or []]
+        raise RuntimeError(f"Formato inválido no JSON de origem ({index_path}): esperado um objeto com a chave 'knowledges'.")
+    entries = [_sanitize_knowledge_entry(entry) for entry in raw.get("knowledges") or []]
+    _validate_knowledge_entries(entries)
+    return entries
 
+def _validate_knowledge_entries(entries: list[dict[str, Any]]) -> None:
+    if not isinstance(entries, list):
+        raise RuntimeError("As entradas de conhecimento devem ser uma lista.")
+    for i, entry in enumerate(entries):
+        name = str(entry.get("name") or "").strip()
+        if not name:
+            raise RuntimeError(f"Entrada na posição {i} não possui um 'name' válido.")
+        description = str(entry.get("description") or "").strip()
+        if not description:
+            raise RuntimeError(f"Entrada '{name}' não possui uma 'description' válida.")
+        files = entry.get("files")
+        if not isinstance(files, list) or not files:
+            raise RuntimeError(f"Entrada '{name}' não possui arquivos associados ('files').")
 
 def _save_index_data(index_path: Path, entries: list[dict[str, Any]]) -> None:
     index_path.parent.mkdir(parents=True, exist_ok=True)
@@ -538,8 +600,15 @@ def _sanitize_knowledge_entry(
     files = _normalize_files(list(raw.get("files") or []))
     if current_file_name and current_file_name not in files:
         files = _normalize_files(files + [current_file_name])
+
+    name = str(raw.get("name") or "").strip()
+    # Remove characters that are not letters, numbers or spaces
+    name = "".join(c for c in name if c.isalnum() or c.isspace())
+    # Normalize spaces
+    name = re.sub(r"\s+", " ", name).strip()
+
     return {
-        "name": str(raw.get("name") or "").strip(),
+        "name": name,
         "description": str(raw.get("description") or "").strip(),
         "files": files,
     }

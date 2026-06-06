@@ -37,7 +37,7 @@ class DebateControlDecision:
     user_message: str | None = None
 
 
-def _resolve_persona_path(persona_value: str, config_path: Path) -> Path:
+def _resolve_persona_path(persona_value: str, config_path: Path, data_dir: Path) -> Path:
     candidate_path = Path(persona_value)
     if candidate_path.is_absolute():
         return candidate_path.resolve()
@@ -45,12 +45,12 @@ def _resolve_persona_path(persona_value: str, config_path: Path) -> Path:
     # Nome curto como `cliente-cetico` ou `cliente-cetico.md`
     if candidate_path.parent == Path(".") and not candidate_path.suffix:
         persona_name = f"{candidate_path.name}.md"
-        return (get_persona_directory() / persona_name).resolve()
+        return (get_persona_directory(data_dir) / persona_name).resolve()
 
     return (config_path.parent / candidate_path).resolve()
 
 
-def load_debate_agents(config_path: Path) -> list[DebateAgentConfig]:
+def load_debate_agents(config_path: Path, data_dir: Path) -> list[DebateAgentConfig]:
     try:
         raw_content = config_path.read_text(encoding="utf-8")
     except OSError as exc:
@@ -77,7 +77,7 @@ def load_debate_agents(config_path: Path) -> list[DebateAgentConfig]:
         persona_value = str(raw_agent.get("persona", "")).strip()
         persona_path = None
         if persona_value:
-            persona_path = _resolve_persona_path(persona_value, config_path)
+            persona_path = _resolve_persona_path(persona_value, config_path, data_dir)
             if not persona_path.exists() or not persona_path.is_file():
                 raise ValueError(
                     f"Arquivo de persona não encontrado para o agente {normalized_id}: {persona_path}"

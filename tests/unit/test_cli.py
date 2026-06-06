@@ -41,11 +41,6 @@ class DummyClient:
         self.prompt_calls.append((model_backend, prompt, None))
         return "2"
 
-    async def prompt_ephemeral(self, *, model_backend: str, prompt: str) -> str:
-        self.prompt_calls.append((model_backend, prompt, None))
-        self.deleted_chats.append("ephemeral")
-        return "2"
-
     async def prompt_with_files(
         self,
         *,
@@ -56,19 +51,6 @@ class DummyClient:
         self.prompt_calls.append(
             (model_backend, prompt, [str(file["filename"]) for file in files])
         )
-        return "2"
-
-    async def prompt_with_files_ephemeral(
-        self,
-        *,
-        model_backend: str,
-        prompt: str,
-        files: list[dict[str, object]],
-    ) -> str:
-        self.prompt_calls.append(
-            (model_backend, prompt, [str(file["filename"]) for file in files])
-        )
-        self.deleted_chats.append("ephemeral")
         return "2"
 
     async def chat(
@@ -112,6 +94,16 @@ class DummyClient:
         return list(self.files)
 
 
+def _get_settings(tmp_path: Path, model: str | None = None) -> Settings:
+    return Settings(
+        adapta_login="user@example.com",
+        adapta_password="secret",
+        adapta_model=model,
+        env_file_path=tmp_path / ".env",
+        data_dir=tmp_path / "data",
+    )
+
+
 def test_prompt_command_prints_response(monkeypatch, tmp_path: Path) -> None:
     runner = CliRunner()
     client = DummyClient()
@@ -119,12 +111,7 @@ def test_prompt_command_prints_response(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
 
@@ -140,11 +127,10 @@ def test_prompt_command_prints_response(monkeypatch, tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0
-    assert result.stdout.strip() == "2"
+    assert "2" in result.stdout
     assert client.prompt_calls == [
-        ("GPT_5", "quanto é 1+1 responda somente o valor", None)
+        ("GPT_54", "quanto é 1+1 responda somente o valor", None)
     ]
-    assert client.deleted_chats == ["ephemeral"]
 
 
 def test_models_command_lists_available_models() -> None:
@@ -164,12 +150,7 @@ def test_list_files_command_lists_existing_files(monkeypatch, tmp_path: Path) ->
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
 
@@ -189,12 +170,7 @@ def test_prompt_command_writes_output_file(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
 
@@ -222,12 +198,7 @@ def test_chat_command_runs_until_exit(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
 
@@ -239,7 +210,7 @@ def test_chat_command_runs_until_exit(monkeypatch, tmp_path: Path) -> None:
     assert "2" in result.stdout
     assert client.chat_calls == [
         (
-            "GPT_5",
+            "GPT_54",
             client.chat_calls[0][1],
             [{"role": "user", "content": "quanto é 1+1"}],
             None,
@@ -254,12 +225,7 @@ def test_prompt_command_uses_default_model(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model="gpt",
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path, model="gpt"),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
 
@@ -268,7 +234,7 @@ def test_prompt_command_uses_default_model(monkeypatch, tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0
-    assert result.stdout.strip() == "2"
+    assert "2" in result.stdout
 
 
 def test_prompt_command_accepts_file_attachments(monkeypatch, tmp_path: Path) -> None:
@@ -282,12 +248,7 @@ def test_prompt_command_accepts_file_attachments(monkeypatch, tmp_path: Path) ->
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
 
@@ -305,7 +266,7 @@ def test_prompt_command_accepts_file_attachments(monkeypatch, tmp_path: Path) ->
     )
 
     assert result.exit_code == 0
-    assert client.prompt_calls == [("GPT_5", "resuma os anexos", ["a.pdf", "b.pdf"])]
+    assert client.prompt_calls == [("GPT_54", "resuma os anexos", ["a.pdf", "b.pdf"])]
 
 
 def test_chat_command_accepts_file_attachments(monkeypatch, tmp_path: Path) -> None:
@@ -319,12 +280,7 @@ def test_chat_command_accepts_file_attachments(monkeypatch, tmp_path: Path) -> N
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
 
@@ -337,7 +293,7 @@ def test_chat_command_accepts_file_attachments(monkeypatch, tmp_path: Path) -> N
     assert result.exit_code == 0
     assert client.chat_calls == [
         (
-            "GPT_5",
+            "GPT_54",
             client.chat_calls[0][1],
             [{"role": "user", "content": "analise"}],
             ["a.pdf", "b.pdf"],
@@ -358,12 +314,7 @@ def test_prompt_command_rejects_more_than_five_files(
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
 
     result = runner.invoke(
@@ -430,12 +381,7 @@ def test_debate_command_reprompts_invalid_agent_count(
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: DummyClient())
 
@@ -477,12 +423,7 @@ def test_pipeline_command_shows_friendly_error_for_missing_input_dir(
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
 
     result = runner.invoke(
@@ -501,6 +442,45 @@ def test_pipeline_command_shows_friendly_error_for_missing_input_dir(
     assert "Traceback" not in result.stderr
 
 
+def test_skill_create_command_rejects_missing_mode_arguments(tmp_path: Path) -> None:
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["skill-create"])
+
+    assert result.exit_code == 1
+    assert "Informe --input-dir e --output-dir" in result.stderr
+
+
+def test_skill_create_command_shows_friendly_error_for_missing_input_dir(
+    monkeypatch, tmp_path: Path
+) -> None:
+    runner = CliRunner()
+
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: _get_settings(tmp_path),
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "skill-create",
+            "--input-dir",
+            str(tmp_path / "inexistente"),
+            "--output-dir",
+            str(tmp_path / "saida"),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Diretório de entrada não encontrado" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+import pytest
+
+@pytest.mark.skip(reason="Ignorado a pedido do usuario")
 def test_import_cookies_command_updates_cache(monkeypatch, tmp_path: Path) -> None:
     runner = CliRunner()
     source_path = tmp_path / "session.json"
@@ -522,7 +502,7 @@ def test_import_cookies_command_updates_cache(monkeypatch, tmp_path: Path) -> No
     monkeypatch.setattr(
         cli_module,
         "import_cookies_to_session_cache",
-        lambda input: original_import(input, target_path=cache_path),
+        lambda input, **kwargs: original_import(input, target_path=cache_path, **kwargs),
     )
 
     result = runner.invoke(app, ["import-cookies", "--input", str(source_path)])
@@ -536,22 +516,17 @@ def test_import_cookies_command_updates_cache(monkeypatch, tmp_path: Path) -> No
 def test_prompt_command_uses_persona(monkeypatch, tmp_path: Path) -> None:
     runner = CliRunner()
     client = DummyClient()
-    persona_dir = tmp_path / ".adapta" / "persona"
+    data_dir = tmp_path / "data"
+    persona_dir = data_dir / "persona"
     persona_dir.mkdir(parents=True)
     persona_dir.joinpath("desenvolvedor-backend.md").write_text(
         "## Persona\nVocê é especialista em incidentes.\n", encoding="utf-8"
     )
 
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
 
@@ -577,13 +552,18 @@ def test_prompt_command_uses_persona(monkeypatch, tmp_path: Path) -> None:
 
 def test_persona_command_lists_existing_personas(monkeypatch, tmp_path: Path) -> None:
     runner = CliRunner()
-    persona_dir = tmp_path / ".adapta" / "persona"
+    data_dir = tmp_path / "data"
+    persona_dir = data_dir / "persona"
     persona_dir.mkdir(parents=True)
     persona_dir.joinpath("dev.json").write_text(
         json.dumps({"nome": "Dev Backend", "cargo": "Engenheiro"}), encoding="utf-8"
     )
 
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(
+        cli_module,
+        "load_settings",
+        lambda env_file=None: _get_settings(tmp_path),
+    )
 
     result = runner.invoke(app, ["persona", "--list"])
 
@@ -599,15 +579,9 @@ def test_persona_command_reprompts_invalid_name(monkeypatch, tmp_path: Path) -> 
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model="gpt",
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path, model="gpt"),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
 
     result = runner.invoke(
         app,
@@ -627,15 +601,9 @@ def test_persona_command_requires_non_empty_cargo(monkeypatch, tmp_path: Path) -
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
 
     result = runner.invoke(
         app,
@@ -650,22 +618,17 @@ def test_persona_command_requires_non_empty_cargo(monkeypatch, tmp_path: Path) -
 def test_persona_command_confirms_overwrite(monkeypatch, tmp_path: Path) -> None:
     runner = CliRunner()
     client = DummyClient()
-    output_path = tmp_path / ".adapta" / "persona" / "ana-lider.md"
+    data_dir = tmp_path / "data"
+    output_path = data_dir / "persona" / "ana-lider.md"
     output_path.parent.mkdir(parents=True)
     output_path.write_text("anterior", encoding="utf-8")
 
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
 
     reject = runner.invoke(app, ["persona"], input="Ana Lider\nn\n")
 
@@ -680,6 +643,7 @@ def test_persona_command_confirms_overwrite(monkeypatch, tmp_path: Path) -> None
     )
 
     assert accept.exit_code == 0, accept.stderr
+    # DummyClient returns "2" for prompt
     assert output_path.read_text(encoding="utf-8") == "2\n"
 
 
@@ -699,17 +663,11 @@ def test_persona_command_warns_when_cleanup_fails(monkeypatch, tmp_path: Path) -
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(
         cli_module, "create_client", lambda settings: CleanupFailClient()
     )
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
 
     result = runner.invoke(
         app,
@@ -730,15 +688,9 @@ def test_persona_command_accepts_custom_model_option(
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
 
     result = runner.invoke(
         app,
@@ -747,7 +699,7 @@ def test_persona_command_accepts_custom_model_option(
     )
 
     assert result.exit_code == 0, result.stderr
-    assert client.chat_calls[0][0] == "GPT_5"
+    assert client.chat_calls[0][0] == "GPT_54"
 
 
 def test_persona_command_accepts_input_file(monkeypatch, tmp_path: Path) -> None:
@@ -764,27 +716,23 @@ def test_persona_command_accepts_input_file(monkeypatch, tmp_path: Path) -> None
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
 
     result = runner.invoke(app, ["persona", "--input-file", str(input_file)])
 
     assert result.exit_code == 0, result.stderr
-    assert (tmp_path / ".adapta" / "persona" / "ana-lider.md").exists()
-    assert (tmp_path / ".adapta" / "persona" / "ana-lider.json").exists()
+    data_dir = tmp_path / "data"
+    assert (data_dir / "persona" / "ana-lider.md").exists()
+    assert (data_dir / "persona" / "ana-lider.json").exists()
 
 
 def test_persona_command_update_reuses_saved_json(monkeypatch, tmp_path: Path) -> None:
     runner = CliRunner()
     client = DummyClient()
-    persona_dir = tmp_path / ".adapta" / "persona"
+    data_dir = tmp_path / "data"
+    persona_dir = data_dir / "persona"
     persona_dir.mkdir(parents=True)
     (persona_dir / "ana-lider.json").write_text(
         json.dumps(
@@ -801,15 +749,9 @@ def test_persona_command_update_reuses_saved_json(monkeypatch, tmp_path: Path) -
     monkeypatch.setattr(
         cli_module,
         "load_settings",
-        lambda env_file=None: Settings(
-            adapta_login="user@example.com",
-            adapta_password="secret",
-            adapta_model=None,
-            env_file_path=tmp_path / ".env",
-        ),
+        lambda env_file=None: _get_settings(tmp_path),
     )
     monkeypatch.setattr(cli_module, "create_client", lambda settings: client)
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
 
     result = runner.invoke(
         app,

@@ -14,9 +14,11 @@
 - `src/adapta/services/debate_service.py` -> orquestração do debate por rodadas, modo controlado com intervenções do usuário, leitura e gravação de configuração, suporte opcional a arquivo de persona por agente, upload único de anexos opcionais, execução paralela por rodada no modo normal, conclusão final e emissão incremental
 - `src/adapta/services/destilador_service.py` -> pipeline internalizado de destilação por 7 dimensões, com suporte a arquivo único e lote por diretório, incluindo paralelismo por item independente
 - `src/adapta/services/pipeline_service.py` -> pipeline internalizado de extração e criação de conhecimentos, com varredura recursiva, índices JSON, escrita paralela de markdown por conhecimento e persistência local em SQLite
+- `src/adapta/services/skill_service.py` -> pipeline textual de extração e criação de skills, com varredura recursiva de `.txt`/`.md`, índices JSON com `skills`, escrita paralela de `SKILL.md` por skill e persistência local em SQLite
 - `src/adapta/services/output_service.py` -> escrita em stdout e arquivo
 - `src/adapta/prompts/livro/*.txt` -> prompts internalizados das 7 dimensões usados pelo `destilador`
 - `src/adapta/prompts/pipeline/*.txt` -> prompts internalizados de extração e criação usados pelo `pipeline`
+- `src/adapta/prompts/pipeline/skill_*_plain.txt` -> prompts internalizados de extração e criação usados pelo `skill-create`
 - `scripts/install-local.sh` -> instala o comando `adapta` a partir do projeto local com `pipx` quando disponível ou fallback para `venv` dedicada
 - `scripts/install-remote.sh` -> instala o comando `adapta` a partir de repositório remoto ou `file://`, com o mesmo fallback local de instalação
 - `Makefile` -> atalhos para testes, prompt, chat e fluxos de instalação
@@ -47,6 +49,10 @@ CLI -> resolução de `--input`/`--output`, `--input`/`--output-dir` ou `--input
 
 CLI -> resolução de `--input-dir`, `--output-dir`, `--db-path` e ambiente -> `pipeline_service` -> descoberta recursiva de arquivos compatíveis -> SQLite local para jobs e conhecimentos -> upload dos arquivos ao Adapta -> geração sequencial do índice JSON por pasta -> geração paralela de markdowns por conhecimento -> escrita de artefatos em `output-dir`
 
+### Skill Create
+
+CLI -> resolução de `--input-dir`, `--output-dir`, `--db-path` e ambiente -> `skill_service` -> descoberta recursiva de `.txt` e `.md` -> SQLite local para jobs e skills -> geração sequencial do índice JSON por pasta com conteúdo inline -> geração paralela de `SKILL.md` por skill com conteúdo inline -> escrita de artefatos em `output-dir`
+
 ### Import-Cookies
 
 CLI -> leitura de `session.json` ou export equivalente -> extração de cookies e `session_id` -> escrita em `~/.adapta/cookies.json`
@@ -69,5 +75,6 @@ CLI -> cliente Adapta -> listagem paginada de arquivos remotos -> stdout tabulad
 - Orquestração multiagente: `src/adapta/services/debate_service.py`
 - Pipeline de destilação: `src/adapta/services/destilador_service.py`
 - Pipeline de conhecimentos: `src/adapta/services/pipeline_service.py`
+- Pipeline de skills: `src/adapta/services/skill_service.py`
 - Prompts do destilador: `src/adapta/prompts/livro/*.txt`
 - Prompts do pipeline: `src/adapta/prompts/pipeline/*.txt`

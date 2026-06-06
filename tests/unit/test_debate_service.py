@@ -84,7 +84,7 @@ def test_load_debate_agents_rejects_single_agent(tmp_path: Path) -> None:
     )
 
     with pytest.raises(ValueError, match="ao menos 2 agentes"):
-        load_debate_agents(config_path)
+        load_debate_agents(config_path, tmp_path)
 
 
 def test_persist_debate_agents_writes_expected_json(tmp_path: Path) -> None:
@@ -95,7 +95,7 @@ def test_persist_debate_agents_writes_expected_json(tmp_path: Path) -> None:
             "A2": {"model": "gpt", "prompt": "desenvolvedor"},
         },
     )
-    agents = load_debate_agents(config_path)
+    agents = load_debate_agents(config_path, tmp_path)
     destination = tmp_path / "debate.json"
 
     persist_debate_agents(agents, destination)
@@ -122,20 +122,20 @@ def test_load_debate_agents_resolves_optional_persona_path(tmp_path: Path) -> No
         },
     )
 
-    agents = load_debate_agents(config_path)
+    agents = load_debate_agents(config_path, tmp_path)
 
     assert agents[0].persona_path == persona_path.resolve()
     assert agents[1].persona_path is None
 
 
 def test_load_debate_agents_resolves_persona_short_name_from_user_directory(
-    monkeypatch, tmp_path: Path
+    tmp_path: Path
 ) -> None:
-    persona_dir = tmp_path / ".adapta" / "persona"
+    data_dir = tmp_path / "data"
+    persona_dir = data_dir / "persona"
     persona_dir.mkdir(parents=True)
     persona_path = persona_dir / "cliente-cetico.md"
     persona_path.write_text("# Você é Cliente Cético\n", encoding="utf-8")
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
     config_path = _write_config(
         tmp_path / "debate.json",
         {
@@ -148,7 +148,7 @@ def test_load_debate_agents_resolves_persona_short_name_from_user_directory(
         },
     )
 
-    agents = load_debate_agents(config_path)
+    agents = load_debate_agents(config_path, data_dir)
 
     assert agents[0].persona_path == persona_path.resolve()
 
@@ -162,7 +162,7 @@ async def test_run_debate_orchestrates_rounds_and_cleanup(tmp_path: Path) -> Non
             "A2": {"model": "gpt", "prompt": "desenvolvedor"},
         },
     )
-    agents = load_debate_agents(config_path)
+    agents = load_debate_agents(config_path, tmp_path)
     config = DebateConfig(
         agents=agents,
         rounds=2,
@@ -209,7 +209,7 @@ async def test_run_debate_uploads_attachments_once_and_reuses_them(
     attachment_b = tmp_path / "b.pdf"
     attachment_a.write_bytes(b"%PDF-1.4\n")
     attachment_b.write_bytes(b"%PDF-1.4\n")
-    agents = load_debate_agents(config_path)
+    agents = load_debate_agents(config_path, tmp_path)
     config = DebateConfig(
         agents=agents,
         rounds=2,
@@ -247,7 +247,7 @@ async def test_run_debate_incorporates_persona_file_into_agent_prompt(
             "A2": {"model": "gpt", "prompt": "desenvolvedor"},
         },
     )
-    agents = load_debate_agents(config_path)
+    agents = load_debate_agents(config_path, tmp_path)
     config = DebateConfig(
         agents=agents,
         rounds=1,
@@ -276,7 +276,7 @@ async def test_run_controlled_debate_allows_manual_reply_and_early_conclusion(
             "A2": {"model": "gpt", "prompt": "desenvolvedor"},
         },
     )
-    agents = load_debate_agents(config_path)
+    agents = load_debate_agents(config_path, tmp_path)
     config = DebateConfig(
         agents=agents,
         rounds=2,
@@ -365,7 +365,7 @@ async def test_run_debate_executes_agents_in_parallel(tmp_path: Path) -> None:
             "A2": {"model": "gpt", "prompt": "desenvolvedor"},
         },
     )
-    agents = load_debate_agents(config_path)
+    agents = load_debate_agents(config_path, tmp_path)
     config = DebateConfig(
         agents=agents,
         rounds=1,

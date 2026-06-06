@@ -6,7 +6,7 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 
 ## Componentes principais
 
-- CLI Typer para `prompt`, `chat`, `models`, `list-files`, `debate`, `persona`, `destilador` e `pipeline`
+- CLI Typer para `prompt`, `chat`, `models`, `list-files`, `debate`, `persona`, `destilador`, `pipeline` e `skill-create`
 - módulo de configuração baseado em `.env`
 - registro de modelos para mapear aliases curtos para nomes do backend Adapta
 - cliente HTTP assíncrono interno reestruturado em camadas de sessão, autenticação, upload/exclusão de arquivos e conversas
@@ -21,6 +21,7 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 - no comando `persona`, a CLI coleta respostas interativas, também pode ler respostas de `--input-file` ou reabrir uma persona com `--update`, resolve o modelo padrão ou um `--model` explícito pelo registro interno, gera um único markdown em chat efêmero e salva o resultado junto do JSON de respostas em uma pasta sob o diretório home real do usuário
 - no destilador, a CLI internaliza o pipeline em 7 dimensões, carrega prompts especializados de `src/adapta/prompts/livro/`, usa upload de arquivo para gerar um consolidado por item e paraleliza itens independentes no modo por diretório
 - no pipeline, a CLI internaliza um fluxo de extração e escrita de conhecimentos por diretório, usa prompts especializados em `src/adapta/prompts/pipeline/`, persiste estado operacional em SQLite local e grava índices e documentos dentro do diretório de saída informado; a escrita de markdowns por conhecimento é paralelizada depois que o índice da pasta está consolidado
+- no skill-create, a CLI internaliza um fluxo textual de extração e escrita de skills por diretório, usa prompts especializados em `src/adapta/prompts/pipeline/`, persiste estado operacional próprio em SQLite local e grava índices e diretórios de skill contendo `SKILL.md`; a escrita das skills é paralelizada depois que o índice da pasta está consolidado
 
 ## Tecnologias
 
@@ -41,4 +42,5 @@ Projeto único em Python, empacotado como CLI e organizado em camadas leves de c
 - destilador reutiliza o padrão de limpeza best-effort para uploads e artefatos remotos após a consolidação final
 - no modo `--input` com `--output-dir`, o destilador preserva os arquivos parciais por dimensão para inspeção local
 - pipeline reutiliza SQLite local para rastrear jobs e conhecimentos, evitando dependência de serviço externo para estado operacional
+- skill-create reutiliza o padrão de SQLite local do pipeline, mas mantém banco próprio para não misturar estado de conhecimentos e skills
 - a implementação atual internaliza apenas o subconjunto necessário do cliente do Adapta para prompt, chat e limpeza remota, reduzindo dependências externas do projeto

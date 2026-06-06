@@ -2,18 +2,23 @@
 set -euo pipefail
 
 if [[ $# -lt 4 ]]; then
-  echo "Usage: adapta_debate.sh <config.json> <rounds>=3 \"<prompt>\" <output-name> [extra adapta debate flags]" >&2
+  echo "Usage: adapta_debate.sh <config.json> <rounds>=3 <prompt-file> <output-name> [extra adapta debate flags]" >&2
   exit 1
 fi
 
 CONFIG_PATH=$1
 ROUNDS=$2
-PROMPT_TEXT=$3
+PROMPT_FILE=$3
 OUTPUT_NAME=$4
 shift 4
 
 if [[ ! -f "$CONFIG_PATH" ]]; then
   echo "Debate config not found: $CONFIG_PATH" >&2
+  exit 1
+fi
+
+if [[ ! -f "$PROMPT_FILE" ]]; then
+  echo "Prompt file not found: $PROMPT_FILE" >&2
   exit 1
 fi
 
@@ -53,6 +58,6 @@ fi
 adapta debate \
   --config "$CONFIG_PATH" \
   --rounds "$ROUNDS" \
-  --prompt "$PROMPT_TEXT" \
+  --prompt-file "$PROMPT_FILE" \
   --output "$OUTPUT_PATH" \
   "$@"

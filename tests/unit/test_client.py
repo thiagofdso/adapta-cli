@@ -13,6 +13,8 @@ from adapta.client import (
     AdaptaClientAdapter,
     AdaptaConversationClient,
     AdaptaHttpSession,
+    ChatCompletionResult,
+    extract_answer_text,
     import_cookies_to_session_cache,
     should_logout,
 )
@@ -329,6 +331,36 @@ def test_should_logout_only_when_env_true(monkeypatch) -> None:
 
     monkeypatch.setenv("ADAPTA_LOGOUT", "true")
     assert should_logout() is True
+
+
+def test_extract_answer_text_raises_for_empty_chat_completion_result() -> None:
+    result = ChatCompletionResult(
+        messages=[{"kind": "answer", "text": ""}],
+        chat_id="chat-empty",
+    )
+
+    with pytest.raises(RuntimeError, match="texto vazio"):
+        extract_answer_text(result)
+
+
+@pytest.mark.anyio
+async def test_call_model_reports_empty_stream_as_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            request=request,
+            text='data: {"type":"text-end"}\n\n'
+            "data: [DONE]\n\n",
+        )
+
+    client, session = _build_client(httpx.MockTransport(handler))
+
+    try:
+        result = await client.call_model(prompt="oi", model="GPT_5")
+        with pytest.raises(RuntimeError, match="texto vazio"):
+            extract_answer_text(result)
+    finally:
+        await session.close()
 
 
 @pytest.mark.anyio

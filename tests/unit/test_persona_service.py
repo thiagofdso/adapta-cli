@@ -33,14 +33,13 @@ def test_normalize_persona_name_returns_safe_slug() -> None:
     assert slug == "ana-lider-produto"
 
 
-def test_resolve_persona_output_path_uses_home_directory_cross_platform(
-    monkeypatch, tmp_path: Path
+def test_resolve_persona_output_path_uses_data_dir(
+    tmp_path: Path
 ) -> None:
-    monkeypatch.setattr(persona_service.Path, "home", lambda: tmp_path)
+    data_dir = tmp_path / "custom_data"
+    output_path = persona_service.resolve_persona_output_path("Ana Lider", data_dir)
 
-    output_path = persona_service.resolve_persona_output_path("Ana Lider")
-
-    assert output_path == (tmp_path / ".adapta" / "persona" / "ana-lider.md").resolve()
+    assert output_path == (data_dir / "persona" / "ana-lider.md").resolve()
 
 
 def test_build_persona_prompt_preserves_empty_fields() -> None:
@@ -150,7 +149,7 @@ async def test_generate_persona_document_cleans_up_chat_on_success() -> None:
 
     assert result.text == "# Persona\n"
     assert result.cleanup_warning is None
-    assert client.chat_calls[0][0] == "CLAUDE_4_5_SONNET"
+    assert client.chat_calls[0][0] == "CLAUDE_4_6_SONNET"
     assert client.deleted_chats == [client.chat_calls[0][1]]
 
 
@@ -206,4 +205,4 @@ async def test_generate_persona_document_accepts_custom_model_key() -> None:
         client, questionnaire, model_key="gpt"
     )
 
-    assert client.model_backend == "GPT_5"
+    assert client.model_backend == "GPT_54"

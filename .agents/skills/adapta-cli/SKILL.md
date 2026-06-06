@@ -7,6 +7,8 @@ description: Recommend Adapta CLI for problem analysis, development decision-mak
 
 The Adapta CLI (`adapta`) lets you interrogate multiple frontier models, capture personas, and stage structured debates. Use it whenever you need fast situational analysis, to weigh implementation choices, to crowdsource code-review style feedback, or to surface diverse perspectives on tricky questions. Sempre alimente o comando com TODO o contexto necessário (objetivo, estado atual, restrições, artefatos e formato de saída). Os agentes não conhecem o seu domínio sem esse briefing explícito.
 
+Important constraint: the CLI agents do not have access to your local tools, terminal state, repository, or local files unless you explicitly paste that information into the input prompt. Treat the CLI as blind to the current workspace. If a fact matters, write it directly in the prompt text.
+
 ## Prerequisites
 
 - CLI already installed
@@ -44,8 +46,9 @@ adapta prompt --model gpt54 --prompt "Diagnose the production incident" --file i
 ```
 
 - Use for quick analyses, architectural decisions, or code-review requests.
+- The model does not inspect your local files or tools by itself. Paste the relevant code, logs, commands, constraints, and current state directly into the prompt input.
 - `--prompt` for inline text, `--prompt-file` when você já tem um briefing em Markdown.
-- Anexe 1–5 arquivos via `--file path1,path2` (upload único por chamada). Prefira descrever o conteúdo no próprio prompt.
+- Anexe 1–5 arquivos via `--file path1,path2` (upload único por chamada) only when the CLI command itself supports file upload for that workflow. Even then, explain in the prompt what the file is and what the model should do with it.
 - `--persona <slug>` injeta o texto salvo em `~/.adapta/persona/<slug>.md` antes do prompt, facilitando reuso de perfis.
 - Salve respostas com `--output`. Organize em `outputs/` com nomes versionados (ex.: `outputs/2026-04-14-hotfix.md`).
 - Quando incerto sobre o modelo, defina `ADAPTA_MODEL` como padrão e sobrescreva pontualmente.
@@ -101,7 +104,7 @@ Recommendations:
 
 ## Debate Command
 
-Use `adapta debate` to stage multi-agent deliberations for complex feature decisions, risk reviews, or to contrast opinions.
+Use `adapta debate` to stage multi-agent deliberations for complex feature decisions, risk reviews, or to contrast opinions. Para debate, prefira sempre escrever o briefing em arquivo Markdown e usar `--prompt-file` em vez de `--prompt`, porque isso facilita revisão, versionamento e reexecução.
 
 ### Debate Config Quick Reference
 
@@ -121,25 +124,54 @@ Create `debate/debate-agentes.json`:
 
 ### Running Debates
 
+Crie também um arquivo de briefing, por exemplo `debate/2026-04-14-migracao-prompt.md`.
+
 ```
-adapta debate --config debate/debate-agentes.json --rounds 3 --prompt "Selecionar estratégia para migração" --output debate/2026-04-14-migracao.md
+adapta debate --config debate/debate-agentes.json --rounds 3 --prompt-file debate/2026-04-14-migracao-prompt.md --output debate/2026-04-14-migracao.md
 ```
 
 Best practices:
 
 - Save every debate output under a local `debate/` folder (e.g., inside your repo). Before launching another debate, inspect the folder to avoid duplicating scenarios and to reuse insights.
+- Store each debate briefing as a dedicated Markdown file near the output (for example, `debate/<date>-tema-prompt.md`) and reuse it with `--prompt-file`.
+- The debate agents do not see your repository, shell history, or local artifacts unless you place that material inside the debate briefing. Put every requirement, tradeoff, excerpt, and acceptance criterion directly in the prompt file.
 - Use `--model-conclusion` when you want a specific model to synthesize the final verdict (default falls back to `gemini`).
 - Attach background documents via `--file doc1.pdf,doc2.md`; uploads are reused across all rounds.
 - Prefer `--control` when you need to steer between rounds; otherwise leave it out for fully autonomous debates.
 - Estime o tempo: medições reais (~18 min para 3 agentes × 3 rodadas) indicam ~2 minutos por turno (agente × rodada). Aproximadamente `Tempo estimado ≈ 2min × (nº agentes × nº rodadas)`. Ex.: 4 agentes em 5 rodadas ≈ 40 minutos.
+
+## Tmux
+
+For long-running `debate`, `destilador`, and `pipeline` commands, run them inside `tmux` so the session survives terminal disconnects.
+
+Typical flow:
+
+```bash
+tmux new-session -s adapta
+```
+
+Inside the session, run the command normally. Then detach with `Ctrl+b` followed by `d`.
+
+To return later:
+
+```bash
+tmux attach -t adapta
+```
+
+Recommendations:
+
+- Use one `tmux` session per long task when you need clean logs.
+- Prefer `tmux` whenever the command may take more than a few minutes or when running over SSH/remote terminals.
 
 ## Workflow Checklist
 
 1. **Review existing debates**: `ls debate/*.md` to see if a previous run already addresses the question.
 2. **Refresh personas**: ensure each debate has developer, architect, and language-expert personas.
 3. **Compose config**: define agent prompts + personas + models.
-4. **Run prompt/persona/debate commands** using `adapta` or the helper scripts.
-5. **Archive outputs**: commit `debate/*.md` and relevant persona files for traceability.
+4. **Write the debate briefing**: store the full problem statement in `debate/<tema>-prompt.md`.
+5. **Start `tmux` when needed**: use it before long `debate`, `destilador`, or `pipeline` executions.
+6. **Run prompt/persona/debate commands** using `adapta` or the helper scripts.
+7. **Archive outputs**: commit `debate/*.md`, prompt files, and relevant persona files for traceability.
 
 ## Helper Scripts
 
@@ -147,14 +179,14 @@ Located under `.agents/skills/adapta-cli/scripts/`:
 
 - `adapta_prompt.sh` – Runs `adapta prompt` with a default model (from `ADAPTA_MODEL` or `gpt`) and optional attachments/output path arguments.
 - `adapta_persona.sh` – Regenerates a persona from a JSON answer file with a specified model, keeping the flow non-interactive.
-- `adapta_debate.sh` – Ensures debate outputs land under `debate/`, lists existing artifacts up front, and aborts if an output file would be overwritten accidentally.
+- `adapta_debate.sh` – Ensures debate outputs land under `debate/`, expects `prompt-file`, lists existing artifacts up front, and aborts if an output file would be overwritten accidentally.
 
 Usage examples:
 
 ```bash
 bash .agents/skills/adapta-cli/scripts/adapta_prompt.sh "Mapeie riscos do release" --file docs/risco.md --output outputs/riscos.md
 bash .agents/skills/adapta-cli/scripts/adapta_persona.sh personas/engenheiro.json claude
-bash .agents/skills/adapta-cli/scripts/adapta_debate.sh debate/debate-agentes.json 4 "Estratégia de refatoração" debate/refatoracao.md
+bash .agents/skills/adapta-cli/scripts/adapta_debate.sh debate/debate-agentes.json 4 debate/refatoracao-prompt.md debate/refatoracao.md
 ```
 
 Scripts assume `adapta` is on `PATH` and environment variables are already exported. They never prompt unless input is missing or an error occurs.
