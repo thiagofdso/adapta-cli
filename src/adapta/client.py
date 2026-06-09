@@ -18,6 +18,8 @@ import httpx
 
 from adapta.models import Settings
 
+SEARCH_LIMIT_ERROR = "[ERR:661]"
+
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +181,67 @@ class AdaptaHttpSession:
             await self._client.aclose()
         self._client = None
         self._client_loop = None
+
+    async def logout(self) -> None:
+        if not self._session_id:
+            self._clear_session_cache()
+            return
+
+        client = await self._session.ensure_client()
+
+        try:
+            await self._touch_session(client, self._session_id)
+        except httpx.HTTPError as exc:
+            logger.debug("Falha ao tocar sessao antes do logout: %s", exc)
+
+        await self._notify_logout_navigation(client)
+        await self._delete_session(client)
+        self._session_id = None
+        self._bearer_token = None
+        self._bearer_token_exp = 0.0
+        self._used_production_token = False
+        self._cached_cookies = {}
+        self._cached_headers = {}
+        self._session.remember_cookies({})
+        client.cookies.clear()
+        self._clear_session_cache()
+
+    async def _notify_logout_navigation(self, client: httpx.AsyncClient) -> None:
+        headers = {
+            "accept": "text/x-component",
+            "content-type": "text/plain;charset=UTF-8",
+            "origin": AGENT_BASE_URL,
+            "referer": f"{AGENT_BASE_URL}/agentic-chat",
+        }
+        try:
+            await client.post(
+                f"{AGENT_BASE_URL}/agentic-chat",
+                headers=headers,
+                content="[]",
+            )
+        except httpx.HTTPError as exc:
+            logger.debug("Falha ao notificar navegação de logout: %s", exc)
+
+    async def _delete_session(self, client: httpx.AsyncClient) -> None:
+        params = {
+            "__clerk_api_version": CLERK_API_VERSION,
+            "_clerk_js_version": CLERK_JS_VERSION,
+            "_method": "DELETE",
+        }
+        headers = {
+            "accept": "*/*",
+            "content-type": "application/x-www-form-urlencoded",
+            "origin": AGENT_BASE_URL,
+            "referer": f"{AGENT_BASE_URL}/",
+        }
+        try:
+            await client.post(
+                f"{CLERK_BASE_URL}/client/sessions",
+                params=params,
+                headers=headers,
+            )
+        except httpx.HTTPError as exc:
+            logger.debug("Falha ao encerrar sessão: %s", exc)
 
 
 class AdaptaAuthenticator:
@@ -711,6 +774,8 @@ class AdaptaConversationClient:
         chat_id: str | None = None,
         files: list[dict[str, Any]] | None = None,
         folder_id: str | None = None,
+        context_ids: list[str] | None = None,
+        expert_id: str | None = None,
     ) -> ChatCompletionResult:
         if prompt is None and not messages:
             raise ValueError("call_model() requer prompt ou messages.")
@@ -725,6 +790,8 @@ class AdaptaConversationClient:
                     chat_id=chat_id,
                     files=files,
                     folder_id=folder_id,
+                    context_ids=context_ids,
+                    expert_id=expert_id,
                 ):
                     if event_type == "answer":
                         chunks.append(payload)
@@ -738,6 +805,202 @@ class AdaptaConversationClient:
                     continue
                 raise
         raise RuntimeError("Falha ao executar o chat após reautenticação.")
+
+    async def list_experts(self, *, is_public: bool = False) -> list[dict[str, Any]]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        params = {"page": 1, "limit": 1000, "isPublic": "true" if is_public else "false"}
+        response = await client.get(
+            f"{AGENT_BASE_URL}/api/expert/getAll/v1",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/expert/my-experts",
+            },
+            params=params,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get("data") or []
+
+    async def create_expert(
+        self,
+        *,
+        name: str,
+        description: str,
+        instruction: str,
+        model: str,
+        category: str = "MANAGEMENT",
+        creativity: int | None = None,
+        ice_breakers: str | None = None,
+    ) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        # multipart/form-data
+        data = {
+            "name": name,
+            "description": description,
+            "instruction": instruction,
+            "model": model,
+            "category": category,
+        }
+        if creativity is not None:
+            data["creativity"] = str(creativity)
+        if ice_breakers:
+            data["iceBreakers"] = ice_breakers
+
+        response = await client.post(
+            f"{API_AGENT_BASE_URL}/api/expert",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/",
+            },
+            data=data,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def delete_expert(self, expert_id: str) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.request(
+            "DELETE",
+            f"{AGENT_BASE_URL}/api/expert/delete/v1",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "content-type": "application/json",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/expert/my-experts",
+            },
+            json={"id": expert_id},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def init_expert_chat(
+        self, chat_id: str, expert_id: str, is_temporary: bool = False
+    ) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.post(
+            f"{AGENT_BASE_URL}/api/chat/init/v1",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "content-type": "application/json",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            json={
+                "chatId": chat_id,
+                "expertId": expert_id,
+                "isTemporaryChat": is_temporary,
+            },
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def list_context_folders(self) -> list[dict[str, Any]]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.get(
+            f"{AGENT_BASE_URL}/api/folders/v2",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            params={"type": "CONTEXTS", "scope": "PERSONAL"},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get("data") or []
+
+    async def list_contexts(
+        self, *, limit: int = 20, folder_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        params: dict[str, Any] = {"limit": limit}
+        if folder_id:
+            params["folderId"] = folder_id
+
+        response = await client.get(
+            f"{AGENT_BASE_URL}/api/contexts/v1",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            params=params,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        data = payload.get("data") or {}
+        return data.get("contexts") or []
+
+    async def create_context(
+        self, title: str, content: str, folder_id: str | None = None
+    ) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        payload = {"title": title, "context": content}
+        if folder_id:
+            payload["folderId"] = folder_id
+
+        response = await client.post(
+            f"{AGENT_BASE_URL}/api/contexts/v1",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "content-type": "application/json",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            json=payload,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def delete_contexts(self, context_ids: list[str]) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        response = await client.request(
+            "DELETE",
+            f"{AGENT_BASE_URL}/api/contexts/v1",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "content-type": "application/json",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            json={"contextIds": context_ids},
+        )
+        response.raise_for_status()
+        return response.json()
 
     async def delete_chat(self, chat_ids: str | list[str]) -> dict[str, Any]:
         if isinstance(chat_ids, str):
@@ -992,6 +1255,31 @@ class AdaptaConversationClient:
         response.raise_for_status()
         return response.json()
 
+    async def list_chats(
+        self, *, limit: int = 20, page: int = 1, folder_id: str | None = None
+    ) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+
+        params: dict[str, Any] = {"limit": limit, "page": page}
+        if folder_id:
+            params["folderId"] = folder_id
+
+        response = await client.get(
+            f"{AGENT_BASE_URL}/api/chat/v2",
+            headers={
+                "accept": "*/*",
+                "authorization": f"Bearer {token}",
+                "origin": AGENT_BASE_URL,
+                "referer": f"{AGENT_BASE_URL}/agentic-chat",
+            },
+            params=params,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get("data") or {}
+
     async def update_skill(self, skill_id: str, is_active: bool) -> dict[str, Any]:
         client = await self._session.ensure_client()
         await self._authenticator.ensure_authenticated()
@@ -1121,6 +1409,11 @@ class AdaptaConversationClient:
         chat_id: str | None,
         files: list[dict[str, Any]] | None = None,
         folder_id: str | None = None,
+        context_ids: list[str] | None = None,
+        expert_id: str | None = None,
+        search_workaround: str | None = None,
+        search_continue_prompt: str | None = None,
+        search_max_workarounds: int = 1,
     ):
         client = await self._session.ensure_client()
         await self._authenticator.ensure_authenticated()
@@ -1143,7 +1436,7 @@ class AdaptaConversationClient:
         payload = {
             "mandatoryTools": [],
             "chatId": chat_identifier,
-            "contextsIds": [],
+            "contextsIds": context_ids or [],
             "meetingContextsIds": [],
             "modelAi": model,
             "preloadedData": {
@@ -1177,6 +1470,8 @@ class AdaptaConversationClient:
         }
         if folder_id:
             payload["folderId"] = folder_id
+        if expert_id:
+            payload["expertId"] = expert_id
 
         headers = {
             "accept": "*/*",
@@ -1186,64 +1481,115 @@ class AdaptaConversationClient:
             "referer": f"{AGENT_BASE_URL}/agentic-chat",
         }
 
-        pending_surrogate: str | None = None
-        async with client.stream(
-            "POST",
-            f"{AGENT_BASE_URL}/api/chat/stream/v1",
-            headers=headers,
-            json=payload,
-        ) as response:
-            response.raise_for_status()
-            async for raw_line in response.aiter_lines():
-                if not raw_line or not raw_line.startswith("data:"):
-                    continue
-                payload_str = raw_line[5:].strip()
-                if not payload_str:
-                    continue
-                if payload_str == "[DONE]":
-                    if pending_surrogate is not None:
-                        yield ("answer", "\ufffd")
-                    yield ("answer_end", "")
-                    break
+        applied_workarounds = 0
 
-                try:
-                    event = json.loads(payload_str)
-                except json.JSONDecodeError:
-                    logger.warning("Evento SSE inválido recebido: %s", payload_str)
-                    continue
+        while True:
+            pending_surrogate: str | None = None
+            saw_done = False
+            retry_requested = False
+            continue_requested = False
+            async with client.stream(
+                "POST",
+                f"{AGENT_BASE_URL}/api/chat/stream/v1",
+                headers=headers,
+                json=payload,
+            ) as response:
+                response.raise_for_status()
+                async for raw_line in response.aiter_lines():
+                    if not raw_line:
+                        continue
+                    if SEARCH_LIMIT_ERROR in raw_line:
+                        if search_workaround in {"retry", "continue"} and applied_workarounds < search_max_workarounds:
+                            applied_workarounds += 1
+                            logger.warning(
+                                "Detectado %s no stream bruto. Aplicando workaround=%s (%s/%s).",
+                                SEARCH_LIMIT_ERROR,
+                                search_workaround,
+                                applied_workarounds,
+                                search_max_workarounds,
+                            )
+                            if search_workaround == "retry":
+                                chat_identifier = _generate_uuid7_like()
+                                payload["chatId"] = chat_identifier
+                                payload["id"] = chat_identifier
+                                retry_requested = True
+                                break
+                            if search_workaround == "continue":
+                                continue_requested = True
+                                break
+                        yield ("raw-error", raw_line)
+                        continue
+                    if not raw_line.startswith("data:"):
+                        continue
+                    payload_str = raw_line[5:].strip()
+                    if not payload_str:
+                        continue
+                    if payload_str == "[DONE]":
+                        saw_done = True
+                        if pending_surrogate is not None:
+                            yield ("answer", "\ufffd")
+                        yield ("answer_end", "")
+                        break
 
-                event_type = event.get("type")
-                if event_type == "tool-output-error":
-                    raise ToolExecutionError(
-                        (
-                            event.get("errorText") or "Erro desconhecido na ferramenta."
-                        ).strip(),
-                        tool_name=event.get("toolName"),
-                        tool_call_id=event.get("toolCallId"),
-                    )
+                    try:
+                        event = json.loads(payload_str)
+                    except json.JSONDecodeError:
+                        logger.warning("Evento SSE inválido recebido: %s", payload_str)
+                        continue
 
-                if event_type == "tool-output-available":
-                    output = event.get("output") or {}
-                    content = output.get("content") or output.get("analysis")
-                    if isinstance(content, str) and content.strip():
-                        yield ("answer", content.strip())
-                    continue
-
-                if event_type == "text-delta":
-                    delta = event.get("delta")
-                    if isinstance(delta, str) and delta:
-                        safe_text, pending_surrogate = self._coalesce_surrogates(
-                            delta, pending_surrogate
+                    event_type = event.get("type")
+                    if event_type == "tool-output-error":
+                        raise ToolExecutionError(
+                            (
+                                event.get("errorText") or "Erro desconhecido na ferramenta."
+                            ).strip(),
+                            tool_name=event.get("toolName"),
+                            tool_call_id=event.get("toolCallId"),
                         )
-                        if safe_text:
-                            yield ("answer", safe_text)
-                    continue
 
-                if event_type == "text-end":
-                    if pending_surrogate is not None:
-                        yield ("answer", "\ufffd")
-                        pending_surrogate = None
-                    yield ("answer_end", "")
+                    if event_type == "tool-output-available":
+                        output = event.get("output") or {}
+                        content = output.get("content") or output.get("analysis")
+                        if isinstance(content, str) and content.strip():
+                            yield ("answer", content.strip())
+                        continue
+
+                    if event_type == "text-delta":
+                        delta = event.get("delta")
+                        if isinstance(delta, str) and delta:
+                            safe_text, pending_surrogate = self._coalesce_surrogates(
+                                delta, pending_surrogate
+                            )
+                            if safe_text:
+                                yield ("answer", safe_text)
+                        continue
+
+                    if event_type == "text-end":
+                        if pending_surrogate is not None:
+                            yield ("answer", "\ufffd")
+                            pending_surrogate = None
+                        yield ("answer_end", "")
+            if retry_requested:
+                continue
+            if continue_requested:
+                prepared_messages = ChatPayloadBuilder.prepare_messages_payload(
+                    messages=[{"role": "user", "content": search_continue_prompt or "continue a pesquisa"}],
+                    prompt=None,
+                    files=None,
+                )
+                message_identifier = next(
+                    (
+                        str(message.get("id"))
+                        for message in reversed(prepared_messages)
+                        if message.get("role") == "user" and message.get("id")
+                    ),
+                    _generate_uuid7_like(),
+                )
+                payload["messages"] = prepared_messages
+                payload["messageId"] = message_identifier
+                continue
+            if saw_done or not search_workaround or applied_workarounds >= search_max_workarounds:
+                break
 
     def _coalesce_surrogates(
         self, chunk: str, pending: str | None
@@ -1318,28 +1664,61 @@ class AdaptaClientAdapter:
         await self._session.close()
         await self._authenticator.close()
 
-    async def prompt(self, *, model_backend: str, prompt: str, folder_id: str | None = None) -> str:
+    async def prompt(
+        self,
+        *,
+        model_backend: str,
+        prompt: str,
+        folder_id: str | None = None,
+        context_ids: list[str] | None = None,
+        expert_id: str | None = None,
+    ) -> str:
         result = await self._conversations.call_model(
-            prompt=prompt, model=model_backend, folder_id=folder_id
+            prompt=prompt,
+            model=model_backend,
+            folder_id=folder_id,
+            context_ids=context_ids,
+            expert_id=expert_id,
         )
         return extract_answer_text(result)
 
     async def prompt_with_files(
-        self, *, model_backend: str, prompt: str, files: list[dict[str, Any]], folder_id: str | None = None
+        self,
+        *,
+        model_backend: str,
+        prompt: str,
+        files: list[dict[str, Any]],
+        folder_id: str | None = None,
+        context_ids: list[str] | None = None,
+        expert_id: str | None = None,
     ) -> str:
         result = await self._conversations.call_model(
             prompt=prompt,
             model=model_backend,
             files=files,
             folder_id=folder_id,
+            context_ids=context_ids,
+            expert_id=expert_id,
         )
         return extract_answer_text(result)
 
     async def chat(
-        self, *, model_backend: str, messages: list[dict[str, Any]], chat_id: str, folder_id: str | None = None
+        self,
+        *,
+        model_backend: str,
+        messages: list[dict[str, Any]],
+        chat_id: str,
+        folder_id: str | None = None,
+        context_ids: list[str] | None = None,
+        expert_id: str | None = None,
     ) -> str:
         result = await self._conversations.call_model(
-            messages=messages, model=model_backend, chat_id=chat_id, folder_id=folder_id
+            messages=messages,
+            model=model_backend,
+            chat_id=chat_id,
+            folder_id=folder_id,
+            context_ids=context_ids,
+            expert_id=expert_id,
         )
         return extract_answer_text(result)
 
@@ -1351,6 +1730,11 @@ class AdaptaClientAdapter:
         chat_id: str,
         files: list[dict[str, Any]] | None = None,
         folder_id: str | None = None,
+        context_ids: list[str] | None = None,
+        expert_id: str | None = None,
+        search_workaround: str | None = None,
+        search_continue_prompt: str | None = None,
+        search_max_workarounds: int = 1,
     ):
         async for event in self._conversations._chat_event_stream(
             prompt=None,
@@ -1359,6 +1743,11 @@ class AdaptaClientAdapter:
             chat_id=chat_id,
             files=files,
             folder_id=folder_id,
+            context_ids=context_ids,
+            expert_id=expert_id,
+            search_workaround=search_workaround,
+            search_continue_prompt=search_continue_prompt,
+            search_max_workarounds=search_max_workarounds,
         ):
             yield event
 
@@ -1370,6 +1759,8 @@ class AdaptaClientAdapter:
         chat_id: str,
         files: list[dict[str, Any]],
         folder_id: str | None = None,
+        context_ids: list[str] | None = None,
+        expert_id: str | None = None,
     ) -> str:
         result = await self._conversations.call_model(
             messages=messages,
@@ -1377,11 +1768,72 @@ class AdaptaClientAdapter:
             chat_id=chat_id,
             files=files,
             folder_id=folder_id,
+            context_ids=context_ids,
+            expert_id=expert_id,
         )
         return extract_answer_text(result)
 
     async def delete_chat(self, chat_id: str | list[str]) -> None:
         await self._conversations.delete_chat(chat_id)
+
+    async def list_chats(
+        self, *, limit: int = 20, page: int = 1, folder_id: str | None = None
+    ) -> dict[str, Any]:
+        return await self._conversations.list_chats(
+            limit=limit, page=page, folder_id=folder_id
+        )
+
+    async def list_context_folders(self) -> list[dict[str, Any]]:
+        return await self._conversations.list_context_folders()
+
+    async def list_contexts(
+        self, *, limit: int = 20, folder_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        return await self._conversations.list_contexts(limit=limit, folder_id=folder_id)
+
+    async def create_context(
+        self, title: str, content: str, folder_id: str | None = None
+    ) -> dict[str, Any]:
+        return await self._conversations.create_context(
+            title=title, content=content, folder_id=folder_id
+        )
+
+    async def delete_contexts(self, context_ids: list[str]) -> dict[str, Any]:
+        return await self._conversations.delete_contexts(context_ids)
+
+    async def list_experts(self, *, is_public: bool = False) -> list[dict[str, Any]]:
+        return await self._conversations.list_experts(is_public=is_public)
+
+    async def create_expert(
+        self,
+        *,
+        name: str,
+        description: str,
+        instruction: str,
+        model: str,
+        category: str = "MANAGEMENT",
+        creativity: int | None = None,
+        ice_breakers: str | None = None,
+    ) -> dict[str, Any]:
+        return await self._conversations.create_expert(
+            name=name,
+            description=description,
+            instruction=instruction,
+            model=model,
+            category=category,
+            creativity=creativity,
+            ice_breakers=ice_breakers,
+        )
+
+    async def delete_expert(self, expert_id: str) -> dict[str, Any]:
+        return await self._conversations.delete_expert(expert_id)
+
+    async def init_expert_chat(
+        self, chat_id: str, expert_id: str, is_temporary: bool = False
+    ) -> dict[str, Any]:
+        return await self._conversations.init_expert_chat(
+            chat_id, expert_id, is_temporary
+        )
 
     async def upload_file(self, file_path: Path) -> dict[str, Any]:
         return await self._conversations.upload_file(file_path)
@@ -1417,6 +1869,9 @@ class AdaptaClientAdapter:
 
     async def delete_file(self, file_path: str | list[str]) -> None:
         await self._conversations.delete_file(file_path)
+
+    async def logout(self) -> None:
+        await self._authenticator.logout()
 
 
 def create_client(settings: Settings) -> AdaptaClientAdapter:

@@ -19,6 +19,9 @@ class Settings:
     adapta_login: str
     adapta_password: str
     adapta_model: str | None
+    adapta_search_workaround: str | None
+    adapta_search_continue_prompt: str | None
+    adapta_search_max_workarounds: int
     env_file_path: Path
 
 
@@ -31,7 +34,9 @@ class PromptRequest:
     file_paths: list[Path] = field(default_factory=list)
     session_id: str | None = None
     stream: bool = False
+    debug_stream: bool = False
     folder_id: str | None = None
+    keep_chat: bool = False
 
 
 @dataclass
@@ -40,6 +45,7 @@ class ChatSession:
     model_key: str
     messages: list[dict[str, str]] = field(default_factory=list)
     cleanup_required: bool = False
+    keep_chat: bool = False
 
 
 @dataclass(frozen=True)

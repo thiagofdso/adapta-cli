@@ -6,7 +6,7 @@ from typing import Any
 
 import typer
 
-from adapta.client import create_client, import_cookies_to_session_cache
+from adapta.client import create_client, import_cookies_to_session_cache, _resolve_session_cache_path
 from adapta.config import load_settings
 from adapta.models import DebateAgentConfig
 from adapta.registry import get_model_option, list_model_options, resolve_model_key
@@ -425,6 +425,22 @@ def import_cookies(
         _fail(str(exc))
 
 
+@app.command("logout")
+def logout() -> None:
+    try:
+        settings = load_settings()
+
+        async def _run() -> None:
+            async with create_client(settings) as client:
+                await client.logout()
+
+        run_async(_run())
+        cache_path = _resolve_session_cache_path()
+        typer.echo(f"Logout concluído. Cache local removido: {cache_path}")
+    except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+
 @app.command()
 def prompt(
     model: str | None = typer.Option(None, "--model"),
@@ -434,11 +450,19 @@ def prompt(
     file: str | None = typer.Option(None, "--file"),
     session: str | None = typer.Option(None, "--session"),
     stream: bool = typer.Option(False, "--stream", help="Exibe a resposta em streaming no terminal."),
+    debug_stream: bool = typer.Option(False, "--debug-stream", help="Exibe todos os eventos recebidos no stream para depuração."),
     persona: str | None = typer.Option(
         None, "--persona", help="Nome ou slug da persona salva em ~/.adapta/persona/."
     ),
     folder_id: str | None = typer.Option(None, "--folder-id", help="ID da pasta onde o chat será criado."),
     folder: str | None = typer.Option(None, "--folder", help="Nome da pasta onde o chat será criado."),
+    context_id: str | None = typer.Option(None, "--context-id", help="ID do contexto a ser usado."),
+    context_name: str | None = typer.Option(None, "--context-name", help="Nome (title) do contexto a ser usado."),
+    context_folder_id: str | None = typer.Option(None, "--context-folder-id", help="ID da pasta do contexto."),
+    context_folder: str | None = typer.Option(None, "--context-folder", help="Nome da pasta do contexto."),
+    expert_id: str | None = typer.Option(None, "--expert-id", help="ID do expert (agente) a ser usado."),
+    expert_name: str | None = typer.Option(None, "--expert-name", help="Nome do expert (agente) a ser usado."),
+    keep_chat: bool = typer.Option(False, "--keep-chat", "--keepChat", help="Mantém o chat remoto ao final em vez de excluí-lo."),
 ) -> None:
     try:
         settings = load_settings()
@@ -465,6 +489,62 @@ def prompt(
             if not resolved_folder_id:
                 _fail(f"Pasta '{folder}' não encontrada.")
 
+        resolved_context_ids: list[str] = []
+        if context_id:
+            resolved_context_ids.append(context_id)
+        elif context_name:
+            resolved_context_folder_id = context_folder_id
+            if context_folder:
+                if context_folder_id:
+                    raise ValueError("Use apenas uma das opções: --context-folder-id ou --context-folder.")
+
+                async def _find_ctx_folder() -> str | None:
+                    async with create_client(settings) as client:
+                        folders = await client.list_context_folders()
+                        for f in folders:
+                            if str(f.get("name")).lower() == context_folder.lower():
+                                return str(f.get("id"))
+                    return None
+
+                resolved_context_folder_id = run_async(_find_ctx_folder())
+                if not resolved_context_folder_id:
+                    _fail(f"Pasta de contexto '{context_folder}' não encontrada.")
+
+            async def _find_context() -> str | None:
+                async with create_client(settings) as client:
+                    contexts = await client.list_contexts(folder_id=resolved_context_folder_id)
+                    for ctx in contexts:
+                        if str(ctx.get("title")).lower() == context_name.lower():
+                            return str(ctx.get("id"))
+                return None
+
+            found_ctx_id = run_async(_find_context())
+            if not found_ctx_id:
+                _fail(f"Contexto '{context_name}' não encontrado.")
+            resolved_context_ids.append(found_ctx_id)
+
+        resolved_expert_id = expert_id
+        if expert_name:
+            if expert_id:
+                raise ValueError("Use apenas uma das opções: --expert-id ou --expert-name.")
+
+            async def _find_expert() -> str | None:
+                async with create_client(settings) as client:
+                    experts = await client.list_experts()
+                    for e in experts:
+                        if str(e.get("name")).lower() == expert_name.lower():
+                            return str(e.get("id"))
+                return None
+
+            resolved_expert_id = run_async(_find_expert())
+            if not resolved_expert_id:
+                _fail(f"Expert '{expert_name}' não encontrado.")
+
+        if stream and settings.adapta_search_workaround == "retry":
+            typer.echo("Aviso: com ADAPTA_SEARCH_WORKAROUND=retry o modo --stream não é suportado; executando sem streaming.", err=True)
+            stream = False
+            debug_stream = False
+
         request = build_prompt_request(
             model_key=model_key,
             prompt=prompt,
@@ -473,7 +553,9 @@ def prompt(
             files=_parse_file_option(file),
             session_id=session,
             stream=stream,
+            debug_stream=debug_stream,
             folder_id=resolved_folder_id,
+            keep_chat=keep_chat,
         )
         if persona_text:
             combined = f"{persona_text.rstrip()}\n\n{request.prompt_text}".strip()
@@ -483,7 +565,12 @@ def prompt(
         async def _run() -> tuple[str, str | None]:
             async with create_client(settings) as client:
                 response = await execute_prompt(
-                    client, request, model_backend=option.backend_name
+                    client,
+                    request,
+                    model_backend=option.backend_name,
+                    context_ids=resolved_context_ids if resolved_context_ids else None,
+                    expert_id=resolved_expert_id,
+                    settings=settings,
                 )
                 persist_output(response.text, request.output_path)
                 return response.text, response.session_id
@@ -505,6 +592,7 @@ def persona(
     list_existing: bool = typer.Option(
         False, "--list", help="Lista personas já salvas e retorna."
     ),
+    keep_chat: bool = typer.Option(False, "--keep-chat", "--keepChat", help="Mantém o chat remoto ao final em vez de excluí-lo."),
 ) -> None:
     try:
         if list_existing:
@@ -528,6 +616,7 @@ def persona(
                     client,
                     questionnaire,
                     model_key=model_key,
+                    keep_chat=keep_chat,
                 )
                 save_persona_document(result.text, output_path, overwrite=overwrite)
                 save_persona_answers(questionnaire, answers_path, overwrite=overwrite)
@@ -545,12 +634,116 @@ def persona(
 def chat(
     model: str | None = typer.Option(None, "--model"),
     file: str | None = typer.Option(None, "--file"),
+    keep_chat: bool = typer.Option(False, "--keep-chat", "--keepChat", help="Mantém o chat remoto ao final em vez de excluí-lo."),
+    list_chats: bool = typer.Option(
+        False, "--list", help="Lista chats da Adapta e retorna."
+    ),
+    detail: bool = typer.Option(
+        False, "--detail", help="Exibe detalhes de um chat específico."
+    ),
+    delete: bool = typer.Option(
+        False, "--delete", help="Remove um chat da Adapta."
+    ),
+    create: bool = typer.Option(
+        False, "--create", help="Cria um novo chat (não suportado diretamente via API de gestão)."
+    ),
+    chat_id: str | None = typer.Option(
+        None, "--id", help="ID do chat para detalhe ou remoção."
+    ),
+    output: str = typer.Option(
+        "plain", "--output", help="Formato de saída: plain, json, yaml."
+    ),
+    folder_id: str | None = typer.Option(
+        None, "--folder-id", help="ID da pasta para filtrar chats."
+    ),
+    folder_name: str | None = typer.Option(
+        None, "--folder-name", help="Nome da pasta para filtrar chats."
+    ),
+    limit: int = typer.Option(
+        20, "--limit", help="Limite de chats por página."
+    ),
 ) -> None:
     try:
         settings = load_settings()
+
+        if list_chats or detail or delete:
+            resolved_folder_id = folder_id
+
+            if folder_name:
+                if folder_id:
+                    raise ValueError("Use apenas uma das opções: --folder-id ou --folder-name.")
+
+                async def _find_folder() -> str | None:
+                    async with create_client(settings) as client:
+                        folders = await client.list_folders()
+                        for f in folders:
+                            if str(f.get("name")).lower() == folder_name.lower():
+                                return str(f.get("id"))
+                    return None
+
+                resolved_folder_id = run_async(_find_folder())
+                if not resolved_folder_id:
+                    _fail(f"Pasta '{folder_name}' não encontrada.")
+
+            async def _run_list() -> dict[str, Any]:
+                async with create_client(settings) as client:
+                    return await client.list_chats(limit=limit, folder_id=resolved_folder_id)
+
+            data = run_async(_run_list())
+            chats = data.get("paginatedChats") or []
+
+            if list_chats:
+                if output == "json":
+                    typer.echo(json.dumps(chats, indent=2, ensure_ascii=False))
+                elif output == "yaml":
+                    # Simple pseudo-yaml fallback
+                    for c in chats:
+                        typer.echo(f"- id: {c.get('id')}")
+                        typer.echo(f"  title: {c.get('title')}")
+                        typer.echo(f"  updatedAt: {c.get('updatedAt')}")
+                else:
+                    typer.echo("id\tupdatedAt\ttitle")
+                    for c in chats:
+                        typer.echo(f"{c.get('id')}\t{c.get('updatedAt')}\t{c.get('title')}")
+                return
+
+            if detail:
+                if not chat_id:
+                    _fail("O parâmetro --id é obrigatório para exibir detalhes de um chat.")
+                
+                target = next((c for c in chats if c.get("id") == chat_id), None)
+                if not target:
+                    _fail(f"Chat com ID '{chat_id}' não encontrado na página atual.")
+                
+                if output == "json":
+                    typer.echo(json.dumps(target, indent=2, ensure_ascii=False))
+                elif output == "yaml":
+                    for k, v in target.items():
+                        typer.echo(f"{k}: {v}")
+                else:
+                    for k, v in target.items():
+                        typer.echo(f"{k}: {v}")
+                return
+
+            if delete:
+                if not chat_id:
+                    _fail("O parâmetro --id é obrigatório para deletar um chat.")
+
+                async def _run_delete() -> None:
+                    async with create_client(settings) as client:
+                        await client.delete_chat(chat_id)
+
+                run_async(_run_delete())
+                typer.echo(f"Chat '{chat_id}' deletado com sucesso.")
+                return
+
+            if create:
+                _fail("A criação de chats vazios não é suportada pela API de gestão. Inicie um chat interativo ou use 'adapta prompt' para criar um novo chat.")
+
+        # Default behavior: interactive chat
         model_key = _resolve_model(model, settings.adapta_model)
         option = get_model_option(model_key)
-        session = create_chat_session(model_key)
+        session = create_chat_session(model_key, keep_chat=keep_chat)
         file_paths = _parse_file_option(file)
 
         async def _run() -> None:
@@ -986,6 +1179,315 @@ def skill(
             return
 
         typer.echo("Use 'adapta skill --list', 'adapta skill --detail [--id|--name]', 'adapta skill --status [--id|--name]', 'adapta skill --create --title <t> --description <d> --instruction <i>', 'adapta skill --delete [--id|--name]', 'adapta skill --enable [--id|--name]' ou 'adapta skill --disable [--id|--name]'.")
+    except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+
+@app.command()
+def context(
+    list_folders: bool = typer.Option(
+        False, "--list-folders", help="Lista pastas de contexto da Adapta e retorna."
+    ),
+    list_contexts: bool = typer.Option(
+        False, "--list", help="Lista contextos da Adapta e retorna."
+    ),
+    detail: bool = typer.Option(
+        False, "--detail", help="Exibe o conteúdo de um contexto específico."
+    ),
+    create: bool = typer.Option(
+        False, "--create", help="Cria um novo contexto na Adapta."
+    ),
+    delete: bool = typer.Option(
+        False, "--delete", help="Remove um ou mais contextos da Adapta."
+    ),
+    id: str | None = typer.Option(
+        None, "--id", help="ID do contexto para detalhe ou remoção."
+    ),
+    title: str | None = typer.Option(
+        None, "--title", help="Título do contexto (para criação, detalhe ou remoção)."
+    ),
+    content: str | None = typer.Option(
+        None, "--content", help="Conteúdo do contexto (para criação)."
+    ),
+    file: Path | None = typer.Option(
+        None, "--file", help="Arquivo com o conteúdo do contexto (para criação)."
+    ),
+    folder_id: str | None = typer.Option(
+        None, "--folder-id", help="ID da pasta para filtrar ou criar o contexto."
+    ),
+    folder_name: str | None = typer.Option(
+        None, "--folder-name", help="Nome da pasta para filtrar ou criar o contexto."
+    ),
+    limit: int = typer.Option(
+        20, "--limit", help="Limite de contextos por listagem."
+    ),
+) -> None:
+    try:
+        settings = load_settings()
+
+        if list_folders:
+            async def _run_folders() -> list[dict[str, Any]]:
+                async with create_client(settings) as client:
+                    return await client.list_context_folders()
+
+            folders = run_async(_run_folders())
+            typer.echo("name\tid\tcontexts")
+            for f in folders:
+                f_name = str(f.get("name") or "")
+                f_id = str(f.get("id") or "")
+                count_block = f.get("_count")
+                count = "0"
+                if isinstance(count_block, dict):
+                    count = str(count_block.get("contexts") or "0")
+                typer.echo(f"{f_name}\t{f_id}\t{count}")
+            return
+
+        resolved_folder_id = folder_id
+        if folder_name:
+            if folder_id:
+                raise ValueError("Use apenas uma das opções: --folder-id ou --folder-name.")
+
+            async def _find_folder() -> str | None:
+                async with create_client(settings) as client:
+                    folders = await client.list_context_folders()
+                    for f in folders:
+                        if str(f.get("name")).lower() == folder_name.lower():
+                            return str(f.get("id"))
+                return None
+
+            resolved_folder_id = run_async(_find_folder())
+            if not resolved_folder_id:
+                _fail(f"Pasta '{folder_name}' não encontrada.")
+
+        if list_contexts:
+            async def _run_list() -> list[dict[str, Any]]:
+                async with create_client(settings) as client:
+                    return await client.list_contexts(limit=limit, folder_id=resolved_folder_id)
+
+            contexts = run_async(_run_list())
+            typer.echo("id\ttitle")
+            for ctx in contexts:
+                typer.echo(f"{ctx.get('id')}\t{ctx.get('title')}")
+            return
+
+        if detail or delete:
+            if not id and not title:
+                _fail("É necessário informar o --id ou --title do contexto.")
+
+            target_id = id
+            if not target_id:
+                async def _find_ctx() -> str | None:
+                    async with create_client(settings) as client:
+                        contexts = await client.list_contexts(folder_id=resolved_folder_id)
+                        for ctx in contexts:
+                            if str(ctx.get("title")).lower() == title.lower():
+                                return str(ctx.get("id"))
+                    return None
+                target_id = run_async(_find_ctx())
+                if not target_id:
+                    _fail(f"Contexto '{title}' não encontrado.")
+
+            if detail:
+                async def _run_get_detail() -> dict[str, Any]:
+                    async with create_client(settings) as client:
+                        contexts = await client.list_contexts(folder_id=resolved_folder_id)
+                        for ctx in contexts:
+                            if str(ctx.get("id")) == target_id:
+                                return ctx
+                        return {}
+                
+                ctx_data = run_async(_run_get_detail())
+                if not ctx_data:
+                    _fail(f"Detalhes do contexto '{target_id}' não encontrados.")
+                typer.echo(ctx_data.get("content") or "Nenhum conteúdo encontrado.")
+                return
+
+            if delete:
+                async def _run_delete() -> dict[str, Any]:
+                    async with create_client(settings) as client:
+                        return await client.delete_contexts([target_id])
+                
+                run_async(_run_delete())
+                typer.echo(f"Contexto '{target_id}' deletado com sucesso.")
+                return
+
+        if create:
+            if not title:
+                _fail("O parâmetro --title é obrigatório para criar um contexto.")
+            
+            ctx_content = content
+            if file:
+                if content:
+                    raise ValueError("Use apenas uma das opções: --content ou --file.")
+                try:
+                    ctx_content = file.read_text(encoding="utf-8").strip()
+                except OSError as exc:
+                    _fail(f"Não foi possível ler o arquivo: {exc}")
+            
+            if not ctx_content:
+                _fail("O conteúdo do contexto não pode ser vazio.")
+
+            async def _run_create() -> dict[str, Any]:
+                async with create_client(settings) as client:
+                    return await client.create_context(title, ctx_content, folder_id=resolved_folder_id)
+
+            result = run_async(_run_create())
+            data = result.get("data")
+            if isinstance(data, dict):
+                created_id = data.get("id")
+                typer.echo(f"Contexto criado com sucesso (ID: {created_id}).")
+            else:
+                typer.echo("Contexto criado, mas o servidor não retornou os dados detalhados.")
+            return
+
+        typer.echo("Use 'adapta context --list-folders', 'adapta context --list', 'adapta context --detail [--id|--title]', 'adapta context --create --title <t> [--content|--file]', ou 'adapta context --delete [--id|--title]'.")
+    except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+
+@app.command()
+def expert(
+    list_experts: bool = typer.Option(
+        False, "--list", help="Lista seus experts da Adapta e retorna."
+    ),
+    detail: bool = typer.Option(
+        False, "--detail", help="Exibe detalhes de um expert específico."
+    ),
+    create: bool = typer.Option(
+        False, "--create", help="Cria um novo expert na Adapta."
+    ),
+    delete: bool = typer.Option(
+        False, "--delete", help="Remove um expert da Adapta."
+    ),
+    id: str | None = typer.Option(
+        None, "--id", help="ID do expert para detalhe ou remoção."
+    ),
+    name: str | None = typer.Option(
+        None, "--name", help="Nome do expert (para criação, detalhe ou remoção)."
+    ),
+    description: str | None = typer.Option(
+        None, "--description", help="Descrição do expert (para criação)."
+    ),
+    instruction: str | None = typer.Option(
+        None, "--instruction", help="Instruções inline do expert (para criação)."
+    ),
+    instruction_file: Path | None = typer.Option(
+        None, "--instruction-file", help="Arquivo com as instruções do expert (para criação)."
+    ),
+    model: str | None = typer.Option(
+        None, "--model", help="ID do modelo a ser usado pelo expert (ex: GPT_54)."
+    ),
+    creativity: int | None = typer.Option(
+        None, "--creativity", help="Nível de criatividade (0-100)."
+    ),
+    ice_breakers: str | None = typer.Option(
+        None, "--ice-breakers", help="Mensagens de quebra-gelo separadas por vírgula."
+    ),
+    output: str = typer.Option(
+        "plain", "--output", help="Formato de saída: plain, json, yaml."
+    ),
+    public: bool = typer.Option(
+        False, "--public", help="Se deve listar experts públicos (padrão é PESSOAL)."
+    ),
+) -> None:
+    try:
+        settings = load_settings()
+
+        async def _get_experts() -> list[dict[str, Any]]:
+            async with create_client(settings) as client:
+                return await client.list_experts(is_public=public)
+
+        if list_experts:
+            experts = run_async(_get_experts())
+            if output == "json":
+                typer.echo(json.dumps(experts, indent=2, ensure_ascii=False))
+            elif output == "yaml":
+                for e in experts:
+                    typer.echo(f"- id: {e.get('id')}")
+                    typer.echo(f"  name: {e.get('name')}")
+                    typer.echo(f"  model: {e.get('model')}")
+            else:
+                typer.echo("id\tmodel\tname")
+                for e in experts:
+                    typer.echo(f"{e.get('id')}\t{e.get('model')}\t{e.get('name')}")
+            return
+
+        if detail or delete:
+            if not id and not name:
+                _fail("É necessário informar o --id ou --name do expert.")
+
+            target_id = id
+            if not target_id:
+                experts = run_async(_get_experts())
+                for e in experts:
+                    if str(e.get("name")).lower() == name.lower():
+                        target_id = str(e.get("id"))
+                        break
+                if not target_id:
+                    _fail(f"Expert '{name}' não encontrado.")
+
+            if detail:
+                experts = run_async(_get_experts())
+                target = next((e for e in experts if e.get("id") == target_id), None)
+                if not target:
+                    _fail(f"Expert com ID '{target_id}' não encontrado.")
+                
+                if output == "json":
+                    typer.echo(json.dumps(target, indent=2, ensure_ascii=False))
+                elif output == "yaml":
+                    for k, v in target.items():
+                        typer.echo(f"{k}: {v}")
+                else:
+                    for k, v in target.items():
+                        typer.echo(f"{k}: {v}")
+                return
+
+            if delete:
+                async def _run_delete() -> dict[str, Any]:
+                    async with create_client(settings) as client:
+                        return await client.delete_expert(target_id)
+                
+                run_async(_run_delete())
+                typer.echo(f"Expert '{target_id}' deletado com sucesso.")
+                return
+
+        if create:
+            if not name or not description or not model:
+                _fail("Os parâmetros --name, --description e --model são obrigatórios.")
+            
+            final_instruction = instruction
+            if instruction_file:
+                if instruction:
+                    raise ValueError("Use apenas uma das opções: --instruction ou --instruction-file.")
+                try:
+                    final_instruction = instruction_file.read_text(encoding="utf-8").strip()
+                except OSError as exc:
+                    _fail(f"Não foi possível ler o arquivo de instruções: {exc}")
+            
+            if not final_instruction:
+                _fail("A instrução do expert não pode ser vazia.")
+
+            async def _run_create() -> dict[str, Any]:
+                async with create_client(settings) as client:
+                    return await client.create_expert(
+                        name=name,
+                        description=description,
+                        instruction=final_instruction,
+                        model=model,
+                        creativity=creativity,
+                        ice_breakers=ice_breakers,
+                    )
+
+            result = run_async(_run_create())
+            data = result.get("data")
+            if isinstance(data, dict):
+                created_id = data.get("id")
+                typer.echo(f"Expert criado com sucesso (ID: {created_id}).")
+            else:
+                typer.echo("Expert criado, mas o servidor não retornou os dados detalhados.")
+            return
+
+        typer.echo("Use 'adapta expert --list', 'adapta expert --detail [--id|--name]', 'adapta expert --create --name <n> --description <d> --model <m> [--instruction|--instruction-file]', ou 'adapta expert --delete [--id|--name]'.")
     except (ValueError, RuntimeError) as exc:
         _fail(str(exc))
 

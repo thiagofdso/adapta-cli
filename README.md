@@ -58,6 +58,14 @@ Salvar saída em arquivo:
 adapta prompt --model gpt --prompt "quanto é 1+1 responda somente o valor" --output saida.txt
 ```
 
+Manter o chat remoto em vez de apagar ao final:
+
+```bash
+adapta prompt --model gpt --prompt-file prompt.txt --keepChat
+adapta chat --model gpt --keepChat
+adapta persona --model claude --keepChat
+```
+
 Chat interativo:
 
 ```bash

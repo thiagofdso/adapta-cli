@@ -347,9 +347,10 @@ async def generate_persona_document(
     client,
     questionnaire: PersonaQuestionnaire,
     model_key: str = DEFAULT_PERSONA_MODEL_KEY,
+    keep_chat: bool = False,
 ) -> PersonaGenerationResult:
     option = get_model_option(model_key)
-    session = create_chat_session(option.key)
+    session = create_chat_session(option.key, keep_chat=keep_chat)
     text: str | None = None
     cleanup_warning: str | None = None
     try:
@@ -364,7 +365,7 @@ async def generate_persona_document(
         text = extract_persona_content(text)
     finally:
         try:
-            if session.cleanup_required:
+            if session.cleanup_required and not session.keep_chat:
                 await client.delete_chat(session.chat_id)
         except Exception as exc:  # noqa: BLE001
             cleanup_warning = f"Falha ao limpar chat remoto: {exc}"

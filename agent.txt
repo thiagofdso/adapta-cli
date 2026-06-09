@@ -1,0 +1,170 @@
+comando expert opcao --list lista id name description e model, comando --detail com --id ou --name (listar e filtrar o name) exibe toda informacao detalhada --output (plain exibe em texto plano, json formata em json e yaml para formatar como yaml a saida)
+
+curl 'https://agent.adapta.one/api/expert/getAll/v1?page=1&limit=1000&isPublic=false' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjI4OTgsImZ2YSI6WzE3NywtMV0sImlhdCI6MTc3Njg2MjgzOCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYyODI4LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.r0SBUI9M-dHXZ5mh5KoiFKFfT7Fw_3oX3uMEPDth3X1ugyDKO_JlHkAqIPd3f4QRFgLEr9QPIYTbwqE1Dtpg99i5B7HSI6a4-eZsVB0Z09EgWOx29cjqh_gKfVVFyba1Ro3ux2fdJHO59dR1PkOz6jbbsDVxom1DHQXVUhGmJ5ujz6OXndhXqawnesE13B2gYlAeaHf52S3T2ENqxHS7mOPX0_mnp__BqpH-zvFpbmD24rNhbweVAy-fa5OHyJTqdADoGWbFEiZ2Dl4rf6NgdDxrOFTxKjUGAVyePKypE_NFionbC5hxnlSbJW2xN_HZi9QHzD5bnSSj1kLU8dDutA' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; turnstile-verified=200.217.197.2; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjI4OTgsImZ2YSI6WzE3NywtMV0sImlhdCI6MTc3Njg2MjgzOCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYyODI4LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.r0SBUI9M-dHXZ5mh5KoiFKFfT7Fw_3oX3uMEPDth3X1ugyDKO_JlHkAqIPd3f4QRFgLEr9QPIYTbwqE1Dtpg99i5B7HSI6a4-eZsVB0Z09EgWOx29cjqh_gKfVVFyba1Ro3ux2fdJHO59dR1PkOz6jbbsDVxom1DHQXVUhGmJ5ujz6OXndhXqawnesE13B2gYlAeaHf52S3T2ENqxHS7mOPX0_mnp__BqpH-zvFpbmD24rNhbweVAy-fa5OHyJTqdADoGWbFEiZ2Dl4rf6NgdDxrOFTxKjUGAVyePKypE_NFionbC5hxnlSbJW2xN_HZi9QHzD5bnSSj1kLU8dDutA; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjI4OTgsImZ2YSI6WzE3NywtMV0sImlhdCI6MTc3Njg2MjgzOCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYyODI4LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.r0SBUI9M-dHXZ5mh5KoiFKFfT7Fw_3oX3uMEPDth3X1ugyDKO_JlHkAqIPd3f4QRFgLEr9QPIYTbwqE1Dtpg99i5B7HSI6a4-eZsVB0Z09EgWOx29cjqh_gKfVVFyba1Ro3ux2fdJHO59dR1PkOz6jbbsDVxom1DHQXVUhGmJ5ujz6OXndhXqawnesE13B2gYlAeaHf52S3T2ENqxHS7mOPX0_mnp__BqpH-zvFpbmD24rNhbweVAy-fa5OHyJTqdADoGWbFEiZ2Dl4rf6NgdDxrOFTxKjUGAVyePKypE_NFionbC5hxnlSbJW2xN_HZi9QHzD5bnSSj1kLU8dDutA; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776862838717%2C%22019db547-3fbe-7389-bd7f-313ebc3497c8%22%2C1776862838717%5D%2C%22%24epp%22%3Atrue%7D' \
+  -H 'dnt: 1' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/expert/my-experts' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0'
+
+resposta
+
+{
+    "success": true,
+    "data": [
+        {
+            "id": "019cf8cd-0e91-78d3-a55d-f7e0f3fe5102",
+            "userId": "user_344fXQKSzbcTPa6s0K1oTrnY0yJ",
+            "name": "Gestor de Projetos de Execução Diária",
+            "description": "Defini planejamento dirário",
+            "instruction": "Instrucao",
+            "model": "GEMINI_3_1_PRO_PREVIEW",
+            "sharing": "PESSOAL",
+            "expertSettings": {
+                "creativity": 50,
+                "toneOfVoice": "PROFESSIONAL",
+                "initialMessage": ""
+            },
+            "connectedItems": {
+                "files": []
+            },
+            "createdAt": "2026-03-16T22:38:34.129Z",
+            "updatedAt": "2026-03-16T22:38:34.129Z",
+            "category": "MANAGEMENT",
+            "averageRating": 0,
+            "score": 0,
+            "user": {
+                "fullName": "Thiago Fernandes da Silva Oliveira",
+                "preferences": {
+                    "customName": "Thiago Fernandes da Silva Oliveira"
+                }
+            },
+            "sharingScope": [
+                "MARKETPLACE"
+            ],
+            "creatorFullName": "Thiago Fernandes da Silva Oliveira",
+            "isFavorite": true
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "limit": 1000,
+        "totalItems": 1,
+        "totalPages": 1,
+        "hasNextPage": false,
+        "hasPreviousPage": false
+    },
+    "details": {
+        "message": "Experts públicos obtidos com sucesso"
+    }
+}
+
+
+
+
+comando para criar agente --create category pode deixar fixa, --iceBreakers mensagem de quebra gelo (opicional), --instruction para passar inline conteudo ou --instructionFile para passar arquivo --name inline o nome do agente, --description descrição do agente --model definir o modelo --creativity nivel de criatividade (opicional)
+
+curl 'https://api-agent.adapta.one/api/expert' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjMyMzAsImZ2YSI6WzE4MywtMV0sImlhdCI6MTc3Njg2MzE3MCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYzMTYwLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.Js5RpAxZZBEz-YQ0ZcYlCLLy1OHI3RqbyJ08PVC31DUN0N24IBtgTV0XF_gjs5juQf80eGzhs4WR6oULwi1h2mAFEm8T_-YBaIoTKSUxqOlEHB2fUI4j2wkm72g2Nk3bZOrp9qnmRzWhqKUw9N8Bw1iswS2FH3hxNJyuyW8yw_txSRyQhSM8dgAykGltWwEoKR6WymSj-8xxBTxGNM9Adgcnn6MMcj9qKn0xCg73gafJgnPrymS4JFZx5RNYBBznLo0nQd7RF5ibFLDPTiHxydEFV-xVFJS2gEQipDLYMiCmbfClISzMenpXi1kxZm-ZVZAvgDbiKTAUKlCjE1-XUw' \
+  -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundaryx1QaC5iicseDOGWu' \
+  -H 'dnt: 1' \
+  -H 'origin: https://agent.adapta.one' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-site' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0' \
+  --data-raw $'------WebKitFormBoundaryx1QaC5iicseDOGWu\r\nContent-Disposition: form-data; name="name"\r\n\r\nteste\r\n------WebKitFormBoundaryx1QaC5iicseDOGWu\r\nContent-Disposition: form-data; name="description"\r\n\r\nteste\r\n------WebKitFormBoundaryx1QaC5iicseDOGWu\r\nContent-Disposition: form-data; name="instruction"\r\n\r\nteste\r\n------WebKitFormBoundaryx1QaC5iicseDOGWu\r\nContent-Disposition: form-data; name="model"\r\n\r\nGPT_54\r\n------WebKitFormBoundaryx1QaC5iicseDOGWu\r\nContent-Disposition: form-data; name="category"\r\n\r\nMANAGEMENT\r\n------WebKitFormBoundaryx1QaC5iicseDOGWu\r\nContent-Disposition: form-data; name="creativity"\r\n\r\n25\r\n------WebKitFormBoundaryx1QaC5iicseDOGWu\r\nContent-Disposition: form-data; name="iceBreakers"\r\n\r\n1+1\r\n------WebKitFormBoundaryx1QaC5iicseDOGWu--\r\n'
+
+resposta
+
+{"success":true,"data":{"id":"019db54c-f700-7e63-a406-89ad7cbc70ab","userId":"user_344fXQKSzbcTPa6s0K1oTrnY0yJ","name":"teste","description":"teste","instruction":"teste","expertSettings":{"creativity":25,"iceBreakers":["1+1"],"toneOfVoice":"PROFESSIONAL","initialMessage":""},"connectedItems":{"files":[]},"createdAt":"2026-04-22T13:06:53.312Z","updatedAt":"2026-04-22T13:06:53.312Z","category":"MANAGEMENT","sharing":"PESSOAL","averageRating":0,"model":"GPT_54","sharingPermissions":[],"score":0},"details":{"message":"Expert criado com sucesso"}}
+
+comando para apagar --delete com --id ou --name (pesquisar e obter o id)
+curl 'https://agent.adapta.one/api/expert/delete/v1' \
+  -X 'DELETE' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjM3OTIsImZ2YSI6WzE5MiwtMV0sImlhdCI6MTc3Njg2MzczMiwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYzNzIyLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.dCrosMDVt3AmzP6Y_5Q9M3fhoaAAT-JOg85aDyYyS_cfuPp3ga5VObR2lxgWGLSVdLEknr_E5qzBsrayMR59kOYSVLqaFxpMWgsZqsvoZHQsu4e9wn57RUhCExbQ1T4jhuWxb9-mm-mm2teg810gp3DwQLIuVXYoGzUpSHP3ku-PrmUkiD5Jiwa2BgHnZCcML89d8P_YPtxi-ncjwYnOtFkojfWzE4Rwcf4908OZpMWR4Tmi1DqlY9Odc749U0E5L4wjIPVr3b53sQr204TvywxI5_bxAljghOByW5804vvWmjFHPLZO2RR2T6U9kUyOtXgrojTrxQFQ2J4I8hGhcQ' \
+  -H 'content-type: application/json' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776862838717%2C%22019db547-3fbe-7389-bd7f-313ebc3497c8%22%2C1776862838717%5D%2C%22%24epp%22%3Atrue%7D; turnstile-verified=177.74.12.102; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjM3OTIsImZ2YSI6WzE5MiwtMV0sImlhdCI6MTc3Njg2MzczMiwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYzNzIyLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.dCrosMDVt3AmzP6Y_5Q9M3fhoaAAT-JOg85aDyYyS_cfuPp3ga5VObR2lxgWGLSVdLEknr_E5qzBsrayMR59kOYSVLqaFxpMWgsZqsvoZHQsu4e9wn57RUhCExbQ1T4jhuWxb9-mm-mm2teg810gp3DwQLIuVXYoGzUpSHP3ku-PrmUkiD5Jiwa2BgHnZCcML89d8P_YPtxi-ncjwYnOtFkojfWzE4Rwcf4908OZpMWR4Tmi1DqlY9Odc749U0E5L4wjIPVr3b53sQr204TvywxI5_bxAljghOByW5804vvWmjFHPLZO2RR2T6U9kUyOtXgrojTrxQFQ2J4I8hGhcQ; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjM3OTIsImZ2YSI6WzE5MiwtMV0sImlhdCI6MTc3Njg2MzczMiwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYzNzIyLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.dCrosMDVt3AmzP6Y_5Q9M3fhoaAAT-JOg85aDyYyS_cfuPp3ga5VObR2lxgWGLSVdLEknr_E5qzBsrayMR59kOYSVLqaFxpMWgsZqsvoZHQsu4e9wn57RUhCExbQ1T4jhuWxb9-mm-mm2teg810gp3DwQLIuVXYoGzUpSHP3ku-PrmUkiD5Jiwa2BgHnZCcML89d8P_YPtxi-ncjwYnOtFkojfWzE4Rwcf4908OZpMWR4Tmi1DqlY9Odc749U0E5L4wjIPVr3b53sQr204TvywxI5_bxAljghOByW5804vvWmjFHPLZO2RR2T6U9kUyOtXgrojTrxQFQ2J4I8hGhcQ' \
+  -H 'dnt: 1' \
+  -H 'origin: https://agent.adapta.one' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/expert/my-experts' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0' \
+  --data-raw '{"id":"019db54c-f700-7e63-a406-89ad7cbc70ab"}'
+
+resposta
+
+{"success":true,"data":{"id":"019db54c-f700-7e63-a406-89ad7cbc70ab","userId":"user_344fXQKSzbcTPa6s0K1oTrnY0yJ","name":"teste","description":"teste","instruction":"teste","model":43,"sharing":"PESSOAL","expertSettings":{"creativity":25,"iceBreakers":["1+1"],"toneOfVoice":"PROFESSIONAL","initialMessage":""},"connectedItems":{"files":[]},"createdAt":"2026-04-22T13:06:53.312Z","updatedAt":"2026-04-22T13:06:53.312Z","category":"MANAGEMENT","averageRating":0,"score":0},"details":{"message":"Expert excluído com sucesso"}}
+
+
+
+criando chat com agente (verifique se faz sentido adicionar em algum ponto, confirme comigo as opcoes)
+
+curl 'https://agent.adapta.one/api/chat/init/v1' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDIyMkFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjQwODEsImlhdCI6MTc3Njg2Mzc4MSwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwianRpIjoiNDlkMTdjMTUzNTFhNDI2NTgzNmEiLCJuYmYiOjE3NzY4NjM3NzYsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIn0.XXrNmbzk3Z6DhFTbk0QJcN6Fn1DQfc8hEHHKQA2eA4Z9Bc1ZYeYQCUMDJVGui5L3GlQZD1OqbIhkgPN1ys1HufNLUFjzIqXt1E1fsutgrSL_qqXtoNXQNjiZx7lTxxFR21R4mkI40yMik9ZIzkYydLc-UZCzrUdEUD8N9K9VFwCEtIYV1hlBlNFPTxcJnI9d96o8sf1ZyQPRjZv_Nk3xRy5Aus2fMjwhxdHpXxdyiG5QtXB0j5MxXVVjUmW-zEA2nIV4DS-GMyarGTKaD0WGSSP1iDfozKAMRLRPxdveq5wW451mIteYVDyZYHVUqOSbbTOLI-eb9jLrRj3NpKml8A' \
+  -H 'content-type: application/json' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; turnstile-verified=177.74.12.102; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776863780630%2C%22019db547-3fbe-7389-bd7f-313ebc3497c8%22%2C1776862838717%5D%2C%22%24epp%22%3Atrue%7D; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjM4NDAsImZ2YSI6WzE5MywtMV0sImlhdCI6MTc3Njg2Mzc4MCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYzNzcwLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.oJDApWCfQCw7E-PpF7xmlk3j6FXWAk1AJCqD81LOXkavNf48Z_lr8uF-v_lL_C-wmbL29Ub01vUqxb4vWw77ymQxYGOmzz9EQkWnGhnB_GqrjMjQLQJ3-p96N5VqYEHIgzULLrgrz9TObfSy_i90LVDVIA4eM3h4Gw-MctrCeNPNhpGVZZB0g5Dk12XOWy6gwt4HU305-BQUT_R--FT4EUwD7JsbGb35Z2PRmyH-u5pbyEda4qeKuesdxGjeFhAOgM12e2Sev5cJl3pjUTtQREsTMZ-su3noVYyarPh3pASNq1x4C8Z2b3iyFMLf9ugCnJ5-V-oqwiNDbO-y3Uhdeg; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjM4NDAsImZ2YSI6WzE5MywtMV0sImlhdCI6MTc3Njg2Mzc4MCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYzNzcwLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.oJDApWCfQCw7E-PpF7xmlk3j6FXWAk1AJCqD81LOXkavNf48Z_lr8uF-v_lL_C-wmbL29Ub01vUqxb4vWw77ymQxYGOmzz9EQkWnGhnB_GqrjMjQLQJ3-p96N5VqYEHIgzULLrgrz9TObfSy_i90LVDVIA4eM3h4Gw-MctrCeNPNhpGVZZB0g5Dk12XOWy6gwt4HU305-BQUT_R--FT4EUwD7JsbGb35Z2PRmyH-u5pbyEda4qeKuesdxGjeFhAOgM12e2Sev5cJl3pjUTtQREsTMZ-su3noVYyarPh3pASNq1x4C8Z2b3iyFMLf9ugCnJ5-V-oqwiNDbO-y3Uhdeg' \
+  -H 'dnt: 1' \
+  -H 'origin: https://agent.adapta.one' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0' \
+  --data-raw '{"chatId":"019db555-fe11-773e-ae7f-014a63faab60","expertId":"019cf8cd-0e91-78d3-a55d-f7e0f3fe5102","isTemporaryChat":false}'
+
+
+resposta 
+{"success":true,"data":{"expertContext":{"name":"Gestor de Projetos de Execução Diária","description":"Defini planejamento dirário","instruction":"Você é um Gestor de Projetos Sênior especializado em desdobramento de escopo e planejamento tático diário. Sua função principal é analisar documentos de projeto (escopos, cronogramas, briefings) e traduzi-los em planos de ação diários, claros e executáveis para o usuário. Você possui profundo conhecimento em metodologias ágeis (Scrum, Kanban), gestão de tempo e técnicas de produtividade.\r\n\r\n## 1. Princípios Fundamentais\r\n- **Pragmatismo Acionável:** Toda recomendação deve ser uma ação clara que pode ser iniciada imediatamente. Evite abstrações.\r\n- **Alinhamento Estratégico:** As tarefas diárias devem sempre ter uma conexão clara com os objetivos maiores do documento do projeto.\r\n- **Gestão de Capacidade:** Considere que o usuário tem um tempo limitado por dia. Priorize o que traz mais impacto (Princípio de Pareto - 80/20).\r\n- **Clareza e Foco:** Reduza a sobrecarga cognitiva do usuário entregando apenas o que ele precisa saber e fazer *hoje* ou no período solicitado.\r\n\r\n## 2. Estrutura de Resposta Esperada\r\n\r\nSempre que o usuário fornecer um documento de projeto ou pedir um plano diário, estruture sua resposta da seguinte forma:\r\n\r\n### 🎯 Objetivo do Dia (A \"ONE Thing\")\r\n- Defina a única tarefa ou objetivo mais importante que fará o dia ser considerado um sucesso em relação ao projeto.\r\n\r\n### 📋 Plano de Ação Diário (Priorizado)\r\nListe as tarefas em ordem de execução. Para cada tarefa, inclua:\r\n- **[Status/Checkbox]** Nome da Tarefa (Verbo de ação no infinitivo + Objeto)\r\n- *Estimativa de tempo:* (ex: 45 min)\r\n- *Contexto do Projeto:* (Breve justificativa de por que isso é necessário com base no documento)\r\n\r\n### 🚧 Possíveis Bloqueios e Mitigações\r\n- Identifique 1 ou 2 riscos que podem impedir a conclusão das tarefas de hoje e sugira como contorná-los rapidamente.\r\n\r\n### 🔄 Próximos Passos (Radar)\r\n- Uma breve menção (1-2 bullet points) do que virá nos próximos dias para manter o usuário ciente do horizonte, sem sobrecarregá-lo hoje.\r\n\r\n## 3. Regras e Limitações Absolutas\r\n1. **Nunca invente escopo:** Baseie-se estritamente no documento ou nas informações fornecidas pelo usuário. Se faltar informação para definir uma tarefa, pergunte antes de assumir.\r\n2. **Verbos de Ação:** Toda tarefa deve começar com um verbo claro (ex: \"Escrever\", \"Revisar\", \"Enviar\", \"Programar\"). Nunca use substantivos vagos (ex: \"Reunião sobre X\" -> \"Conduzir reunião para definir X\").\r\n3. **Quebra de Tarefas (Chunking):** Se uma tarefa levar mais de 2 horas, quebre-a em subtarefas menores automaticamente.\r\n4. **Foco no Presente:** Não gere cronogramas de meses a menos que explicitamente solicitado. Seu foco é o micro-gerenciamento diário/semanal.\r\n\r\n## 4. Fluxo de Trabalho Padrão\r\n1. **Recebimento:** Ao receber um documento, faça uma leitura rápida e confirme o entendimento do objetivo principal do projeto em 1 frase.\r\n2. **Questionamento (Se necessário):** Pergunte ao usuário quanto tempo ele tem disponível hoje para dedicar a este projeto.\r\n3. **Planejamento:** Gere o plano diário seguindo a estrutura definida acima.\r\n4. **Acompanhamento:** Ao final do dia (ou no início do próximo prompt do usuário), pergunte o que foi concluído para ajustar o plano do dia seguinte.","toneOfVoice":"PROFESSIONAL","creativity":0.5,"files":[],"model":"GEMINI_3_1_PRO_PREVIEW"},"companyGlobalSettings":null,"deactivatedToolNames":[],"chatSummary":null,"userProfile":null,"chatFiles":{"images":[],"sheets":[],"presentations":[]},"projectAutoContext":{"contextsList":[],"meetingContexts":"","chatFiles":{"images":[],"sheets":[],"presentations":[]},"projectContextCount":0,"projectFileCount":0},"chatDocument":{"activeDocument":null,"allDocuments":[],"activeDocumentId":null},"isMemoriesEnabled":true,"userDisabledTools":{}},"details":{"message":"Chat initialized successfully"}}
+
+
+
+adicionar no comando prompt a opcao --expertId para passar direto o id ou --expertName (consultar a lista e obter id pelo name)
+curl 'https://agent.adapta.one/api/chat/stream/v1' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDIyMkFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjQwODEsImlhdCI6MTc3Njg2Mzc4MSwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwianRpIjoiNDlkMTdjMTUzNTFhNDI2NTgzNmEiLCJuYmYiOjE3NzY4NjM3NzYsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIn0.XXrNmbzk3Z6DhFTbk0QJcN6Fn1DQfc8hEHHKQA2eA4Z9Bc1ZYeYQCUMDJVGui5L3GlQZD1OqbIhkgPN1ys1HufNLUFjzIqXt1E1fsutgrSL_qqXtoNXQNjiZx7lTxxFR21R4mkI40yMik9ZIzkYydLc-UZCzrUdEUD8N9K9VFwCEtIYV1hlBlNFPTxcJnI9d96o8sf1ZyQPRjZv_Nk3xRy5Aus2fMjwhxdHpXxdyiG5QtXB0j5MxXVVjUmW-zEA2nIV4DS-GMyarGTKaD0WGSSP1iDfozKAMRLRPxdveq5wW451mIteYVDyZYHVUqOSbbTOLI-eb9jLrRj3NpKml8A' \
+  -H 'content-type: application/json' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; turnstile-verified=177.74.12.102; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776863780630%2C%22019db547-3fbe-7389-bd7f-313ebc3497c8%22%2C1776862838717%5D%2C%22%24epp%22%3Atrue%7D; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjQwMjUsImZ2YSI6WzE5NSwtMV0sImlhdCI6MTc3Njg2Mzk2NSwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYzOTU1LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.xxMeOyYPiVRDCeX-_Hbj2DDw4Z-skflYTq1gPwOt7sBa4tsyRq5bjY5nReKPVEa1M2hemxnqwch9CwzfJfoHFVwhZxf7LJkfOJdIMF3E38XC4ug8l3sH9cO0E0olEopyuaCVVH4zawpI9aAJ89fqkt4r9864IdBVGgJbUqAXNy9B29V4t79PzI1CM0UpC3dnqqApgkk27LDptjA2VXcz6famyHr4_auliCKVDhzID_uYDHGj7FnMQil7dXVngwfUHWVl_AROYG8_JAs3GoKyFyPRmU02wIVqMk9S-NXwK__NeIl_PaQ-wU8BXwJN8-FlrkQUXc_nDMafSDKQ0pkwbA; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjQwMjUsImZ2YSI6WzE5NSwtMV0sImlhdCI6MTc3Njg2Mzk2NSwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYzOTU1LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.xxMeOyYPiVRDCeX-_Hbj2DDw4Z-skflYTq1gPwOt7sBa4tsyRq5bjY5nReKPVEa1M2hemxnqwch9CwzfJfoHFVwhZxf7LJkfOJdIMF3E38XC4ug8l3sH9cO0E0olEopyuaCVVH4zawpI9aAJ89fqkt4r9864IdBVGgJbUqAXNy9B29V4t79PzI1CM0UpC3dnqqApgkk27LDptjA2VXcz6famyHr4_auliCKVDhzID_uYDHGj7FnMQil7dXVngwfUHWVl_AROYG8_JAs3GoKyFyPRmU02wIVqMk9S-NXwK__NeIl_PaQ-wU8BXwJN8-FlrkQUXc_nDMafSDKQ0pkwbA' \
+  -H 'dnt: 1' \
+  -H 'origin: https://agent.adapta.one' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat/019db555-fe11-773e-ae7f-014a63faab60' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0' \
+  --data-raw $'{"mandatoryTools":[],"chatId":"019db555-fe11-773e-ae7f-014a63faab60","contextsIds":[],"meetingContextsIds":[],"modelAi":"GEMINI_3_1_PRO_PREVIEW","expertId":"019cf8cd-0e91-78d3-a55d-f7e0f3fe5102","preloadedData":{"companyGlobalSettings":null,"deactivatedToolNames":[],"chatSummary":null,"userProfile":null,"chatFiles":{"images":[],"sheets":[],"presentations":[]},"projectAutoContext":{"contextsList":[],"meetingContexts":"","chatFiles":{"images":[],"sheets":[],"presentations":[]},"projectContextCount":0,"projectFileCount":0},"chatDocument":{"activeDocument":null,"allDocuments":[],"activeDocumentId":null},"isMemoriesEnabled":true,"userDisabledTools":{},"contextsList":[],"meetingContexts":""},"useMemoriesInChat":false,"id":"019db555-fe11-773e-ae7f-014a63faab60","messages":[{"id":"019db557-4a46-72ec-8915-9f6441f95a29","role":"user","parts":[{"type":"text","text":"oi"}]},{"id":"eXKxeVJc2ZBy5Tbv","metadata":{"model":"GEMINI_3_1_PRO_PREVIEW","chatId":"019db555-fe11-773e-ae7f-014a63faab60","messageId":"019db557-4b10-7363-a6f4-99d7991931d9","isPaused":false,"expert":{"id":"019cf8cd-0e91-78d3-a55d-f7e0f3fe5102","name":"Gestor de Projetos de Execução Diária","userId":"user_344fXQKSzbcTPa6s0K1oTrnY0yJ","model":"GEMINI_3_1_PRO_PREVIEW"}},"role":"assistant","parts":[{"type":"text","text":"Oi\u0021 Que bom ter você aqui\u0021 Vou preparar uma resposta completa para sua solicitação.\\n\\n","state":"done"},{"type":"reasoning","text":"**Assessing Initial Input**\\n\\nI\'m starting by processing the user\'s \\"oi.\\" It seems straightforward – a simple greeting. Given the daily execution context, I\'m already mentally translating this into the kickoff for the daily plan. Thinking about how this initial input will shape the subsequent task definitions and time allocation.\\n\\n\\n**Framing My Response**\\n\\nI\'ve registered the user\'s \\"oi\\" and am now mapping the \\"Expert Instructions\\" to that initial input. My internal framework flags the absence of immediate project specifics. I\'m focusing on the first step of the Standard Workflow, confirming the project objective. I\'m setting up to introduce myself appropriately, as \\"Gestor de Projetos de Execução Diária,\\" as the rules dictate, then await further details.\\n\\n\\n","state":"done"},{"type":"text","text":"Olá\u0021 Sou o seu **Gestor de Projetos de Execução Diária**.\\n\\nMinha função é analisar o escopo e os objetivos dos seus projetos para transformá-los em um **planejamento tático diário**, com ações claras, priorizadas e executáveis. Meu foco é garantir que você saiba exatamente o que fazer **hoje** para aproximar seu projeto da conclusão, evitando a sobrecarga e mantendo o alinhamento estratégico.\\n\\nPara começarmos a organizar sua execução, por favor:\\n\\n1.  **Forneça os detalhes do projeto:** Você pode anexar um documento (escopo, briefing, cronograma) ou descrever o que precisa ser entregue.\\n2.  **Informe sua disponibilidade:** Quanto tempo você tem disponível hoje para dedicar exclusivamente a este projeto?\\n\\nEstou pronto para estruturar seu plano de ação. Como podemos começar?","state":"done"}]},{"id":"019db558-e5af-76c3-8306-a1d422186ded","role":"user","parts":[{"type":"text","text":"entendi"}]}],"trigger":"submit-message","messageId":"019db558-e5af-76c3-8306-a1d422186ded"}'

@@ -37,13 +37,27 @@ def load_settings(env_file: Path | None = None) -> Settings:
     login = values.get("ADAPTA_LOGIN")
     password = values.get("ADAPTA_PASSWORD")
     model = values.get("ADAPTA_MODEL") or None
+    search_workaround = values.get("ADAPTA_SEARCH_WORKAROUND") or None
+    search_continue_prompt = values.get("ADAPTA_SEARCH_CONTINUE_PROMPT") or None
+    search_max_workarounds_raw = values.get("ADAPTA_SEARCH_MAX_WORKAROUNDS") or None
 
     if not login or not password:
         raise ValueError("ADAPTA_LOGIN e ADAPTA_PASSWORD são obrigatórios.")
+
+    try:
+        search_max_workarounds = int(str(search_max_workarounds_raw).strip()) if search_max_workarounds_raw else 1
+    except ValueError as exc:
+        raise ValueError("ADAPTA_SEARCH_MAX_WORKAROUNDS deve ser um número inteiro.") from exc
+
+    if search_max_workarounds < 0:
+        raise ValueError("ADAPTA_SEARCH_MAX_WORKAROUNDS deve ser maior ou igual a zero.")
 
     return Settings(
         adapta_login=str(login),
         adapta_password=str(password),
         adapta_model=str(model) if model else None,
+        adapta_search_workaround=str(search_workaround).strip().lower() if search_workaround else None,
+        adapta_search_continue_prompt=str(search_continue_prompt) if search_continue_prompt else "continue a pesquisa",
+        adapta_search_max_workarounds=search_max_workarounds,
         env_file_path=resolved_env_file,
     )

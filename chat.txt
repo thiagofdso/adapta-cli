@@ -1,0 +1,435 @@
+curl 'https://agent.adapta.one/api/chat/v2?limit=20&page=1' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjAwNTAsImZ2YSI6WzEzMCwtMV0sImlhdCI6MTc3Njg1OTk5MCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODU5OTgwLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.Am1IpWcIT0RdH7Sf_yLJcNtXqrH7Dv4oSVVssYg2D-qlGxd8IZHJr6Ph1-GQjY_7r80YNCEBdoDJHPuGEUm64g4f1AXlPsVVnCIADeLNyarPWjsGdw5zQBuy_yJPpknxewW_sKHcF0dUgUKOtwR91b_Jaz8MQVMfG8FJ_DIeAM5c4wHBBcaIoX-VpI2lYlc8xYmgsahg1nbtBQde9R8PFA3pZSHw5AckJAefziryn3vkiSRi5QXJ5GqGhJGeWE0Nv7Rr3fKoA8g5z6LOaeksTv9KItX1XmfgymErrzi4IWv7LRyFvsd8E6aR4OhZVGMUB6DqOP52iLp2zTAEKb1gZw' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; turnstile-verified=200.217.197.2; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjAwNTAsImZ2YSI6WzEzMCwtMV0sImlhdCI6MTc3Njg1OTk5MCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODU5OTgwLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.Am1IpWcIT0RdH7Sf_yLJcNtXqrH7Dv4oSVVssYg2D-qlGxd8IZHJr6Ph1-GQjY_7r80YNCEBdoDJHPuGEUm64g4f1AXlPsVVnCIADeLNyarPWjsGdw5zQBuy_yJPpknxewW_sKHcF0dUgUKOtwR91b_Jaz8MQVMfG8FJ_DIeAM5c4wHBBcaIoX-VpI2lYlc8xYmgsahg1nbtBQde9R8PFA3pZSHw5AckJAefziryn3vkiSRi5QXJ5GqGhJGeWE0Nv7Rr3fKoA8g5z6LOaeksTv9KItX1XmfgymErrzi4IWv7LRyFvsd8E6aR4OhZVGMUB6DqOP52iLp2zTAEKb1gZw; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjAwNTAsImZ2YSI6WzEzMCwtMV0sImlhdCI6MTc3Njg1OTk5MCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODU5OTgwLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.Am1IpWcIT0RdH7Sf_yLJcNtXqrH7Dv4oSVVssYg2D-qlGxd8IZHJr6Ph1-GQjY_7r80YNCEBdoDJHPuGEUm64g4f1AXlPsVVnCIADeLNyarPWjsGdw5zQBuy_yJPpknxewW_sKHcF0dUgUKOtwR91b_Jaz8MQVMfG8FJ_DIeAM5c4wHBBcaIoX-VpI2lYlc8xYmgsahg1nbtBQde9R8PFA3pZSHw5AckJAefziryn3vkiSRi5QXJ5GqGhJGeWE0Nv7Rr3fKoA8g5z6LOaeksTv9KItX1XmfgymErrzi4IWv7LRyFvsd8E6aR4OhZVGMUB6DqOP52iLp2zTAEKb1gZw; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776859991704%2C%22019db4d5-70b9-7d39-b5aa-d08aa4a682dc%22%2C1776855380150%5D%2C%22%24epp%22%3Atrue%7D' \
+  -H 'dnt: 1' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat/019db50e-c3b6-770f-8352-fb5628d59255' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0'
+
+
+{
+    "success": true,
+    "data": {
+        "paginatedChats": [
+            {
+                "id": "019db50e-c3b6-770f-8352-fb5628d59255",
+                "title": "1+1",
+                "updatedAt": "2026-04-22T11:59:29.090Z",
+                "aiModels": [
+                    17
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019dad36-0efb-7527-8fe5-5b08086171d7",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T23:27:00.573Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019dac5b-a223-730c-90a6-2c947bf9c4e5",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T19:28:39.291Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019dac47-c3c7-7544-ae79-efc11e4da43a",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T19:04:55.572Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019dabd5-577f-759d-8a99-26bc34b247a1",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T17:04:44.197Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019dabcc-4bd8-77f1-bb08-36b6a071b713",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T16:55:28.996Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019dab9e-57a6-70c3-bd12-c4487520fd79",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T16:04:35.469Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019dab8a-f0f9-761f-ad43-09fe4984ede5",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T16:01:02.998Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019dab98-e40b-7417-a68a-406542faedbb",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T15:54:06.604Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019dab85-b850-77df-9442-c5c33cc2f4f4",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T15:34:07.648Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019daac7-4bea-7465-b7e3-a6fbee80c096",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T15:29:09.214Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019daabc-0695-7220-b03d-043529d4e48b",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T11:54:20.606Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019daab6-a170-705e-9b03-aaf071e3bdd1",
+                "title": "Contexto obrigatório para esta pesquisa:\n- OpenClaw é um projeto público.\n- Use ",
+                "updatedAt": "2026-04-20T11:49:09.785Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019da3f6-eb0a-75dd-bfc3-818427957d16",
+                "title": "quais ferramentas de busca na internet e o que cada uma faz",
+                "updatedAt": "2026-04-19T04:20:15.484Z",
+                "aiModels": [
+                    17
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019da3e9-23f4-72ff-85f6-7052eb7180b3",
+                "title": "execute import serpapi\n\nclient = serpapi.Client(api_key=\"68e2c1565fdac0edb6b2a56",
+                "updatedAt": "2026-04-19T04:11:58.011Z",
+                "aiModels": [
+                    17
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019da33d-c13f-76dc-88b7-dac71af4ea31",
+                "title": "análise e identifique quais skills eu posso criar com base nos arquivos",
+                "updatedAt": "2026-04-19T01:30:17.922Z",
+                "aiModels": [
+                    17
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": {
+                    "files": [
+                        {
+                            "fileUrl": "https://adapta-one-prod.s3.sa-east-1.amazonaws.com/thiagofdso.ufpa%40gmail.com/txt/icaro.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA3FLD6RMYLYFE2L2Q%2F20260419%2Fsa-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260419T012028Z&X-Amz-Expires=604800&X-Amz-Signature=a6df5b5bdf35d68aa1e57db65d1c3094d9c7ab9ea3166d60465fe2f50a354049&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+                            "fileName": "icaro.txt",
+                            "filePath": "thiagofdso.ufpa@gmail.com/txt/icaro.txt"
+                        },
+                        {
+                            "fileUrl": "https://adapta-one-prod.s3.sa-east-1.amazonaws.com/thiagofdso.ufpa%40gmail.com/txt/dnaicaro.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA3FLD6RMYLYFE2L2Q%2F20260419%2Fsa-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260419T012028Z&X-Amz-Expires=604800&X-Amz-Signature=dbf572c92d56fc7912a60e281501d288bb20e7425d1a0ce8929f4e608bb8868c&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+                            "fileName": "dnaicaro.txt",
+                            "filePath": "thiagofdso.ufpa@gmail.com/txt/dnaicaro.txt"
+                        }
+                    ]
+                },
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019da31f-a4e4-7214-b547-c3997a588b3e",
+                "title": "# Prompt de pesquisa\n\n## Tópico\nDiferença entre heartbeat, hook e cron\n\n## Promp",
+                "updatedAt": "2026-04-19T00:28:03.714Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019da318-e068-7332-b0fb-bbfdd7aa9d07",
+                "title": "Você é o agente responsável pela conclusão final de um debate multiagente.\nTema ",
+                "updatedAt": "2026-04-19T00:18:17.961Z",
+                "aiModels": [
+                    17
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019da2f9-8f4a-73e1-ac55-b838a9b6edff",
+                "title": "Dê casos de uso reais para Heartbeats, Hooks e Cron Jobs no OpenClaw. Para cada ",
+                "updatedAt": "2026-04-18T23:43:37.453Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            },
+            {
+                "id": "019da2b9-bdff-742d-9316-e91f3b1c58fc",
+                "title": "montei essa ementa sobre openclaw quero que pesquisei e prepare conteúdo para eu",
+                "updatedAt": "2026-04-18T23:36:43.105Z",
+                "aiModels": [
+                    18
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": false,
+                "connectedItems": null,
+                "folderId": null,
+                "total_count": 175,
+                "expert": null,
+                "expertsMap": {}
+            }
+        ],
+        "favoriteChats": [
+            {
+                "id": "019cf8cd-28f8-74c9-9d79-696fba3ae825",
+                "title": "Quero planejar minhas atividades para hoje do projeto de versionamento.",
+                "updatedAt": "2026-04-17T02:45:43.983Z",
+                "aiModels": [
+                    22
+                ],
+                "aiExperts": [
+                    "019cf8cd-0e91-78d3-a55d-f7e0f3fe5102"
+                ],
+                "expertId": null,
+                "isFavorite": true,
+                "connectedItems": null,
+                "folderId": null,
+                "expert": {
+                    "id": "019cf8cd-0e91-78d3-a55d-f7e0f3fe5102",
+                    "name": "Gestor de Projetos de Execução Diária",
+                    "userId": "user_344fXQKSzbcTPa6s0K1oTrnY0yJ",
+                    "model": "GEMINI_3_1_PRO_PREVIEW"
+                },
+                "expertsMap": {
+                    "019cf8cd-0e91-78d3-a55d-f7e0f3fe5102": {
+                        "id": "019cf8cd-0e91-78d3-a55d-f7e0f3fe5102",
+                        "name": "Gestor de Projetos de Execução Diária",
+                        "userId": "user_344fXQKSzbcTPa6s0K1oTrnY0yJ",
+                        "model": "GEMINI_3_1_PRO_PREVIEW"
+                    }
+                }
+            },
+            {
+                "id": "019d8a02-d64d-748d-a15b-73adce3e82ed",
+                "title": "Oi eu tenho uma aplicação que simula a conversa entre múltiplas LLMs eu faço um ",
+                "updatedAt": "2026-04-14T03:38:27.517Z",
+                "aiModels": [
+                    20
+                ],
+                "aiExperts": [],
+                "expertId": null,
+                "isFavorite": true,
+                "connectedItems": null,
+                "folderId": null,
+                "expert": null,
+                "expertsMap": {}
+            }
+        ]
+    },
+    "pagination": {
+        "page": 1,
+        "limit": 20,
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "totalItems": 175,
+        "totalPages": 9
+    },
+    "details": {
+        "message": "Chats retrieved successfully"
+    }
+}
+
+
+
+curl 'https://agent.adapta.one/api/chat/v2?limit=20&page=1&folderId=019bc165-4f1d-7541-8230-a3f5aeb859dd' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjAyNTAsImZ2YSI6WzEzMywtMV0sImlhdCI6MTc3Njg2MDE5MCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwMTgwLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.PK93dc9COwCnNqarnkBqtCfl0HZVBi3jBR6UUpKglAFdddTG0jT0kJxv_F-o2agqxCNjqYY5KtFL-8n8INvwv-wnYVOOWAsHLMzR27pi8QYvQannoouNqe0UxblDcv08Y24KsWlVxW71BGTK-yc_ifoak5r0016WwsOgaMJDDICUjnNyMHs_0xsQQgLr3TevowfyHlfOq7WXJY2L3EVfaFGuV71PmNeSW4_3iHDE5l5X4GYYj5gszdtb40L0IkSFQWcQ_knjAPGyRNjEVNlsIwh2UGnd5T83sqhwHW-T_UggDKR1yye5jPAMnGpBU1hg6JtstRgQ1E1ycNNf-OYjiw' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; turnstile-verified=200.217.197.2; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776859991704%2C%22019db4d5-70b9-7d39-b5aa-d08aa4a682dc%22%2C1776855380150%5D%2C%22%24epp%22%3Atrue%7D; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjAyNTAsImZ2YSI6WzEzMywtMV0sImlhdCI6MTc3Njg2MDE5MCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwMTgwLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.PK93dc9COwCnNqarnkBqtCfl0HZVBi3jBR6UUpKglAFdddTG0jT0kJxv_F-o2agqxCNjqYY5KtFL-8n8INvwv-wnYVOOWAsHLMzR27pi8QYvQannoouNqe0UxblDcv08Y24KsWlVxW71BGTK-yc_ifoak5r0016WwsOgaMJDDICUjnNyMHs_0xsQQgLr3TevowfyHlfOq7WXJY2L3EVfaFGuV71PmNeSW4_3iHDE5l5X4GYYj5gszdtb40L0IkSFQWcQ_knjAPGyRNjEVNlsIwh2UGnd5T83sqhwHW-T_UggDKR1yye5jPAMnGpBU1hg6JtstRgQ1E1ycNNf-OYjiw; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjAyNTAsImZ2YSI6WzEzMywtMV0sImlhdCI6MTc3Njg2MDE5MCwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwMTgwLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.PK93dc9COwCnNqarnkBqtCfl0HZVBi3jBR6UUpKglAFdddTG0jT0kJxv_F-o2agqxCNjqYY5KtFL-8n8INvwv-wnYVOOWAsHLMzR27pi8QYvQannoouNqe0UxblDcv08Y24KsWlVxW71BGTK-yc_ifoak5r0016WwsOgaMJDDICUjnNyMHs_0xsQQgLr3TevowfyHlfOq7WXJY2L3EVfaFGuV71PmNeSW4_3iHDE5l5X4GYYj5gszdtb40L0IkSFQWcQ_knjAPGyRNjEVNlsIwh2UGnd5T83sqhwHW-T_UggDKR1yye5jPAMnGpBU1hg6JtstRgQ1E1ycNNf-OYjiw' \
+  -H 'dnt: 1' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat/019db50e-c3b6-770f-8352-fb5628d59255' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0'
+
+
+{"success":true,"data":{"paginatedChats":[{"id":"019bc20c-6624-768f-aa22-b2c530276b36","title":"Leia o documento completo, ele é um fluxo que desenhei para geração de aulas de ","updatedAt":"2026-01-16T11:31:56.626Z","aiModels":[26],"aiExperts":null,"expertId":"019aa6ca-d2a8-7190-99cb-52778b01a790","isFavorite":false,"connectedItems":{"files":[{"fileUrl":"https://adapta-one-prod.s3.sa-east-1.amazonaws.com/thiagofdso.ufpa%40gmail.com/txt/prompts_microaprendizado.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA3FLD6RMYLYFE2L2Q%2F20260115%2Fsa-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260115T150622Z&X-Amz-Expires=604800&X-Amz-Signature=4977b47af0a87b713fe9d4180dc7e91321a4e4d009a57f0b0da273184c814d57&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","fileName":"prompts_microaprendizado.txt","filePath":"thiagofdso.ufpa@gmail.com/txt/prompts_microaprendizado.txt"}]},"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":{"id":"019aa6ca-d2a8-7190-99cb-52778b01a790","name":"Ronnald Hawk - Consultoria","userId":"user_344fXQKSzbcTPa6s0K1oTrnY0yJ","model":"GPT_51"},"expertsMap":{"019aa6ca-d2a8-7190-99cb-52778b01a790":{"id":"019aa6ca-d2a8-7190-99cb-52778b01a790","name":"Ronnald Hawk - Consultoria","userId":"user_344fXQKSzbcTPa6s0K1oTrnY0yJ","model":"GPT_51"}}},{"id":"019bc1fe-49a8-763f-8414-bd7ee4f14d54","title":"Leia o documento completo, ele é um fluxo que desenhei para geração de aulas de ","updatedAt":"2026-01-15T14:23:41.791Z","aiModels":[27],"aiExperts":null,"expertId":"019aa988-698d-78e1-afeb-bf0dc9e6a9b5","isFavorite":false,"connectedItems":{"files":[{"fileUrl":"https://adapta-one-prod.s3.sa-east-1.amazonaws.com/thiagofdso.ufpa%40gmail.com/txt/prompts_microaprendizado.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIA3FLD6RMYJLMFZPJX%2F20260115%2Fsa-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260115T141037Z&X-Amz-Expires=604800&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEG4aCXNhLWVhc3QtMSJIMEYCIQCQmBNpqmbTLb4sgKGUgSIkqB4czz1t%2FCfaEKfWPaAyqwIhAPd32VZGctSTXsvvyuOB36WPhVNHidI6WTEDO3XWYh7wKq0FCDcQABoMNzY3Mzk4MTUzMDA4IgxcuVGtn%2BvWZzHbdCQqigUl6EV9lzU4I%2FTnTuBRJ0BiqAwybaC%2FtbxYhsTkIjknTswzhTDVxBJrSpMsG1nuHxn%2Ft%2Fh84ZdnVZAo%2FnlhK9hUnfiaiKs0jNubcIC5PqtHSbILJDC6x6KKy8wZGElEuFX6lSfRPq6ujcTNU3z9wp5VX%2FUfgxD7HohRzD50rhFdHgnE%2BPp0Fv45r3iOSYWa6k%2Fx%2BrIItXncI95svgwvVqdaTe%2BpnXijCY2GJlSXRAdV%2FKSxQIqCajLF3fz2YwcGlg%2Bh79Uk%2FY9B3NZyYB8lfawAJKLIaVhZSbjSYg2ApKA6DJNCx5mCu%2FrlVElkXpSQ9WhWrCr%2F%2B8Eqe2O%2BEfmCeppflRCRkBraoB%2F%2B1xcQ8%2BfrA2cDpLmVrUp%2Bv2PX%2FUyWySzNgXxRnv5QkCZDtgWs6VSoIlvdaF%2F2B54EONqwf0O1NCnXFAt2QudVoEWLY8ex8oEsyBkZRfXgQVEUY3U3Wymt98azDqpDTHMLry1CKFqN24ZfXWWGGHlKd79y4Y2o4EpWgjv47pfC5blgkPxReJGqcrenvffniBQfqAazsKvS8SyTHvciihCHSSKQJfliiHhyUq5PUDN%2B67hpQZIDDCycpUE53Fh6wmDNtlTZ1X5JaF68HflbamvxbnBdgyyxWGs9YId%2Fr0QkwgQvlBjgcNJBXUujbsPaXJi4SThShj7hfn4GAGvIpG8X%2BxUEtrb6q25oCbEWNzJaPOgwBjw2f4r6w43tkDRS7Q%2FwLmrYPeFSf0%2F%2F%2F7ztXpABHEppxNyVjYcQy%2Fwf1M1irYrNAw9zR4V8NrBUlYH%2FdpxbwAQOwY4LQUCCLOeX3WlStoNuUgXMWuass8WVqt9OVv4P5YZOHuJeUKnU8LtnwkHUwDCu16PLBjqYAUUSfK%2F6vhFRLjhlirWHEN%2Fq4j2x%2B8eozaWMPrdZJXA0ARRNjFt9%2BhJ2wSIixxwj6PM6%2FcapdXul4nMvNWmr8Q%2B9KTQWpP3%2Bd0oFo28EXZ4e4rXhejKv7V5TQ9kTcPpSLRdj8eFZQ5hSafX2X3tKybVRRg0XUJlhXPaRe5xe0XURjMBdR05uWxkeyBl6Wq4qlSCxV4lkkY4d&X-Amz-Signature=d31449394585695f18fd65efc6be4cfe3a6d4d396640ae06be0f5f32292abe17&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","fileName":"prompts_microaprendizado.txt","filePath":"thiagofdso.ufpa@gmail.com/txt/prompts_microaprendizado.txt"}]},"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":{"id":"019aa988-698d-78e1-afeb-bf0dc9e6a9b5","name":"Ronnald Hawk - Planejador","userId":"user_344fXQKSzbcTPa6s0K1oTrnY0yJ","model":"GEMINI_3_1_PRO_PREVIEW"},"expertsMap":{"019aa988-698d-78e1-afeb-bf0dc9e6a9b5":{"id":"019aa988-698d-78e1-afeb-bf0dc9e6a9b5","name":"Ronnald Hawk - Planejador","userId":"user_344fXQKSzbcTPa6s0K1oTrnY0yJ","model":"GEMINI_3_1_PRO_PREVIEW"}}},{"id":"019b4c30-da45-735f-8385-bfe08a6eb188","title":"Prompt-Aula-Microaprendizado","updatedAt":"2026-01-15T14:08:03.444Z","aiModels":[18],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":null,"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc1f0-221d-74da-a1ff-e9d9410368a5","title":"3.3-1 Validação de Qualidade das Perguntas","updatedAt":"2026-01-15T14:05:14.079Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":null,"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc1ec-9616-77fa-9870-bb7ab4f21e6f","title":"3.2-2 Geração de Perguntas de Microaprendizado","updatedAt":"2026-01-15T13:54:33.932Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":null,"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc1ea-46b9-74ec-8aec-15076b9d17ad","title":"3.2-1 Geração de Perguntas de Microaprendizado","updatedAt":"2026-01-15T13:50:16.677Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":null,"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc1d0-47d5-72b7-8a78-6fbae61dabc2","title":"3.1-2 Transformação em Roteiro de Áudio","updatedAt":"2026-01-15T13:46:03.354Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":null,"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc1cd-9b1a-71d9-b0a7-f31b106af659","title":"3.1-1 Transformação em Roteiro de Áudio","updatedAt":"2026-01-15T13:19:46.614Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":null,"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc1cb-2372-76bc-911b-6f229ffeb1c5","title":"2.2-2 Enriquecimento com Elementos Interativos","updatedAt":"2026-01-15T13:17:00.715Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":null,"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc1a2-c08d-74b3-9f16-e30d3f1372b6","title":"2.2-1 Enriquecimento com Elementos Interativos","updatedAt":"2026-01-15T13:14:21.780Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":null,"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc190-e294-76dc-8ce4-be4dda2d4a14","title":"2.1-2 Geração de Conteúdo Didático (Markdown)","updatedAt":"2026-01-15T12:29:45.028Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":{"files":[{"fileUrl":"https://adapta-one-prod.s3.sa-east-1.amazonaws.com/thiagofdso.ufpa%40gmail.com/pdf/100M-Offers-Traduzido.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA3FLD6RMYLYFE2L2Q%2F20260115%2Fsa-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260115T120932Z&X-Amz-Expires=604800&X-Amz-Signature=2323e142c881a88253d321cbb8ba835ad9e2f3b408ae44c406b942a10e54084d&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","fileName":"100M-Offers-Traduzido.pdf","filePath":"thiagofdso.ufpa@gmail.com/pdf/100M-Offers-Traduzido.pdf"}]},"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc189-570a-71ac-a81c-734a509e647d","title":"2.1-1 Geração de Conteúdo Didático (Markdown)","updatedAt":"2026-01-15T12:09:15.451Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":{"files":[{"fileUrl":"https://adapta-one-prod.s3.sa-east-1.amazonaws.com/thiagofdso.ufpa%40gmail.com/pdf/100M-Offers-Traduzido.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA3FLD6RMYLYFE2L2Q%2F20260115%2Fsa-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260115T120057Z&X-Amz-Expires=604800&X-Amz-Signature=d4a6d578f08828d6160845cffff4b10afc388f6a075ceb8c0e22a3c1d6a10f3a&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","fileName":"100M-Offers-Traduzido.pdf","filePath":"thiagofdso.ufpa@gmail.com/pdf/100M-Offers-Traduzido.pdf"}]},"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc174-fb8a-7599-a712-a47c277b9095","title":"1.3 Validação e Refinamento","updatedAt":"2026-01-15T11:56:42.149Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":{"files":[{"fileUrl":"https://adapta-one-prod.s3.sa-east-1.amazonaws.com/thiagofdso.ufpa%40gmail.com/txt/json_microaulas.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIA3FLD6RMYGDQXHTEJ%2F20260115%2Fsa-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260115T114343Z&X-Amz-Expires=604800&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEGwaCXNhLWVhc3QtMSJHMEUCIH3A%2F4CP%2BbY40w7mIJcI2R5jbSTLiYwsLcjdjxUHNxbFAiEA7smKuc5g7SrSLc900mjHXOy2mZNBv7tHvPd4zfI2vyYqrQUINRAAGgw3NjczOTgxNTMwMDgiDP%2FZMVbJUarMoQT2DSqKBdoGHH879Ww4VQZd8x3AquJB0NWD90oow9iwWkHm8RsQnATY0VAKSf8UiuNavQzpaYfbc9evZC5ODrznJtjUIU0cJ5B1EkGAVaSdXxdSV%2FxczayEha%2BDHhY58459QSjUpDbYt93Rafiw09lSUTDYFxc2fhL0MOP8GwaDaFYhu6CzZBvjpQT3t0DWxOHX3ddsLb190bPb02F%2FP%2BXvxoppNnz2zYDDn0%2FbSiSGVPzfAvc7uokaAE3bi5Qs0sJ2FEQ4dzzIqLZYGiV3WSIWbPPYlXaamhpWSVgwxQCnGDIoHjWGBsIOWp9HsmHSmDP6okULE0IMTNtqUVhwnPnlaI4SLs9YCvbzDWvExo5G1QPM%2F2FIAnC%2FE%2B5Lj6CGNEejPpoy2Dqj1X71XEbckxlZnHkAjS9ofrNpivABCpVjPHTESbT4ZPahG2Upj5s7zfH%2FOWmMpeMQL90XaBkh9pULz5gWEffgwxtpw4bBRko6q4wP%2BnuI%2FZGVzVnIhmPmZ%2FCdTt972tRbE6zfmdFzY42b5JfNi%2FL7IxQkagHW3oAgv%2BfmghAR%2B2yuoxh%2Fmtxn4g%2Bq80%2FNV62UUQEwcdyGhcDflP4tMzNBrW1ObNsaqAIDfg%2F1KCSxq8c1YwYqTYrhqzlKe87vMyE4ZEzCNARUKxGzvulXXiVExvZu0tDOhOwC1DFHcu%2BiR%2B62s3Lu4g5x9%2FTRiIvymc0pkB4PADpZNjJGurxjOihNAS51EQ28QlIbQluPqTE1VMa6g%2FfOW7RATUUZwECKx%2BRqGBggEuf6sfh8NRrwtvbkFsLAKJL5aQCsTsC6foo%2BGaH9yzILBgSBcj1biQxe6Gb%2BNhdibhj7LkL7JeLlX9SN6PKqMyzt7jgQMJ%2Bjo8sGOpkBJGPS2Py5FqGKxDmw8gXDV9QV64Q9yJgMJmG%2BL9elzMCaq2iBac5urFQRxiTpxAtTffcjtE%2F7peEcfyMZ1oqYh4xtYFYawk9LpnN6xq1ltbpan0yLmhZPrcVE1mExnjhlwXs1GpArFqdH46v2wd2SvK2KxnMdwNCwM%2BpO7EyF4KsTk%2FF%2Bl0xyjfoMf5uBG%2BpCiGKJN74N4Osz&X-Amz-Signature=1c5dfe722868bce92a9914261a6d529cdb2bebb1c5ad0d48fba29231c3723e2a&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","fileName":"json_microaulas.txt","filePath":"thiagofdso.ufpa@gmail.com/txt/json_microaulas.txt"}]},"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc169-0b71-758a-9ba3-0a8e15e8822f","title":"1.2 Estruturação em Sessões e Microaulas","updatedAt":"2026-01-15T11:40:16.283Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":null,"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}},{"id":"019bc15e-4c79-7616-aee1-d69979395e25","title":"1.1 Análise Inicial do Livro","updatedAt":"2026-01-15T11:27:09.905Z","aiModels":[17],"aiExperts":null,"expertId":null,"isFavorite":false,"connectedItems":{"files":[{"fileUrl":"https://adapta-one-prod.s3.sa-east-1.amazonaws.com/thiagofdso.ufpa%40gmail.com/pdf/100M-Offers-Traduzido.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA3FLD6RMYLYFE2L2Q%2F20260115%2Fsa-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260115T112250Z&X-Amz-Expires=604800&X-Amz-Signature=ec819b65abf0fc662a33b1aadc09af9f82a8f6f1d9573af5ee13789fd5fccc66&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","fileName":"100M-Offers-Traduzido.pdf","filePath":"thiagofdso.ufpa@gmail.com/pdf/100M-Offers-Traduzido.pdf"}]},"folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","total_count":15,"expert":null,"expertsMap":{}}],"favoriteChats":[]},"pagination":{"page":1,"limit":20,"hasNextPage":false,"hasPreviousPage":false,"totalItems":15,"totalPages":1},"details":{"message":"Chats retrieved successfully"}}

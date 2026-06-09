@@ -8,9 +8,9 @@
 - `src/adapta/registry.py` -> catálogo de modelos e resolução de aliases
 - `src/adapta/runtime.py` -> ponte síncrona para fluxos assíncronos
 - `src/adapta/client.py` -> cliente interno do Adapta com classes focadas em sessão HTTP, autenticação, cache local de sessão em `~/.adapta/cookies.json`, importação de export de cookies do navegador, listagem/upload/exclusão de arquivos e conversas com SSE
-- `src/adapta/services/prompt_service.py` -> fluxo de prompt único, validação de anexos e upload opcional antes do envio
-- `src/adapta/services/persona_service.py` -> validação do questionário de persona, leitura e escrita do JSON de respostas, montagem do prompt fixo, resolução dos caminhos de saída e cleanup best-effort do chat remoto
-- `src/adapta/services/chat_service.py` -> fluxo de chat com limpeza remota e suporte a anexos enviados junto das mensagens
+- `src/adapta/services/prompt_service.py` -> fluxo de prompt único, validação de anexos, upload opcional antes do envio e cleanup opcional do chat remoto conforme `keep_chat`
+- `src/adapta/services/persona_service.py` -> validação do questionário de persona, leitura e escrita do JSON de respostas, montagem do prompt fixo, resolução dos caminhos de saída e cleanup best-effort do chat remoto, opcionalmente preservado com `keep_chat`
+- `src/adapta/services/chat_service.py` -> fluxo de chat com limpeza remota opcional e suporte a anexos enviados junto das mensagens
 - `src/adapta/services/debate_service.py` -> orquestração do debate por rodadas, modo controlado com intervenções do usuário, leitura e gravação de configuração, suporte opcional a arquivo de persona por agente, upload único de anexos opcionais, execução paralela por rodada no modo normal, conclusão final e emissão incremental
 - `src/adapta/services/destilador_service.py` -> pipeline internalizado de destilação por 7 dimensões, com suporte a arquivo único e lote por diretório, incluindo paralelismo por item independente
 - `src/adapta/services/pipeline_service.py` -> pipeline internalizado de extração e criação de conhecimentos, com varredura recursiva, índices JSON, escrita paralela de markdown por conhecimento e persistência local em SQLite

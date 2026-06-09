@@ -1,0 +1,195 @@
+chamada comando context --listFolders
+
+curl 'https://agent.adapta.one/api/folders/v2?type=CONTEXTS&scope=PERSONAL' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjA4MDcsImZ2YSI6WzE0MiwtMV0sImlhdCI6MTc3Njg2MDc0NywiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwNzM3LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.oz9ITTKrg5RXMDnT37PO1eO7KmrWtnhStnebtFYl9TJOej4nazD86Y2af2D3gEaP7DvMi-o3b2HyFzvvX2KhzbbWFqFDRF2HVESakPMoJBYfdwFigEPaBrHp_i7eqCWH5uWL2hMb1Uy7pO2RqMgMB8RjS-Czwp4Rx2W3kwVDG1WqKH8o3CJx8MzzQ6qQu7zeSzf-O9oGZw9rp58e2MvGIDWR2NEz9Pj3i_Q_wyvy6qFZ0QhQXmYedLlyDjUxGC2PxWx-xGTIvanCUAxuw3WoRaNzg9XEDzzBC4GsWAO0fRW2Wmap3Pf7BnOwqEHsHxtEzCluSyyLPc5YNCu6BBr7qQ' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; turnstile-verified=200.217.197.2; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776859991704%2C%22019db4d5-70b9-7d39-b5aa-d08aa4a682dc%22%2C1776855380150%5D%2C%22%24epp%22%3Atrue%7D; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjA4MDcsImZ2YSI6WzE0MiwtMV0sImlhdCI6MTc3Njg2MDc0NywiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwNzM3LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.oz9ITTKrg5RXMDnT37PO1eO7KmrWtnhStnebtFYl9TJOej4nazD86Y2af2D3gEaP7DvMi-o3b2HyFzvvX2KhzbbWFqFDRF2HVESakPMoJBYfdwFigEPaBrHp_i7eqCWH5uWL2hMb1Uy7pO2RqMgMB8RjS-Czwp4Rx2W3kwVDG1WqKH8o3CJx8MzzQ6qQu7zeSzf-O9oGZw9rp58e2MvGIDWR2NEz9Pj3i_Q_wyvy6qFZ0QhQXmYedLlyDjUxGC2PxWx-xGTIvanCUAxuw3WoRaNzg9XEDzzBC4GsWAO0fRW2Wmap3Pf7BnOwqEHsHxtEzCluSyyLPc5YNCu6BBr7qQ; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjA4MDcsImZ2YSI6WzE0MiwtMV0sImlhdCI6MTc3Njg2MDc0NywiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwNzM3LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.oz9ITTKrg5RXMDnT37PO1eO7KmrWtnhStnebtFYl9TJOej4nazD86Y2af2D3gEaP7DvMi-o3b2HyFzvvX2KhzbbWFqFDRF2HVESakPMoJBYfdwFigEPaBrHp_i7eqCWH5uWL2hMb1Uy7pO2RqMgMB8RjS-Czwp4Rx2W3kwVDG1WqKH8o3CJx8MzzQ6qQu7zeSzf-O9oGZw9rp58e2MvGIDWR2NEz9Pj3i_Q_wyvy6qFZ0QhQXmYedLlyDjUxGC2PxWx-xGTIvanCUAxuw3WoRaNzg9XEDzzBC4GsWAO0fRW2Wmap3Pf7BnOwqEHsHxtEzCluSyyLPc5YNCu6BBr7qQ' \
+  -H 'dnt: 1' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0'
+
+resposta
+
+
+{
+    "success": true,
+    "data": [
+        {
+            "id": "019c2bbd-76fb-7af3-b254-f77380dcb098",
+            "name": "Banpara",
+            "color": "DEFAULT",
+            "createdAt": "2026-02-05T02:59:23.000Z",
+            "userId": "user_344fXQKSzbcTPa6s0K1oTrnY0yJ",
+            "_count": {
+                "contexts": 1
+            }
+        }
+    ],
+    "details": {
+        "message": "Pastas listadas com sucesso"
+    }
+}
+
+
+
+chamada listar --list para listar contextos listar id e title, adicionar um comando --detail com parametro --id ou --title para consultar e exibir o content do contexto
+
+curl 'https://agent.adapta.one/api/contexts/v1?limit=20' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjA4MDcsImZ2YSI6WzE0MiwtMV0sImlhdCI6MTc3Njg2MDc0NywiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwNzM3LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.oz9ITTKrg5RXMDnT37PO1eO7KmrWtnhStnebtFYl9TJOej4nazD86Y2af2D3gEaP7DvMi-o3b2HyFzvvX2KhzbbWFqFDRF2HVESakPMoJBYfdwFigEPaBrHp_i7eqCWH5uWL2hMb1Uy7pO2RqMgMB8RjS-Czwp4Rx2W3kwVDG1WqKH8o3CJx8MzzQ6qQu7zeSzf-O9oGZw9rp58e2MvGIDWR2NEz9Pj3i_Q_wyvy6qFZ0QhQXmYedLlyDjUxGC2PxWx-xGTIvanCUAxuw3WoRaNzg9XEDzzBC4GsWAO0fRW2Wmap3Pf7BnOwqEHsHxtEzCluSyyLPc5YNCu6BBr7qQ' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; turnstile-verified=200.217.197.2; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776859991704%2C%22019db4d5-70b9-7d39-b5aa-d08aa4a682dc%22%2C1776855380150%5D%2C%22%24epp%22%3Atrue%7D; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjA4MDcsImZ2YSI6WzE0MiwtMV0sImlhdCI6MTc3Njg2MDc0NywiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwNzM3LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.oz9ITTKrg5RXMDnT37PO1eO7KmrWtnhStnebtFYl9TJOej4nazD86Y2af2D3gEaP7DvMi-o3b2HyFzvvX2KhzbbWFqFDRF2HVESakPMoJBYfdwFigEPaBrHp_i7eqCWH5uWL2hMb1Uy7pO2RqMgMB8RjS-Czwp4Rx2W3kwVDG1WqKH8o3CJx8MzzQ6qQu7zeSzf-O9oGZw9rp58e2MvGIDWR2NEz9Pj3i_Q_wyvy6qFZ0QhQXmYedLlyDjUxGC2PxWx-xGTIvanCUAxuw3WoRaNzg9XEDzzBC4GsWAO0fRW2Wmap3Pf7BnOwqEHsHxtEzCluSyyLPc5YNCu6BBr7qQ; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjA4MDcsImZ2YSI6WzE0MiwtMV0sImlhdCI6MTc3Njg2MDc0NywiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwNzM3LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.oz9ITTKrg5RXMDnT37PO1eO7KmrWtnhStnebtFYl9TJOej4nazD86Y2af2D3gEaP7DvMi-o3b2HyFzvvX2KhzbbWFqFDRF2HVESakPMoJBYfdwFigEPaBrHp_i7eqCWH5uWL2hMb1Uy7pO2RqMgMB8RjS-Czwp4Rx2W3kwVDG1WqKH8o3CJx8MzzQ6qQu7zeSzf-O9oGZw9rp58e2MvGIDWR2NEz9Pj3i_Q_wyvy6qFZ0QhQXmYedLlyDjUxGC2PxWx-xGTIvanCUAxuw3WoRaNzg9XEDzzBC4GsWAO0fRW2Wmap3Pf7BnOwqEHsHxtEzCluSyyLPc5YNCu6BBr7qQ' \
+  -H 'dnt: 1' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0'
+
+
+
+resposta
+
+{
+    "success": true,
+    "data": {
+        "contexts": [
+            {
+                "id": "0199e4a7-8880-74ef-9568-257ecb3f3f8a",
+                "userId": "user_344fXQKSzbcTPa6s0K1oTrnY0yJ",
+                "folderId": null,
+                "title": "Persona Engenheiro DevOps",
+                "content": "Você é Carlos Eduardo\n\n## ** Engenheiro DevOps Sênior**\n\n### **Full Name:** Carlos Eduardo Santos\n\n### **Demographics:**\n- **Idade:** 32-38 anos\n- **Gênero:** Masculino\n- **Renda:** R$ 12.000 - R$ 18.000/mês\n- **Localização:** Grande centro urbano (São Paulo, Rio de Janeiro)\n- **Educação:** Superior completo em Engenharia da Computação ou Análise e Desenvolvimento de Sistemas\n\n### **Ocupação & Indústria:**\n- **Cargo:** Engenheiro DevOps Sênior\n- **Tamanho da Empresa:** Grande corporação (Banco)\n- **Setor:** Financeiro/Bancário\n\n### **Psicografia:**\n- **Valores Centrais:** Eficiência, Padronização, Automação, Estabilidade\n- **Interesses:** Tecnologias emergentes, automação, metodologias ágeis\n- **Estilo de Vida:** Focado na carreira, busca equilíbrio entre vida pessoal e profissional\n\n### **Objetivos:**\n- Padronizar esteiras de CI/CD para reduzir trabalho manual e retrabalho\n- Capacitar equipes de desenvolvimento para construírem seus próprios pipelines\n- Implementar soluções que aumentem a autonomia dos times\n- Reduzir o tempo gasto \"apagando incêndios\" e focar em melhorias estratégicas\n\n### **Esperanças:**\n- Tornar-se referência técnica em arquitetura DevOps na organização\n- Liderar a transformação digital e cultural da empresa\n- Construir um ambiente onde desenvolvedores sejam autônomos e produtivos\n- Evoluir para posições de liderança técnica ou arquitetura de soluções\n\n### **Pontos de Dor:**\n- Jobs do Jenkins falhando constantemente, gerando retrabalho e pressão\n- Necessidade frequente de criar exceções no SonarQube para liberar deploys\n- Indisponibilidade das ferramentas DevOps impactando toda a cadeia de desenvolvimento\n- Dificuldade em construir pipelines complexos que atendam aos requisitos de compliance bancário\n- Falta de padronização gerando inconsistências entre projetos\n\n### **Medos:**\n- Falhas em produção que possam impactar sistemas críticos bancários\n- Não conseguir acompanhar a velocidade das mudanças tecnológicas\n- Perder relevância técnica por ficar \"apagando incêndios\" ao invés de inovar\n- Auditoria encontrar não-conformidades nos processos de deploy\n\n### **Critérios de Decisão:**\n- Soluções que sejam comprovadamente seguras e atendam compliance bancário\n- Ferramentas que reduzam complexidade e aumentem padronização\n- Documentação clara e exemplos práticos de implementação\n- Suporte técnico responsivo e conhecimento especializado\n\n### **Prontidão para Mudança:**\n- Alto interesse em adotar novas tecnologias que comprovem valor\n- Cauteloso devido ao ambiente regulado, mas aberto a inovações\n- Prefere implementações graduais e bem testadas\n- Valoriza proof of concepts antes de implementações em larga escala\n\n### **Objeções:**\n- \"Isso vai funcionar no nosso ambiente altamente regulado?\"\n- \"Quanto tempo vai levar para implementar e treinar as equipes?\"\n- \"Temos garantia de que não vai quebrar os processos existentes?\"\n- \"O compliance e segurança estão cobertos?\"\n\n### **Papel no Processo de Uso:**\n- **Usuário Principal:** Utiliza diretamente as ferramentas DevOps\n- **Influenciador:** Recomenda soluções para outros engenheiros\n- **Multiplicador:** Treina e orienta equipes de desenvolvimento\n\n### **Conteúdo e Canais Preferidos:**\n- **Tipo de Conteúdo:** Tutoriais práticos, códigos prontos, documentação técnica, exemplos de configuração\n- **Canais:** Buscas no Google, ChatGPT e outras IAs, documentação oficial, fóruns especializados, colegas experientes\n- **Formato:** Passo-a-passo detalhado, snippets de código, templates reutilizáveis\n\n---\n\nAgora que temos uma visão clara de quem é essa persona, vamos conectar isso ao seu agente. **Por favor, descreva seu agente DevOps. Que tipos de perguntas ele responde? Como ele funciona e quais são seus principais recursos e benefícios para resolver os problemas do Carlos Eduardo?**",
+                "createdAt": "2025-07-24T14:21:07.368Z",
+                "updatedAt": "2025-07-24T14:21:07.368Z",
+                "contextLength": 3801,
+                "isShared": false
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "limit": 20,
+            "hasNextPage": false,
+            "hasPreviousPage": false,
+            "totalItems": 10,
+            "totalPages": 1
+        }
+    },
+    "pagination": {
+        "page": 1,
+        "limit": 20,
+        "hasNextPage": false,
+        "hasPreviousPage": false,
+        "totalItems": 1,
+        "totalPages": 1
+    },
+    "details": {
+        "message": "Contexts retrieved successfully"
+    }
+}
+
+
+chamada para listar contexto --list com filtro --folderId para passar diretamente o id ou --folderName com nome (consultar primeiro a lista de pastas para obter o id)
+
+curl 'https://agent.adapta.one/api/contexts/v1?limit=20&folderId=019c2bbd-76fb-7af3-b254-f77380dcb098' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjExMzIsImZ2YSI6WzE0NywtMV0sImlhdCI6MTc3Njg2MTA3MiwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYxMDYyLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.uxUFrf1lAgrMt_SGrlMvRROwuf4SUtLiS8SDnns7MPNgBkLmpaJpKR3OBpPk79UBd5mUbR4kvS7frEJBzvU8JtNy1Dl_8hLuhA52StodgpvbnHrefzdhFyiFV6YSWgWPowl8quweKwUQDOkQJg59hJEznh3F3nbGv8cxTddeHZN7yq70TWoB5-YCQLgQ88So2pMqe_QYiQiFWao2o5HlUQi6aBrGil5KAQLBWqfuoDUK3W8POkwubmdji1CesfTPQ6Txj-UTD57fftyth1m9dtXujJ2Yo4CUPvPCImT_6T_T3rzQbc5XUBXWPs6Kxme7SUteHL4y27oL2KA9YDIPrw' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; turnstile-verified=200.217.197.2; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776859991704%2C%22019db4d5-70b9-7d39-b5aa-d08aa4a682dc%22%2C1776855380150%5D%2C%22%24epp%22%3Atrue%7D; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjExMzIsImZ2YSI6WzE0NywtMV0sImlhdCI6MTc3Njg2MTA3MiwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYxMDYyLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.uxUFrf1lAgrMt_SGrlMvRROwuf4SUtLiS8SDnns7MPNgBkLmpaJpKR3OBpPk79UBd5mUbR4kvS7frEJBzvU8JtNy1Dl_8hLuhA52StodgpvbnHrefzdhFyiFV6YSWgWPowl8quweKwUQDOkQJg59hJEznh3F3nbGv8cxTddeHZN7yq70TWoB5-YCQLgQ88So2pMqe_QYiQiFWao2o5HlUQi6aBrGil5KAQLBWqfuoDUK3W8POkwubmdji1CesfTPQ6Txj-UTD57fftyth1m9dtXujJ2Yo4CUPvPCImT_6T_T3rzQbc5XUBXWPs6Kxme7SUteHL4y27oL2KA9YDIPrw; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjExMzIsImZ2YSI6WzE0NywtMV0sImlhdCI6MTc3Njg2MTA3MiwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYxMDYyLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.uxUFrf1lAgrMt_SGrlMvRROwuf4SUtLiS8SDnns7MPNgBkLmpaJpKR3OBpPk79UBd5mUbR4kvS7frEJBzvU8JtNy1Dl_8hLuhA52StodgpvbnHrefzdhFyiFV6YSWgWPowl8quweKwUQDOkQJg59hJEznh3F3nbGv8cxTddeHZN7yq70TWoB5-YCQLgQ88So2pMqe_QYiQiFWao2o5HlUQi6aBrGil5KAQLBWqfuoDUK3W8POkwubmdji1CesfTPQ6Txj-UTD57fftyth1m9dtXujJ2Yo4CUPvPCImT_6T_T3rzQbc5XUBXWPs6Kxme7SUteHL4y27oL2KA9YDIPrw' \
+  -H 'dnt: 1' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0'
+
+
+chamada para criar contexto  opcao--create --title "titulo" --content "..." ou --file para ler de um arquivo
+
+curl 'https://agent.adapta.one/api/contexts/v1' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjA5OTEsImZ2YSI6WzE0NSwtMV0sImlhdCI6MTc3Njg2MDkzMSwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwOTIxLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.0I-ziTdr71bp_yG5VowwOtlkKzc2btwcE6_GcTTOHLjZOIi4nWGihPaQr7FYxAgZfMmFwWJu77pYP9zYqxbUxHTr3eSLc4F36c9lkHerq-ipyF_g2NAvGbPur3_3F_rWJ_yWqK7e77dzSJlgddJIEFUW_D8GUpAlgWerkNcHVF_X_q654O8xpjIoXfZEErX4pcmhe3IBKPzI905FvYUo93R6QtwIrBX9VlrVtbcdd4qoy50o2CnEaOxU9ypPzi1O5YcQUXPNBefQffkkW0_g2IMIpz7D2uoGBB8UKmhZilcfZe5TlpCi8rjHkLKNmjsIQA21iZsKvmKYV0eNQNsU7Q' \
+  -H 'content-type: application/json' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; turnstile-verified=200.217.197.2; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776859991704%2C%22019db4d5-70b9-7d39-b5aa-d08aa4a682dc%22%2C1776855380150%5D%2C%22%24epp%22%3Atrue%7D; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjA5OTEsImZ2YSI6WzE0NSwtMV0sImlhdCI6MTc3Njg2MDkzMSwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwOTIxLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.0I-ziTdr71bp_yG5VowwOtlkKzc2btwcE6_GcTTOHLjZOIi4nWGihPaQr7FYxAgZfMmFwWJu77pYP9zYqxbUxHTr3eSLc4F36c9lkHerq-ipyF_g2NAvGbPur3_3F_rWJ_yWqK7e77dzSJlgddJIEFUW_D8GUpAlgWerkNcHVF_X_q654O8xpjIoXfZEErX4pcmhe3IBKPzI905FvYUo93R6QtwIrBX9VlrVtbcdd4qoy50o2CnEaOxU9ypPzi1O5YcQUXPNBefQffkkW0_g2IMIpz7D2uoGBB8UKmhZilcfZe5TlpCi8rjHkLKNmjsIQA21iZsKvmKYV0eNQNsU7Q; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjA5OTEsImZ2YSI6WzE0NSwtMV0sImlhdCI6MTc3Njg2MDkzMSwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYwOTIxLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.0I-ziTdr71bp_yG5VowwOtlkKzc2btwcE6_GcTTOHLjZOIi4nWGihPaQr7FYxAgZfMmFwWJu77pYP9zYqxbUxHTr3eSLc4F36c9lkHerq-ipyF_g2NAvGbPur3_3F_rWJ_yWqK7e77dzSJlgddJIEFUW_D8GUpAlgWerkNcHVF_X_q654O8xpjIoXfZEErX4pcmhe3IBKPzI905FvYUo93R6QtwIrBX9VlrVtbcdd4qoy50o2CnEaOxU9ypPzi1O5YcQUXPNBefQffkkW0_g2IMIpz7D2uoGBB8UKmhZilcfZe5TlpCi8rjHkLKNmjsIQA21iZsKvmKYV0eNQNsU7Q' \
+  -H 'dnt: 1' \
+  -H 'origin: https://agent.adapta.one' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0' \
+  --data-raw '{"title":"1","context":"1"}'
+
+
+
+
+chamada para deletar --delete com --id ou --title (consultar a lista e obter id)
+
+curl 'https://agent.adapta.one/api/contexts/v1' \
+  -X 'DELETE' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjEyNzIsImZ2YSI6WzE0OSwtMV0sImlhdCI6MTc3Njg2MTIxMiwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYxMjAyLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.KmN7ROMJq6tOcGn0Mp_MtpMKafy7PTl74FIhE8j89yUo_L1c2uoU9ZIZ0D3dcydta7ExrThvdTzX5NZWZMjq8nRNzlHgBs5BorgTASkEC_oR6NjblqD66L2XsytZqPo41vHRuz_35cKSrRzgfqZG3-4UPZluM1hHQPaG9yxSHl-uBF4n5ngD9u6AXvGKsDUUBFEkL-1J-h5HiOLAU2x1cIjjQ5VVvpC_J2Fo1CrtySf1JQ0o0jU_C24mCsYI8oF4wQsOCXI8jMwDZF9Trm-0fLa4xT9Cr1QykQ-QUOYF-4x7mRyx43RUctBQrH2vr0MMRFt5gbYa58Enu5ZATI2EzA' \
+  -H 'content-type: application/json' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; turnstile-verified=200.217.197.2; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776859991704%2C%22019db4d5-70b9-7d39-b5aa-d08aa4a682dc%22%2C1776855380150%5D%2C%22%24epp%22%3Atrue%7D; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjEyNzIsImZ2YSI6WzE0OSwtMV0sImlhdCI6MTc3Njg2MTIxMiwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYxMjAyLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.KmN7ROMJq6tOcGn0Mp_MtpMKafy7PTl74FIhE8j89yUo_L1c2uoU9ZIZ0D3dcydta7ExrThvdTzX5NZWZMjq8nRNzlHgBs5BorgTASkEC_oR6NjblqD66L2XsytZqPo41vHRuz_35cKSrRzgfqZG3-4UPZluM1hHQPaG9yxSHl-uBF4n5ngD9u6AXvGKsDUUBFEkL-1J-h5HiOLAU2x1cIjjQ5VVvpC_J2Fo1CrtySf1JQ0o0jU_C24mCsYI8oF4wQsOCXI8jMwDZF9Trm-0fLa4xT9Cr1QykQ-QUOYF-4x7mRyx43RUctBQrH2vr0MMRFt5gbYa58Enu5ZATI2EzA; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjEyNzIsImZ2YSI6WzE0OSwtMV0sImlhdCI6MTc3Njg2MTIxMiwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYxMjAyLCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.KmN7ROMJq6tOcGn0Mp_MtpMKafy7PTl74FIhE8j89yUo_L1c2uoU9ZIZ0D3dcydta7ExrThvdTzX5NZWZMjq8nRNzlHgBs5BorgTASkEC_oR6NjblqD66L2XsytZqPo41vHRuz_35cKSrRzgfqZG3-4UPZluM1hHQPaG9yxSHl-uBF4n5ngD9u6AXvGKsDUUBFEkL-1J-h5HiOLAU2x1cIjjQ5VVvpC_J2Fo1CrtySf1JQ0o0jU_C24mCsYI8oF4wQsOCXI8jMwDZF9Trm-0fLa4xT9Cr1QykQ-QUOYF-4x7mRyx43RUctBQrH2vr0MMRFt5gbYa58Enu5ZATI2EzA' \
+  -H 'dnt: 1' \
+  -H 'origin: https://agent.adapta.one' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0' \
+  --data-raw '{"contextIds":["019db52a-a370-74d0-a93e-954ddcec9de8"]}'
+
+
+
+resposta
+{"success":true,"data":{"metadata":{"ids":["019db52a-a370-74d0-a93e-954ddcec9de8"]}},"details":{"message":"Context deleted successfully"}}
+
+
+
+chamada de modelo usando contexto, adicione no comando prompt a opcao --contextId para passar diretamente o id ou --contextName para passar o titulo, --contextFolderId para especificar o id da pasta do contexto (consultar  --contextFolder para especificar a pasta do contexto (consultar o id da pasta e depois os contextos para obter o id), quando passar o --contextId nao precisa fazer busca do id somente caso use contextName, lembrando que Name é o title do contexto.
+
+curl 'https://agent.adapta.one/api/chat/stream/v1' \
+  -H 'accept: */*' \
+  -H 'accept-language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDIyMkFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjE0MTcsImlhdCI6MTc3Njg2MTExNywiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwianRpIjoiY2QwZWY4MWNjNmYxMjFjMGRlNDEiLCJuYmYiOjE3NzY4NjExMTIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIn0.MBnOTyKlytH6ZzUfy43PnFAk0RvwQlRoAJwb9sMTvH4a-rLFK_0Qb1qag3ZQ6AdPyqaFL0-ngyBCez4HMTs-sQiGo9t6hAUM9VhJGt56cNRz9p9HK_9BRg6iOFv8LVIN_yVmAsj2W4HQhwJC-aHu-0N6JjB1RF163bTC9a4E90JYFrI2edOXNNjfw559sDFKI8L0PeWcuvWwY-F21Ha4h0K12WKvgcV-zu3z-P2wPn3XNrE50tfpGVN-mrhP5A8i7-hK39RizklOO5ewygeVUbtvPXnHdml3rbKga0Q3ll4uMLYzZVd9BuL12V3OCrSGyklKFvSFvZBGocZNLBlGKA' \
+  -H 'content-type: application/json' \
+  -b '__client_uat_xcsZUTdN=1763467077; AMP_c78597472d=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJjZjVmNDQwOC05ZjUyLTQ3YWQtOTY5Zi1iODI1YWQwYzQ1MjMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjJ0aGlhZ29mZHNvLnVmcGElNDBnbWFpbC5jb20lMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzYzNDcxNTQxNjgxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc2MzQ3MTU0MTcyOCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMTMlMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=; __client_uat=1776852186; __client_uat_0GUur0zr=1776852186; clerk_active_context=sess_3Chydr8yTDZ4jg64Dd4m5Z76Q9H:; turnstile-verified=200.217.197.2; __refresh_0GUur0zr=sx9sDasJexdGbiOs4AXO; ph_phc_EyNGMgUAq1JSXDq0JgLuO0MgIDlptaaKRQLwDvX8f7g_posthog=%7B%22distinct_id%22%3A%22user_344fXQKSzbcTPa6s0K1oTrnY0yJ%22%2C%22%24sesid%22%3A%5B1776859991704%2C%22019db4d5-70b9-7d39-b5aa-d08aa4a682dc%22%2C1776855380150%5D%2C%22%24epp%22%3Atrue%7D; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjE0MDksImZ2YSI6WzE1MiwtMV0sImlhdCI6MTc3Njg2MTM0OSwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYxMzM5LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.ac-EnyMXQRRaD9D4FHj4YQmG8izDI-99eQLr3H6SYzWwJt62W2lv3fjW3K-cJFosLQ1V6chr9DRLLXqJazgc76WIVskBIV0x4ZLA9qTlMZmhsS5FXv4r7_dF3R3C7cqEiBdyHWFbdDidRRHgCrcNXhMK9Lp4cyvq_IOi9EjeyeXb7myS72J1a2rdzpMPYCJYZNsa7eLQlcwNnsh-8dIaDb5pWxvjqL68XbqqFkAR4Yvr82xS9wC0KdT6sba5PsuMWljEw2veQEYYLnHwM5D-WR9kV1bVmx1mUSx04_-mfp7yvqHi-GVf84Ioz6w1P8lSvIrh14NWuMbwf8gXQVggsg; __session_0GUur0zr=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zMlFtc2l3dUhYYTlHb0o4NzZOQ1BXQXBrUEkiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2FnZW50LmFkYXB0YS5vbmUiLCJleHAiOjE3NzY4NjE0MDksImZ2YSI6WzE1MiwtMV0sImlhdCI6MTc3Njg2MTM0OSwiaXNzIjoiaHR0cHM6Ly9jbGVyay5hZ2VudC5hZGFwdGEub25lIiwibmJmIjoxNzc2ODYxMzM5LCJzaWQiOiJzZXNzXzNDaHlkcjh5VERaNGpnNjREZDRtNVo3NlE5SCIsInN0cyI6ImFjdGl2ZSIsInN1YiI6InVzZXJfMzQ0ZlhRS1N6YmNUUGE2czBLMW9Ucm5ZMHlKIiwidiI6Mn0.ac-EnyMXQRRaD9D4FHj4YQmG8izDI-99eQLr3H6SYzWwJt62W2lv3fjW3K-cJFosLQ1V6chr9DRLLXqJazgc76WIVskBIV0x4ZLA9qTlMZmhsS5FXv4r7_dF3R3C7cqEiBdyHWFbdDidRRHgCrcNXhMK9Lp4cyvq_IOi9EjeyeXb7myS72J1a2rdzpMPYCJYZNsa7eLQlcwNnsh-8dIaDb5pWxvjqL68XbqqFkAR4Yvr82xS9wC0KdT6sba5PsuMWljEw2veQEYYLnHwM5D-WR9kV1bVmx1mUSx04_-mfp7yvqHi-GVf84Ioz6w1P8lSvIrh14NWuMbwf8gXQVggsg' \
+  -H 'dnt: 1' \
+  -H 'origin: https://agent.adapta.one' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://agent.adapta.one/agentic-chat' \
+  -H 'sec-ch-ua: "Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0' \
+  --data-raw $'{"mandatoryTools":[],"chatId":"019db530-a051-7518-a262-68eaa06e8b5d","contextsIds":["019c2bd7-a764-7160-a08a-8990476ac4ac"],"meetingContextsIds":[],"modelAi":"CLAUDE_4_6_SONNET","folderId":"019bc165-4f1d-7541-8230-a3f5aeb859dd","preloadedData":{"companyGlobalSettings":null,"deactivatedToolNames":[],"chatSummary":null,"userProfile":null,"chatFiles":{"images":[],"sheets":[],"presentations":[]},"projectAutoContext":{"contextsList":[],"meetingContexts":"","chatFiles":{"images":[],"sheets":[],"presentations":[]},"projectContextCount":0,"projectFileCount":0},"chatDocument":{"activeDocument":null,"allDocuments":[],"activeDocumentId":null},"isMemoriesEnabled":true,"userDisabledTools":{},"contextsList":[{"id":"019c2bd7-a764-7160-a08a-8990476ac4ac","title":"Banpara","content":"Voce tem acesso e deve usar a ferramenta **webScrape - Extração de conteúdo de URLs específicas** para consultar URLs especificadas para obter dados reais e atuais.\\n\\nTrabalho no Banpará desde 2016, estou lotado atualmente na SUGOT/GEARQ da DITEC.\\n- Minhas principais atuações são em criação, revisão e atualização de normativos\\n- Consultoria em Arquitetura\\n- DevSecOps\\n\\nPara mais informações consulte:\\n* Contexto institucional do Banco do Estado do Pará (Banpará): https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/banpara/SKILL.md\\n* Estrutura Organizacional DITEC (consulte quando precisar entender quais áreas devem envolvidas em atividades):  https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/organograma-ditec/SKILL.md\'\\n* Contexto de alto nível sobre o Planejamento Estratégico de TI  (PETI) e o Plano Diretor de TI (PDTI) (Consulte quando precisar analisar a relação de atividades com o planejamento estratégico do banco): https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/planejamento-estrategico/SKILL.md\\n* Link do PETI: https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/planejamento-estrategico/PETI_2026-2027_V1.0.pdf\\n* Link do PDTI: https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/planejamento-estrategico/pdti_2020-2025_revisao_2025_-_v1.7_.pdf\\n* Projetos em andamento (Consulte quando precisar da visão geral dos projetos em andamento): https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/projetos/SKILL.md\\n* Projeto Octopus: https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/projeto-octopus/SKILL.md\\n* Trigger Projeto Octopus: https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/projeto-octopus/trg_track_DDL.sql\\n* Plano de implantação do octopus (consulte quando precisar entender as fases e etapas de implantação do octopus): https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/projeto-octopus/plano-implantacao.md\\n* Projeto versionamento e implantação de mudanças de banco de dados: https://github.com/thiagofdso/banpara-skills/raw/refs/heads/main/projeto-implantacao-banco/SKILL.md\\n  * Relatório de avaliação dos processos de gestão de mudanças de banco de dados: https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/projeto-implantacao-banco/Parecer_sobre_Processos_de_Implantação_de_Banco_de_Dados.pdf\\n  * Análise de ferramentas de mercado para versionamento de banco de dados:  https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/projeto-implantacao-banco/Analise_de_Ferramentas_de_Implantação_de_Banco_de_dados.pdf\\n  * Relatório de Provas de Conceito com ferramentas de versionamento de banco de dados:  https://raw.githubusercontent.com/thiagofdso/banpara-skills/refs/heads/main/projeto-implantacao-banco/PROVA_DE_CONCEITO_FERRAMENTAS_DE_IMPLANTAÇÃO_DE_BANCO_DE_DADOS.pdf"}],"meetingContexts":""},"useMemoriesInChat":false,"id":"019db530-a051-7518-a262-68eaa06e8b5d","messages":[{"id":"019db531-084b-779c-bb74-58e4fc99e2f6","role":"user","parts":[{"type":"text","text":"oi"}]}],"trigger":"submit-message","messageId":"019db531-084b-779c-bb74-58e4fc99e2f6"}'

@@ -4,7 +4,7 @@
 
 Status: ativo
 
-Descrição: envia um prompt inline ou por arquivo e retorna a resposta no terminal, com opção de salvar em arquivo. Também aceita `--file` com 1 a 5 anexos separados por vírgula, fazendo upload antes de chamar o modelo. Com `--persona <slug>`, injeta o conteúdo de `~/.adapta/persona/<slug>.md` antes do prompt, facilitando reaproveitamento de personas. Reforce sempre o contexto completo (objetivo, estado atual, restrições) ao escrever o prompt.
+Descrição: envia um prompt inline ou por arquivo e retorna a resposta no terminal, com opção de salvar em arquivo. Também aceita `--file` com 1 a 5 anexos separados por vírgula, fazendo upload antes de chamar o modelo. Com `--persona <slug>`, injeta o conteúdo de `~/.adapta/persona/<slug>.md` antes do prompt, facilitando reaproveitamento de personas. Reforce sempre o contexto completo (objetivo, estado atual, restrições) ao escrever o prompt. Por padrão, o chat efêmero é removido ao final; com `--keepChat`/`--keep-chat`, o chat remoto é preservado.
 
 Depende de: autenticação Adapta, registro de modelos, cliente de prompt.
 
@@ -12,7 +12,7 @@ Depende de: autenticação Adapta, registro de modelos, cliente de prompt.
 
 Status: ativo
 
-Descrição: inicia uma conversa contextual com o modelo e exclui o chat remoto ao encerrar. Também aceita `--file` com 1 a 5 anexos separados por vírgula, reaproveitando os mesmos anexos em cada mensagem da sessão.
+Descrição: inicia uma conversa contextual com o modelo e exclui o chat remoto ao encerrar por padrão. Também aceita `--file` com 1 a 5 anexos separados por vírgula, reaproveitando os mesmos anexos em cada mensagem da sessão. Com `--keepChat`/`--keep-chat`, o chat remoto é mantido.
 
 Depende de: autenticação Adapta, registro de modelos, cliente de chat.
 
@@ -20,7 +20,7 @@ Depende de: autenticação Adapta, registro de modelos, cliente de chat.
 
 Status: ativo
 
-Descrição: expõe o comando `persona` para conduzir uma entrevista interativa em 6 blocos, gerar JSON+Markdown em `~/.adapta/persona/{slug}` (diretório home real), e agora inclui `--list` para exibir as personas já salvas, `--input-file` para regerar a partir de JSON existente e `--update` para reaproveitar respostas. O comando valida nome/cargo, grava tanto o JSON quanto o prompt final e tenta excluir o chat remoto ao final.
+Descrição: expõe o comando `persona` para conduzir uma entrevista interativa em 6 blocos, gerar JSON+Markdown em `~/.adapta/persona/{slug}` (diretório home real), e agora inclui `--list` para exibir as personas já salvas, `--input-file` para regerar a partir de JSON existente e `--update` para reaproveitar respostas. O comando valida nome/cargo, grava tanto o JSON quanto o prompt final e tenta excluir o chat remoto ao final por padrão. Com `--keepChat`/`--keep-chat`, preserva o chat remoto.
 
 Depende de: autenticação Adapta, registro de modelos, cliente de chat, persistência local de saída e resolução multiplataforma do diretório home.
 

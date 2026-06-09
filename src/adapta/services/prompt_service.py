@@ -33,7 +33,9 @@ def build_prompt_request(
     files: list[Path] | None,
     session_id: str | None = None,
     stream: bool = False,
+    debug_stream: bool = False,
     folder_id: str | None = None,
+    keep_chat: bool = False,
 ) -> PromptRequest:
     if bool(prompt) == bool(prompt_file):
         raise ValueError("Informe apenas uma origem de prompt.")
@@ -52,7 +54,9 @@ def build_prompt_request(
             file_paths=file_paths,
             session_id=(session_id or None),
             stream=stream,
+            debug_stream=debug_stream,
             folder_id=folder_id,
+            keep_chat=keep_chat,
         )
 
     normalized_prompt = (prompt or "").strip()
@@ -66,42 +70,69 @@ def build_prompt_request(
         file_paths=file_paths,
         session_id=(session_id or None),
         stream=stream,
+        debug_stream=debug_stream,
         folder_id=folder_id,
+        keep_chat=keep_chat,
     )
 
 
 async def execute_prompt(
-    client, request: PromptRequest, model_backend: str
+    client,
+    request: PromptRequest,
+    model_backend: str,
+    context_ids: list[str] | None = None,
+    expert_id: str | None = None,
+    settings=None,
 ) -> ResponseArtifact:
     session_id = request.session_id or generate_chat_id()
     messages = [{"role": "user", "content": request.prompt_text}]
 
     if request.stream:
-        chunks: list[str] = []
         files = None
         if request.file_paths:
-            files = [await client.upload_file(file_path) for file_path in request.file_paths]
-        async for event_type, payload in client.chat_stream(
-            model_backend=model_backend,
-            messages=messages,
-            chat_id=session_id,
-            files=files,
-            folder_id=request.folder_id,
-        ):
-            if event_type == "answer" and payload:
-                print(payload, end="", flush=True)
-                chunks.append(payload)
-        print(flush=True)
-        text = "".join(chunks)
+            files = [
+                await client.upload_file(file_path) for file_path in request.file_paths
+            ]
+
+        async def _consume_stream(current_messages: list[dict[str, str]], current_chat_id: str) -> str:
+            chunks: list[str] = []
+            async for event_type, payload in client.chat_stream(
+                model_backend=model_backend,
+                messages=current_messages,
+                chat_id=current_chat_id,
+                files=files,
+                folder_id=request.folder_id,
+                context_ids=context_ids,
+                expert_id=expert_id,
+                search_workaround=(settings.adapta_search_workaround if settings else None),
+                search_continue_prompt=(settings.adapta_search_continue_prompt if settings else None),
+                search_max_workarounds=(settings.adapta_search_max_workarounds if settings else 1),
+            ):
+                if request.debug_stream:
+                    print(
+                        f"\n[stream-event] type={event_type} payload={payload!r}",
+                        flush=True,
+                    )
+                if event_type == "answer" and payload:
+                    print(payload, end="", flush=True)
+                    chunks.append(payload)
+            print(flush=True)
+            return "".join(chunks)
+
+        text = await _consume_stream(messages, session_id)
     else:
         if request.file_paths:
-            files = [await client.upload_file(file_path) for file_path in request.file_paths]
+            files = [
+                await client.upload_file(file_path) for file_path in request.file_paths
+            ]
             text = await client.chat_with_files(
                 model_backend=model_backend,
                 messages=messages,
                 chat_id=session_id,
                 files=files,
                 folder_id=request.folder_id,
+                context_ids=context_ids,
+                expert_id=expert_id,
             )
         else:
             text = await client.chat(
@@ -109,6 +140,8 @@ async def execute_prompt(
                 messages=messages,
                 chat_id=session_id,
                 folder_id=request.folder_id,
+                context_ids=context_ids,
+                expert_id=expert_id,
             )
 
     destination = "stdout" if request.output_path is None else "stdout+file"
