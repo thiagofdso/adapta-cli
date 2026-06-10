@@ -1,0 +1,13 @@
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao1.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao2.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao3.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao4.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao5.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao6.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao7.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/knowledge_creation.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/knowledge_creation_plain.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/knowledge_extraction.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/knowledge_extraction_plain.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/skill_creation_plain.txt
+/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/skill_extraction_plain.txt

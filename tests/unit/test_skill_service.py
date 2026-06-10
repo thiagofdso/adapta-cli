@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import sqlite3
 from pathlib import Path
 
@@ -10,7 +11,10 @@ from adapta.services.skill_service import (
     build_skill_create_request,
     discover_skill_documents,
     run_skill_create,
+    _load_index_data,
     _merge_skill_entries,
+    _upsert_skills,
+    _validate_skill_entries,
     _validate_skill_markdown,
 )
 
@@ -128,6 +132,159 @@ def test_merge_skill_entries_patches_by_id_and_accumulates_files() -> None:
         {"name": "aula01.txt", "contribution": "Base"},
         {"name": "aula02.txt", "contribution": "Exemplo pratico"},
     ]
+
+
+def test_merge_skill_entries_patches_by_normalized_name_when_id_changes() -> None:
+    existing = [
+        {
+            "id": "tecnica-upscale-imagens-pixel-cut",
+            "name": "Tecnica de Upscale de Imagens com Pixel Cut",
+            "description": "Descricao antiga",
+            "files": [{"name": "aula39.txt", "contribution": "Base"}],
+        }
+    ]
+    new = [
+        {
+            "id": "tecnica-upscale-imagens-pixelcut",
+            "name": "Tecnica de Upscale de Imagens com Pixel Cut",
+            "description": "Descricao atualizada",
+            "files": [{"name": "aula68.txt", "contribution": "Nova pratica"}],
+        }
+    ]
+
+    merged = _merge_skill_entries(existing, new)
+
+    assert len(merged) == 1
+    assert merged[0]["id"] == "tecnica-upscale-imagens-pixel-cut"
+    assert merged[0]["name"] == "Tecnica de Upscale de Imagens com Pixel Cut"
+    assert merged[0]["description"] == "Descricao atualizada"
+    assert merged[0]["files"] == [
+        {"name": "aula39.txt", "contribution": "Base"},
+        {"name": "aula68.txt", "contribution": "Nova pratica"},
+    ]
+
+
+def test_validate_skill_entries_rejects_duplicate_normalized_names() -> None:
+    entries = [
+        {
+            "id": "tecnica-upscale-imagens-pixel-cut",
+            "name": "Tecnica de Upscale de Imagens com Pixel Cut",
+            "description": "Descricao A",
+            "files": [{"name": "aula39.txt", "contribution": "Base"}],
+        },
+        {
+            "id": "tecnica-upscale-imagens-pixelcut",
+            "name": "Técnica de Upscale de Imagens com Pixel Cut",
+            "description": "Descricao B",
+            "files": [{"name": "aula68.txt", "contribution": "Nova pratica"}],
+        },
+    ]
+
+    with pytest.raises(RuntimeError, match="Nome de skill duplicado"):
+        _validate_skill_entries(entries)
+
+
+def test_load_index_data_repairs_legacy_duplicate_names(tmp_path: Path) -> None:
+    index_path = tmp_path / "raw.json"
+    index_path.write_text(
+        json.dumps(
+            {
+                "skills": [
+                    {
+                        "id": "tecnica-upscale-imagens-pixel-cut",
+                        "name": "Tecnica de Upscale de Imagens com Pixel Cut",
+                        "description": "Descricao antiga",
+                        "files": [{"name": "aula39.txt", "contribution": "Base"}],
+                    },
+                    {
+                        "id": "tecnica-upscale-imagens-pixelcut",
+                        "name": "Tecnica de Upscale de Imagens com Pixel Cut",
+                        "description": "Descricao atualizada",
+                        "files": [{"name": "aula68.txt", "contribution": "Nova pratica"}],
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    entries = _load_index_data(index_path)
+
+    assert len(entries) == 1
+    assert entries[0]["id"] == "tecnica-upscale-imagens-pixel-cut"
+    assert entries[0]["description"] == "Descricao atualizada"
+    assert entries[0]["files"] == [
+        {"name": "aula39.txt", "contribution": "Base"},
+        {"name": "aula68.txt", "contribution": "Nova pratica"},
+    ]
+
+
+def test_upsert_skills_updates_existing_row_when_name_matches_even_with_different_key() -> None:
+    connection = sqlite3.connect(":memory:")
+    connection.row_factory = sqlite3.Row
+    cursor = connection.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE skills (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            skill_key TEXT,
+            name TEXT NOT NULL,
+            description TEXT,
+            position INTEGER,
+            folder_path TEXT NOT NULL,
+            status_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(name, folder_path)
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE files_skills (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            skill_id INTEGER NOT NULL,
+            file_name TEXT NOT NULL,
+            contribution TEXT,
+            UNIQUE(skill_id, file_name),
+            FOREIGN KEY (skill_id) REFERENCES skills (id)
+        )
+        """
+    )
+    folder_path = "/curso/raw"
+    _upsert_skills(
+        connection,
+        folder_path,
+        [
+            {
+                "id": "tecnica-upscale-imagens-pixel-cut",
+                "name": "Tecnica de Upscale de Imagens com Pixel Cut",
+                "description": "Descricao antiga",
+                "files": [{"name": "aula39.txt", "contribution": "Base"}],
+            }
+        ],
+    )
+
+    _upsert_skills(
+        connection,
+        folder_path,
+        [
+            {
+                "id": "tecnica-upscale-imagens-pixelcut",
+                "name": "Tecnica de Upscale de Imagens com Pixel Cut",
+                "description": "Descricao atualizada",
+                "files": [{"name": "aula68.txt", "contribution": "Nova pratica"}],
+            }
+        ],
+    )
+
+    cursor.execute("SELECT skill_key, name, description FROM skills")
+    rows = cursor.fetchall()
+    assert len(rows) == 1
+    assert rows[0]["skill_key"] == "tecnica-upscale-imagens-pixelcut"
+    assert rows[0]["description"] == "Descricao atualizada"
+    cursor.execute("SELECT file_name FROM files_skills")
+    assert [row[0] for row in cursor.fetchall()] == ["aula68.txt"]
+    connection.close()
 
 
 def test_validate_skill_markdown_rejects_wrapped_commentary() -> None:

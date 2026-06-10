@@ -12,7 +12,7 @@ from adapta.config import (
     resolve_pipeline_db_path,
     resolve_skill_create_db_path,
 )
-from adapta.models import DebateAgentConfig
+from adapta.models import DebateAgentConfig, DebateTurn
 from adapta.registry import get_model_option, list_model_options, resolve_model_key
 from adapta.runtime import run_async
 from adapta.services.chat_service import (
@@ -329,50 +329,92 @@ def _select_agent_id(agents: list[DebateAgentConfig], label: str) -> str:
     raise ValueError(f"Agente inválido: {raw_choice}")
 
 
+def _select_agent_ids(agents: list[DebateAgentConfig], label: str) -> list[str]:
+    typer.echo(f"\n{label}")
+    for i, agent in enumerate(agents, 1):
+        typer.echo(f"{i}. {agent.agent_id}")
+    typer.echo("0. Todos os outros")
+    
+    raw_choice = typer.prompt("Seleção (ex: 1,3 ou 0)").strip()
+    if raw_choice == "0":
+        return [a.agent_id for a in agents]
+    
+    selected = []
+    for part in raw_choice.split(","):
+        try:
+            idx = int(part.strip())
+            if 1 <= idx <= len(agents):
+                selected.append(agents[idx - 1].agent_id)
+        except ValueError:
+            continue
+    return selected
+
+
 def _prompt_control_decision(
-    turn,
+    turn: DebateTurn | None,
     agents: list[DebateAgentConfig],
 ) -> DebateControlDecision:
-    typer.echo("1. Continuar fluxo atual")
-    typer.echo("2. Responder um agente")
-    typer.echo("3. Responder todos os agentes")
-    typer.echo("4. Fazer um agente responder a outro")
-    typer.echo("5. Fazer um agente responder a todos")
-    typer.echo("6. Concluir debate")
-    choice = typer.prompt("Ação após a resposta").strip()
+    while True:
+        if turn is None:
+            typer.echo("\n--- Início da Rodada / Intervenção Livre ---")
+        else:
+            typer.echo(f"\n--- Controle após resposta de {turn.agent_id} ---")
 
-    if choice == "1":
-        return DebateControlDecision(action="continue")
-    if choice == "2":
-        target_agent_id = _select_agent_id(agents, "Qual agente deve responder?")
-        user_message = typer.prompt("Sua resposta para esse agente").strip()
-        return DebateControlDecision(
-            action="respond_one",
-            target_agent_id=target_agent_id,
-            user_message=user_message,
-        )
-    if choice == "3":
-        user_message = typer.prompt("Sua resposta para todos os agentes").strip()
-        return DebateControlDecision(action="respond_all", user_message=user_message)
-    if choice == "4":
-        target_agent_id = _select_agent_id(agents, "Qual agente vai responder?")
-        source_agent_id = _select_agent_id(agents, "A qual agente ele deve responder?")
-        return DebateControlDecision(
-            action="agent_to_agent",
-            target_agent_id=target_agent_id,
-            source_agent_id=source_agent_id,
-        )
-    if choice == "5":
-        target_agent_id = _select_agent_id(
-            agents, "Qual agente deve responder a todos?"
-        )
-        return DebateControlDecision(
-            action="agent_to_all",
-            target_agent_id=target_agent_id,
-        )
-    if choice == "6":
-        return DebateControlDecision(action="conclude")
-    raise ValueError(f"Ação inválida: {choice}")
+        typer.echo("1. Continuar fluxo automático")
+        typer.echo("2. Escolher um agente para responder agora")
+        if turn:
+            typer.echo(f"3. Direcionar contexto de {turn.agent_id} para outros agentes")
+        typer.echo("4. Intervir: Mensagem para um agente")
+        typer.echo("5. Intervir: Mensagem para todos")
+        typer.echo("6. Concluir debate")
+        choice = typer.prompt("Ação").strip()
+
+        if choice == "1":
+            return DebateControlDecision(action="continue")
+        
+        if choice == "2":
+            target_agent_id = _select_agent_id(agents, "Qual agente deve responder?")
+            user_message = typer.prompt("Instrução adicional (opcional)", default="").strip()
+            typer.echo(f"Acionando {target_agent_id}...")
+            return DebateControlDecision(
+                action="trigger_agent",
+                target_agent_id=target_agent_id,
+                user_message=user_message if user_message else None,
+            )
+
+        if choice == "3" and turn:
+            target_ids = _select_agent_ids(agents, f"Quem deve receber o contexto de {turn.agent_id}?")
+            # Remove o próprio emissor se estiver na lista
+            target_ids = [tid for tid in target_ids if tid != turn.agent_id]
+            if not target_ids:
+                typer.echo("Nenhum agente selecionado.")
+                continue
+            typer.echo(f"Contexto de {turn.agent_id} direcionado para: {', '.join(target_ids)}")
+            return DebateControlDecision(
+                action="update_context",
+                source_agent_id=turn.agent_id,
+                target_agent_ids=target_ids,
+            )
+
+        if choice == "4":
+            target_agent_id = _select_agent_id(agents, "Qual agente deve responder?")
+            user_message = typer.prompt("Sua mensagem para esse agente").strip()
+            typer.echo(f"Enviando mensagem para {target_agent_id}...")
+            return DebateControlDecision(
+                action="respond_one",
+                target_agent_id=target_agent_id,
+                user_message=user_message,
+            )
+
+        if choice == "5":
+            user_message = typer.prompt("Sua mensagem para todos os agentes").strip()
+            typer.echo("Enviando mensagem para todos os agentes...")
+            return DebateControlDecision(action="respond_all", user_message=user_message)
+
+        if choice == "6":
+            return DebateControlDecision(action="conclude")
+
+        typer.echo(f"Ação inválida: {choice}. Tente novamente.")
 
 
 @app.command()

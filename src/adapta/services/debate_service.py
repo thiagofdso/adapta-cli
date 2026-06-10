@@ -33,6 +33,7 @@ TurnEmitter = Callable[[DebateTurn], None]
 class DebateControlDecision:
     action: str
     target_agent_id: str | None = None
+    target_agent_ids: list[str] | None = None
     source_agent_id: str | None = None
     user_message: str | None = None
 
@@ -392,7 +393,7 @@ async def run_controlled_debate(
     client,
     config: DebateConfig,
     control_callback: Callable[
-        [DebateTurn, list[DebateAgentConfig]], DebateControlDecision
+        [DebateTurn | None, list[DebateAgentConfig]], DebateControlDecision
     ],
     emit_turn: TurnEmitter | None = None,
 ) -> DebateResult:
@@ -419,7 +420,7 @@ async def run_controlled_debate(
             emit_turn(turn)
 
     async def _handle_control(
-        last_turn: DebateTurn,
+        last_turn: DebateTurn | None,
         round_number: int,
         turns: list[DebateTurn],
         current_responses: dict[str, str],
@@ -430,6 +431,51 @@ async def run_controlled_debate(
                 return False
             if decision.action == "conclude":
                 return True
+            
+            if decision.action == "trigger_agent":
+                target_id = decision.target_agent_id or ""
+                target_agent = agent_map.get(target_id)
+                if target_agent is None:
+                    raise ValueError(f"Agente inválido: {target_id}")
+                
+                instruction = None
+                if decision.user_message:
+                    instruction = f"Instrução adicional do usuário: {decision.user_message}"
+
+                prompt_text = _build_turn_prompt(
+                    config=config,
+                    agent=target_agent,
+                    round_number=round_number,
+                    previous_responses=previous_responses,
+                )
+                if instruction:
+                    prompt_text = f"{instruction}\n\n{prompt_text}"
+
+                last_turn = await _send_turn(
+                    client=client,
+                    config=config,
+                    session=sessions[target_id],
+                    agent=target_agent,
+                    round_number=round_number,
+                    prompt_text=prompt_text,
+                    uploaded_files=uploaded_files,
+                )
+                await _emit_and_track(last_turn, turns, current_responses)
+                continue
+
+            if decision.action == "update_context":
+                source_id = decision.source_agent_id or ""
+                target_ids = decision.target_agent_ids or []
+                source_text = latest_responses.get(source_id)
+                if source_text is None:
+                    raise ValueError(f"Resposta não encontrada para {source_id}")
+                
+                # O contexto é injetado via latest_responses/previous_responses.
+                # latest_responses[source_id] já foi atualizado em _emit_and_track.
+                # Não precisamos fazer nada aqui no service, o CLI apenas
+                # confirmou a ação. O loop volta e pergunta a próxima ação.
+                continue
+
             if decision.action == "respond_one":
                 target_id = decision.target_agent_id or ""
                 target_agent = agent_map.get(target_id)
@@ -441,7 +487,7 @@ async def run_controlled_debate(
                     instruction="Responda diretamente à intervenção do usuário abaixo.",
                     context_lines=[decision.user_message or ""],
                 )
-                turn = await _send_turn(
+                last_turn = await _send_turn(
                     client=client,
                     config=config,
                     session=sessions[target_id],
@@ -450,10 +496,9 @@ async def run_controlled_debate(
                     prompt_text=prompt_text,
                     uploaded_files=uploaded_files,
                 )
-                await _emit_and_track(turn, turns, current_responses)
-                if await _handle_control(turn, round_number, turns, current_responses):
-                    return True
-                return False
+                await _emit_and_track(last_turn, turns, current_responses)
+                continue
+
             if decision.action == "respond_all":
                 for target_agent in config.agents:
                     prompt_text = _build_control_prompt(
@@ -462,7 +507,7 @@ async def run_controlled_debate(
                         instruction="Responda diretamente à intervenção comum do usuário abaixo.",
                         context_lines=[decision.user_message or ""],
                     )
-                    turn = await _send_turn(
+                    last_turn = await _send_turn(
                         client=client,
                         config=config,
                         session=sessions[target_agent.agent_id],
@@ -471,82 +516,31 @@ async def run_controlled_debate(
                         prompt_text=prompt_text,
                         uploaded_files=uploaded_files,
                     )
-                    await _emit_and_track(turn, turns, current_responses)
-                    if await _handle_control(
-                        turn, round_number, turns, current_responses
-                    ):
-                        return True
-                return False
-            if decision.action == "agent_to_agent":
-                target_id = decision.target_agent_id or ""
-                source_id = decision.source_agent_id or ""
-                target_agent = agent_map.get(target_id)
-                if target_agent is None:
-                    raise ValueError(f"Agente inválido para intervenção: {target_id}")
-                source_text = latest_responses.get(source_id)
-                if source_text is None:
-                    raise ValueError(
-                        f"Ainda não há resposta registrada para {source_id}."
-                    )
-                prompt_text = _build_control_prompt(
-                    config=config,
-                    agent=target_agent,
-                    instruction=f"Responda especificamente à última resposta de {source_id}.",
-                    context_lines=[f"{source_id}: {source_text}"],
-                )
-                turn = await _send_turn(
-                    client=client,
-                    config=config,
-                    session=sessions[target_id],
-                    agent=target_agent,
-                    round_number=round_number,
-                    prompt_text=prompt_text,
-                    uploaded_files=uploaded_files,
-                )
-                await _emit_and_track(turn, turns, current_responses)
-                if await _handle_control(turn, round_number, turns, current_responses):
-                    return True
-                return False
-            if decision.action == "agent_to_all":
-                target_id = decision.target_agent_id or ""
-                target_agent = agent_map.get(target_id)
-                if target_agent is None:
-                    raise ValueError(f"Agente inválido para intervenção: {target_id}")
-                context_lines = [
-                    f"{agent_id}: {response_text}"
-                    for agent_id, response_text in latest_responses.items()
-                    if agent_id != target_id
-                ]
-                if not context_lines:
-                    raise ValueError(
-                        "Ainda não há respostas de outros agentes para esse passo."
-                    )
-                prompt_text = _build_control_prompt(
-                    config=config,
-                    agent=target_agent,
-                    instruction="Responda considerando as últimas respostas de todos os outros agentes abaixo.",
-                    context_lines=context_lines,
-                )
-                turn = await _send_turn(
-                    client=client,
-                    config=config,
-                    session=sessions[target_id],
-                    agent=target_agent,
-                    round_number=round_number,
-                    prompt_text=prompt_text,
-                    uploaded_files=uploaded_files,
-                )
-                await _emit_and_track(turn, turns, current_responses)
-                if await _handle_control(turn, round_number, turns, current_responses):
-                    return True
-                return False
+                    await _emit_and_track(last_turn, turns, current_responses)
+                continue
+
             raise ValueError(f"Ação de controle inválida: {decision.action}")
 
     try:
         for round_number in range(1, config.rounds + 1):
             turns: list[DebateTurn] = []
             current_responses: dict[str, str] = {}
+
+            if await _handle_control(None, round_number, turns, current_responses):
+                debate_rounds.append(
+                    DebateRound(round_number=round_number, turns=turns)
+                )
+                return await _finalize_debate_result(
+                    client=client,
+                    config=config,
+                    debate_rounds=debate_rounds,
+                    cleanup_warnings=cleanup_warnings,
+                )
+
             for agent in config.agents:
+                if agent.agent_id in current_responses:
+                    continue
+
                 prompt_text = _build_turn_prompt(
                     config=config,
                     agent=agent,

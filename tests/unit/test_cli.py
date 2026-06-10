@@ -37,7 +37,7 @@ class DummyClient:
     async def __aexit__(self, exc_type, exc, tb):
         return None
 
-    async def prompt(self, *, model_backend: str, prompt: str) -> str:
+    async def prompt(self, *, model_backend: str, prompt: str, folder_id: str | None = None) -> str:
         self.prompt_calls.append((model_backend, prompt, None))
         return "2"
 
@@ -47,6 +47,7 @@ class DummyClient:
         model_backend: str,
         prompt: str,
         files: list[dict[str, object]],
+        folder_id: str | None = None,
     ) -> str:
         self.prompt_calls.append(
             (model_backend, prompt, [str(file["filename"]) for file in files])
