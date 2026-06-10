@@ -294,8 +294,8 @@ def import_cookies(input: Path=typer.Option(..., '--input')) -> None:
         settings = load_settings()
         destination, payload = import_cookies_to_session_cache(input, data_dir=settings.data_dir)
         typer.echo(f'Cookies importados para {destination}')
-        typer.echo(f'session_id: {payload['session_id']}')
-        typer.echo(f'cookies: {len(payload['cookies'])}')
+        typer.echo(f"session_id: {payload['session_id']}")
+        typer.echo(f"cookies: {len(payload['cookies'])}")
     except (ValueError, RuntimeError, FileNotFoundError, json.JSONDecodeError) as exc:
         _fail(str(exc))
 
@@ -671,9 +671,9 @@ def chat(model: str | None=typer.Option(None, '--model'), file: str | None=typer
                     typer.echo(json.dumps(chats, indent=2, ensure_ascii=False))
                 elif output == 'yaml':
                     for c in chats:
-                        typer.echo(f'- id: {c.get('id')}')
-                        typer.echo(f'  title: {c.get('title')}')
-                        typer.echo(f'  updatedAt: {c.get('updatedAt')}')
+                        typer.echo(f"- id: {c.get('id')}")
+                        typer.echo(f"  title: {c.get('title')}")
+                        typer.echo(f"  updatedAt: {c.get('updatedAt')}")
                 else:
                     typer.echo('id\tupdatedAt\ttitle')
                     for c in chats:
@@ -869,9 +869,9 @@ def expert(list_experts: bool=typer.Option(False, '--list', help='Lista seus exp
                 typer.echo(json.dumps(experts, indent=2, ensure_ascii=False))
             elif output == 'yaml':
                 for e in experts:
-                    typer.echo(f'- id: {e.get('id')}')
-                    typer.echo(f'  name: {e.get('name')}')
-                    typer.echo(f'  model: {e.get('model')}')
+                    typer.echo(f"- id: {e.get('id')}")
+                    typer.echo(f"  name: {e.get('name')}")
+                    typer.echo(f"  model: {e.get('model')}")
             else:
                 typer.echo('id\tmodel\tname')
                 for e in experts:
