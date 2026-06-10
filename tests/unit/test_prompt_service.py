@@ -11,7 +11,7 @@ class DummyClient:
         self.calls: list[tuple[str, str, list[str] | None]] = []
         self.deleted_chats: list[str] = []
 
-    async def prompt(self, *, model_backend: str, prompt: str) -> str:
+    async def prompt(self, *, model_backend: str, prompt: str, folder_id: str | None = None) -> str:
         self.calls.append((model_backend, prompt, None))
         return "2"
 
@@ -21,6 +21,7 @@ class DummyClient:
         model_backend: str,
         prompt: str,
         files: list[dict[str, object]],
+        folder_id: str | None = None,
     ) -> str:
         self.calls.append(
             (model_backend, prompt, [str(file["filename"]) for file in files])

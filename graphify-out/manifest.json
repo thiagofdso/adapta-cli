@@ -1,0 +1,157 @@
+{
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/__init__.py": {
+    "mtime": 1780711746.7770085,
+    "ast_hash": "586e943d940f2feb981fae485677d44c",
+    "semantic_hash": "586e943d940f2feb981fae485677d44c"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/__main__.py": {
+    "mtime": 1780711746.7770085,
+    "ast_hash": "e0da0dc3977d81de1162b995cc32d4d3",
+    "semantic_hash": "e0da0dc3977d81de1162b995cc32d4d3"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/cli.py": {
+    "mtime": 1780761839.5035224,
+    "ast_hash": "a65f2a3bdc26d09c4c2e0b650c8a182c",
+    "semantic_hash": "a65f2a3bdc26d09c4c2e0b650c8a182c"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/client.py": {
+    "mtime": 1780711746.7770085,
+    "ast_hash": "752705d316a7f584854e2c113778e18e",
+    "semantic_hash": "752705d316a7f584854e2c113778e18e"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/config.py": {
+    "mtime": 1780711746.7770085,
+    "ast_hash": "c7439e14685fabeb009e2dc3518e413f",
+    "semantic_hash": "c7439e14685fabeb009e2dc3518e413f"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/logging.py": {
+    "mtime": 1780711746.7775626,
+    "ast_hash": "5b7ae14522c43963ee9512d19b483512",
+    "semantic_hash": "5b7ae14522c43963ee9512d19b483512"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/models.py": {
+    "mtime": 1780711746.7775626,
+    "ast_hash": "0600b1019bf230a6c1d425755d790dbe",
+    "semantic_hash": "0600b1019bf230a6c1d425755d790dbe"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/registry.py": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "3f4651f49d7bd722367a61fafe8bf688",
+    "semantic_hash": "3f4651f49d7bd722367a61fafe8bf688"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/runtime.py": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "5f87b0e1417a16d1f1bbbcd8901906cc",
+    "semantic_hash": "5f87b0e1417a16d1f1bbbcd8901906cc"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/services/__init__.py": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "412cd3c62d1555e253d5bdfc62988224",
+    "semantic_hash": "412cd3c62d1555e253d5bdfc62988224"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/services/chat_service.py": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "07bd794bb515ac27a01f4280ef8d7722",
+    "semantic_hash": "07bd794bb515ac27a01f4280ef8d7722"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/services/debate_service.py": {
+    "mtime": 1780761806.0754342,
+    "ast_hash": "97a6ef0718dab8a50fc31f00dc255fa0",
+    "semantic_hash": "97a6ef0718dab8a50fc31f00dc255fa0"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/services/destilador_service.py": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "c762831fe5dc6fae6cf5f3d38b11028d",
+    "semantic_hash": "c762831fe5dc6fae6cf5f3d38b11028d"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/services/output_service.py": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "d3275d7e26d99121aace572a142b4c7f",
+    "semantic_hash": "d3275d7e26d99121aace572a142b4c7f"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/services/persona_service.py": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "9566c0eb78f8225cfc876336110b8d83",
+    "semantic_hash": "9566c0eb78f8225cfc876336110b8d83"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/services/pipeline_service.py": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "0575182bb390d78fd2ad2513a5858c7b",
+    "semantic_hash": "0575182bb390d78fd2ad2513a5858c7b"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/services/prompt_service.py": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "c6b38e1d9a860fb89392aae51d606a25",
+    "semantic_hash": "c6b38e1d9a860fb89392aae51d606a25"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/services/skill_service.py": {
+    "mtime": 1780849003.4615483,
+    "ast_hash": "05d134907d9806f848816c7ef2bea39f",
+    "semantic_hash": "05d134907d9806f848816c7ef2bea39f"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao1.txt": {
+    "mtime": 1780711746.777896,
+    "ast_hash": "7819569ac543e47fbff138f635d8fae5",
+    "semantic_hash": "7819569ac543e47fbff138f635d8fae5"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao2.txt": {
+    "mtime": 1780711746.7779717,
+    "ast_hash": "09d0ce8cd2e1337bb561a56dc5ea073d",
+    "semantic_hash": "09d0ce8cd2e1337bb561a56dc5ea073d"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao3.txt": {
+    "mtime": 1780711746.7779717,
+    "ast_hash": "d1b7b2c1216eee7cf8316a5973575d86",
+    "semantic_hash": "d1b7b2c1216eee7cf8316a5973575d86"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao4.txt": {
+    "mtime": 1780711746.7779717,
+    "ast_hash": "7641ba2399dd4e2d674725a47467b3e6",
+    "semantic_hash": "7641ba2399dd4e2d674725a47467b3e6"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao5.txt": {
+    "mtime": 1780711746.7779717,
+    "ast_hash": "97dcc6176db4af0c614f69fde7827afa",
+    "semantic_hash": "97dcc6176db4af0c614f69fde7827afa"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao6.txt": {
+    "mtime": 1780711746.7779717,
+    "ast_hash": "42165cabd57fc5ef55c050711f57c6b8",
+    "semantic_hash": "42165cabd57fc5ef55c050711f57c6b8"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/livro/dimensao7.txt": {
+    "mtime": 1780711746.7779717,
+    "ast_hash": "c57485900c6967d7fda9f73d765518a3",
+    "semantic_hash": "c57485900c6967d7fda9f73d765518a3"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/knowledge_creation.txt": {
+    "mtime": 1780711746.7779717,
+    "ast_hash": "1549518b6996291a8cb7c8d719cf4f4f",
+    "semantic_hash": "1549518b6996291a8cb7c8d719cf4f4f"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/knowledge_creation_plain.txt": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "5c9d38f3c8c4d2d794c3c5dd5c24c16a",
+    "semantic_hash": "5c9d38f3c8c4d2d794c3c5dd5c24c16a"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/knowledge_extraction.txt": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "d5d579ef32332d550b0d44eb897cabf7",
+    "semantic_hash": "d5d579ef32332d550b0d44eb897cabf7"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/knowledge_extraction_plain.txt": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "5f7d764c8d0d6d180a0e0fc9c399a379",
+    "semantic_hash": "5f7d764c8d0d6d180a0e0fc9c399a379"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/skill_creation_plain.txt": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "4273944a66b2821915c553b425066971",
+    "semantic_hash": "4273944a66b2821915c553b425066971"
+  },
+  "/home/thiagofdso/Projetos/adapta-cli/src/adapta/prompts/pipeline/skill_extraction_plain.txt": {
+    "mtime": 1780711746.77857,
+    "ast_hash": "3fa755b13baf717a49ad7902adfacf88",
+    "semantic_hash": "3fa755b13baf717a49ad7902adfacf88"
+  }
+}

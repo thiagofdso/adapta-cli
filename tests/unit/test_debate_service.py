@@ -61,7 +61,7 @@ class DummyDebateClient:
             "path": f"uploads/{file_path.name}",
         }
 
-    async def prompt(self, *, model_backend: str, prompt: str) -> str:
+    async def prompt(self, *, model_backend: str, prompt: str, folder_id: str | None = None) -> str:
         self.prompt_calls.append((model_backend, prompt))
         return f"conclusao-{model_backend}"
 
@@ -287,6 +287,7 @@ async def test_run_controlled_debate_allows_manual_reply_and_early_conclusion(
     )
     decisions = iter(
         [
+            DebateControlDecision(action="continue"),  # Antes da rodada começar
             DebateControlDecision(
                 action="respond_one",
                 target_agent_id="A2",

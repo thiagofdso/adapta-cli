@@ -4,6 +4,7 @@ import asyncio
 import json
 import re
 import sqlite3
+import unicodedata
 from collections import defaultdict
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -661,7 +662,7 @@ def _load_index_data(index_path: Path) -> list[dict[str, Any]]:
         raise RuntimeError(
             f"Formato inválido no JSON de origem ({index_path}): esperado um objeto com a chave 'skills'."
         )
-    entries = [_sanitize_skill_entry(entry) for entry in raw.get("skills") or []]
+    entries = _merge_skill_entries([], raw.get("skills") or [])
     _validate_skill_entries(entries)
     return entries
 
@@ -689,6 +690,7 @@ def _parse_skill_json(raw_text: str, *, current_file_name: str) -> list[dict[str
 def _validate_skill_entries(entries: list[dict[str, Any]]) -> None:
     if not isinstance(entries, list):
         raise RuntimeError("As entradas de skill devem ser uma lista.")
+    seen_names: dict[str, str] = {}
     for index, entry in enumerate(entries):
         skill_id = str(entry.get("id") or "").strip()
         if not skill_id:
@@ -696,6 +698,12 @@ def _validate_skill_entries(entries: list[dict[str, Any]]) -> None:
         name = str(entry.get("name") or "").strip()
         if not name:
             raise RuntimeError(f"Entrada na posição {index} não possui um 'name' válido.")
+        normalized_name = _normalized_skill_name(name)
+        if normalized_name in seen_names:
+            raise RuntimeError(
+                f"Nome de skill duplicado no índice: '{name}' conflita com '{seen_names[normalized_name]}'."
+            )
+        seen_names[normalized_name] = name
         description = str(entry.get("description") or "").strip()
         if not description:
             raise RuntimeError(f"Entrada '{name}' não possui uma 'description' válida.")
@@ -714,17 +722,28 @@ def _merge_skill_entries(
     existing_entries: list[dict[str, Any]], new_entries: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
     merged = [_sanitize_skill_entry(entry) for entry in existing_entries]
-    position_by_key = {
-        _entry_patch_key(entry): index
-        for index, entry in enumerate(merged)
-    }
+    position_by_id: dict[str, int] = {}
+    position_by_name: dict[str, int] = {}
+    for index, entry in enumerate(merged):
+        skill_id = str(entry.get("id") or "").strip().lower()
+        if skill_id:
+            position_by_id[f"id:{skill_id}"] = index
+        normalized_name = _normalized_skill_name(str(entry.get("name") or ""))
+        if normalized_name:
+            position_by_name[f"name:{normalized_name}"] = index
+
     for entry in new_entries:
         sanitized_entry = _sanitize_skill_entry(entry)
-        key = _entry_patch_key(sanitized_entry)
-        if not key:
-            continue
-        if key in position_by_key:
-            current = merged[position_by_key[key]]
+        id_key = _entry_patch_key(sanitized_entry)
+        name_key = f"name:{_normalized_skill_name(str(sanitized_entry.get('name') or ''))}"
+        position = position_by_id.get(id_key)
+        if position is None:
+            position = position_by_name.get(name_key)
+        if position is not None:
+            current = merged[position]
+            position_by_id[id_key] = position
+            if name_key != "name:":
+                position_by_name[name_key] = position
             current["files"] = _normalize_files(
                 list(current.get("files") or [])
                 + list(sanitized_entry.get("files") or [])
@@ -732,7 +751,10 @@ def _merge_skill_entries(
             if sanitized_entry.get("description"):
                 current["description"] = sanitized_entry["description"]
         else:
-            position_by_key[key] = len(merged)
+            position = len(merged)
+            position_by_id[id_key] = position
+            if name_key != "name:":
+                position_by_name[name_key] = position
             merged.append(sanitized_entry)
     return merged
 
@@ -762,11 +784,18 @@ def _sanitize_skill_entry(
     }
 
 
+def _normalized_skill_name(name: str) -> str:
+    decomposed = unicodedata.normalize("NFKD", str(name or ""))
+    ascii_name = "".join(char for char in decomposed if not unicodedata.combining(char))
+    ascii_name = "".join(char for char in ascii_name if char.isalnum() or char.isspace())
+    return re.sub(r"\s+", " ", ascii_name).strip().casefold()
+
+
 def _entry_patch_key(entry: dict[str, Any]) -> str:
     skill_id = str(entry.get("id") or "").strip()
     if skill_id:
         return f"id:{skill_id.lower()}"
-    return f"name:{str(entry.get('name') or '').strip().lower()}"
+    return f"name:{_normalized_skill_name(str(entry.get('name') or ''))}"
 
 
 def _normalize_files(files: list[Any]) -> list[dict[str, str]]:
@@ -801,7 +830,7 @@ def _upsert_skills(
             cursor.execute(
                 """
                 SELECT id FROM skills
-                WHERE name = ? AND folder_path = ? AND (skill_key IS NULL OR skill_key = '')
+                WHERE name = ? AND folder_path = ?
                 """,
                 (entry["name"], folder_path),
             )

@@ -185,6 +185,28 @@ class AdaptaHttpSession:
         self._client = None
         self._client_loop = None
 
+    async def logout(self) -> None:
+        if not self._session_id:
+            self._clear_session_cache()
+            return
+        client = await self._session.ensure_client()
+        try:
+            await self._touch_session(client, self._session_id)
+        except httpx.HTTPError as exc:
+            logger.debug('Falha ao tocar sessao antes do logout: %s', exc)
+        await self._notify_logout_navigation(client)
+        await self._delete_session(client)
+        self._session_id = None
+        self._bearer_token = None
+        self._bearer_token_exp = 0.0
+        self._used_production_token = False
+        self._cached_cookies = {}
+        self._cached_headers = {}
+        self._session.remember_cookies({})
+        client.cookies.clear()
+        self._clear_session_cache()
+
+
 
 class AdaptaAuthenticator:
     def __init__(
@@ -1305,6 +1327,98 @@ class AdaptaConversationClient:
         low_value = ord(low) - 0xDC00
         return chr(0x10000 + ((high_value << 10) | low_value))
 
+    async def list_experts(self, *, is_public: bool=False) -> list[dict[str, Any]]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+        params = {'page': 1, 'limit': 1000, 'isPublic': 'true' if is_public else 'false'}
+        response = await client.get(f'{AGENT_BASE_URL}/api/expert/getAll/v1', headers={'accept': '*/*', 'authorization': f'Bearer {token}', 'origin': AGENT_BASE_URL, 'referer': f'{AGENT_BASE_URL}/expert/my-experts'}, params=params)
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get('data') or []
+
+
+    async def create_expert(self, *, name: str, description: str, instruction: str, model: str, category: str='MANAGEMENT', creativity: int | None=None, ice_breakers: str | None=None) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+        data = {'name': name, 'description': description, 'instruction': instruction, 'model': model, 'category': category}
+        if creativity is not None:
+            data['creativity'] = str(creativity)
+        if ice_breakers:
+            data['iceBreakers'] = ice_breakers
+        response = await client.post(f'{API_AGENT_BASE_URL}/api/expert', headers={'accept': '*/*', 'authorization': f'Bearer {token}', 'origin': AGENT_BASE_URL, 'referer': f'{AGENT_BASE_URL}/'}, data=data)
+        response.raise_for_status()
+        return response.json()
+
+
+    async def delete_expert(self, expert_id: str) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+        response = await client.request('DELETE', f'{AGENT_BASE_URL}/api/expert/delete/v1', headers={'accept': '*/*', 'authorization': f'Bearer {token}', 'content-type': 'application/json', 'origin': AGENT_BASE_URL, 'referer': f'{AGENT_BASE_URL}/expert/my-experts'}, json={'id': expert_id})
+        response.raise_for_status()
+        return response.json()
+
+
+    async def list_context_folders(self) -> list[dict[str, Any]]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+        response = await client.get(f'{AGENT_BASE_URL}/api/folders/v2', headers={'accept': '*/*', 'authorization': f'Bearer {token}', 'origin': AGENT_BASE_URL, 'referer': f'{AGENT_BASE_URL}/agentic-chat'}, params={'type': 'CONTEXTS', 'scope': 'PERSONAL'})
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get('data') or []
+
+
+    async def list_contexts(self, *, limit: int=20, folder_id: str | None=None) -> list[dict[str, Any]]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+        params: dict[str, Any] = {'limit': limit}
+        if folder_id:
+            params['folderId'] = folder_id
+        response = await client.get(f'{AGENT_BASE_URL}/api/contexts/v1', headers={'accept': '*/*', 'authorization': f'Bearer {token}', 'origin': AGENT_BASE_URL, 'referer': f'{AGENT_BASE_URL}/agentic-chat'}, params=params)
+        response.raise_for_status()
+        payload = response.json()
+        data = payload.get('data') or {}
+        return data.get('contexts') or []
+
+
+    async def create_context(self, title: str, content: str, folder_id: str | None=None) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+        payload = {'title': title, 'context': content}
+        if folder_id:
+            payload['folderId'] = folder_id
+        response = await client.post(f'{AGENT_BASE_URL}/api/contexts/v1', headers={'accept': '*/*', 'authorization': f'Bearer {token}', 'content-type': 'application/json', 'origin': AGENT_BASE_URL, 'referer': f'{AGENT_BASE_URL}/agentic-chat'}, json=payload)
+        response.raise_for_status()
+        return response.json()
+
+
+    async def delete_contexts(self, context_ids: list[str]) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+        response = await client.request('DELETE', f'{AGENT_BASE_URL}/api/contexts/v1', headers={'accept': '*/*', 'authorization': f'Bearer {token}', 'content-type': 'application/json', 'origin': AGENT_BASE_URL, 'referer': f'{AGENT_BASE_URL}/agentic-chat'}, json={'contextIds': context_ids})
+        response.raise_for_status()
+        return response.json()
+
+
+    async def list_chats(self, *, limit: int=20, page: int=1, folder_id: str | None=None) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+        params: dict[str, Any] = {'limit': limit, 'page': page}
+        if folder_id:
+            params['folderId'] = folder_id
+        response = await client.get(f'{AGENT_BASE_URL}/api/chat/v2', headers={'accept': '*/*', 'authorization': f'Bearer {token}', 'origin': AGENT_BASE_URL, 'referer': f'{AGENT_BASE_URL}/agentic-chat'}, params=params)
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get('data') or {}
+
+
 
 class AdaptaClientAdapter:
     def __init__(
@@ -1435,6 +1549,42 @@ class AdaptaClientAdapter:
 
     async def delete_file(self, file_path: str | list[str]) -> None:
         await self._conversations.delete_file(file_path)
+
+    async def list_chats(self, *, limit: int=20, page: int=1, folder_id: str | None=None) -> dict[str, Any]:
+        return await self._conversations.list_chats(limit=limit, page=page, folder_id=folder_id)
+
+
+    async def list_context_folders(self) -> list[dict[str, Any]]:
+        return await self._conversations.list_context_folders()
+
+
+    async def list_contexts(self, *, limit: int=20, folder_id: str | None=None) -> list[dict[str, Any]]:
+        return await self._conversations.list_contexts(limit=limit, folder_id=folder_id)
+
+
+    async def create_context(self, title: str, content: str, folder_id: str | None=None) -> dict[str, Any]:
+        return await self._conversations.create_context(title=title, content=content, folder_id=folder_id)
+
+
+    async def delete_contexts(self, context_ids: list[str]) -> dict[str, Any]:
+        return await self._conversations.delete_contexts(context_ids)
+
+
+    async def list_experts(self, *, is_public: bool=False) -> list[dict[str, Any]]:
+        return await self._conversations.list_experts(is_public=is_public)
+
+
+    async def create_expert(self, *, name: str, description: str, instruction: str, model: str, category: str='MANAGEMENT', creativity: int | None=None, ice_breakers: str | None=None) -> dict[str, Any]:
+        return await self._conversations.create_expert(name=name, description=description, instruction=instruction, model=model, category=category, creativity=creativity, ice_breakers=ice_breakers)
+
+
+    async def delete_expert(self, expert_id: str) -> dict[str, Any]:
+        return await self._conversations.delete_expert(expert_id)
+
+
+    async def logout(self) -> None:
+        await self._authenticator.logout()
+
 
 
 def create_client(settings: Settings) -> AdaptaClientAdapter:

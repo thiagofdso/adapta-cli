@@ -22,10 +22,13 @@ def generate_chat_id() -> str:
 
 
 def create_chat_session(
-    model_key: str, chat_id_factory=generate_chat_id
+    model_key: str, chat_id_factory=generate_chat_id, keep_chat: bool = False
 ) -> ChatSession:
     return ChatSession(
-        chat_id=chat_id_factory(), model_key=model_key, cleanup_required=False
+        chat_id=chat_id_factory(),
+        model_key=model_key,
+        cleanup_required=False,
+        keep_chat=keep_chat,
     )
 
 
@@ -65,12 +68,16 @@ async def send_chat_message(
 
 
 async def close_chat_session(client, session: ChatSession) -> None:
-    if session.cleanup_required:
+    if session.cleanup_required and not session.keep_chat:
         await client.delete_chat(session.chat_id)
 
 
 async def close_chat_sessions(client, sessions: list[ChatSession]) -> None:
-    chat_ids = [session.chat_id for session in sessions if session.cleanup_required]
+    chat_ids = [
+        session.chat_id
+        for session in sessions
+        if session.cleanup_required and not session.keep_chat
+    ]
     if not chat_ids:
         return
     await client.delete_chat(chat_ids)
