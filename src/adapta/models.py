@@ -41,6 +41,7 @@ class ChatSession:
     model_key: str
     messages: list[dict[str, str]] = field(default_factory=list)
     cleanup_required: bool = False
+    keep_chat: bool = False
 
 
 @dataclass(frozen=True)

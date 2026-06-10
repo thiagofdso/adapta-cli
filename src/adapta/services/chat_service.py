@@ -22,10 +22,13 @@ def generate_chat_id() -> str:
 
 
 def create_chat_session(
-    model_key: str, chat_id_factory=generate_chat_id
+    model_key: str, chat_id_factory=generate_chat_id, keep_chat: bool = False
 ) -> ChatSession:
     return ChatSession(
-        chat_id=chat_id_factory(), model_key=model_key, cleanup_required=False
+        chat_id=chat_id_factory(),
+        model_key=model_key,
+        cleanup_required=False,
+        keep_chat=keep_chat,
     )
 
 
