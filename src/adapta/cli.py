@@ -253,7 +253,7 @@ def _prompt_control_decision(turn: DebateTurn | None, agents: list[DebateAgentCo
             if not target_ids:
                 typer.echo('Nenhum agente selecionado.')
                 continue
-            typer.echo(f'Contexto de {turn.agent_id} direcionado para: {', '.join(target_ids)}')
+            typer.echo(f"Contexto de {turn.agent_id} direcionado para: {', '.join(target_ids)}")
             return DebateControlDecision(action='update_context', source_agent_id=turn.agent_id, target_agent_ids=target_ids)
         if choice == '4':
             target_agent_id = _select_agent_id(agents, 'Qual agente deve responder?')
