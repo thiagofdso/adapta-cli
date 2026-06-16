@@ -188,6 +188,8 @@ class SkillCreateRequest:
     job_filter: int | None = None
     keep_chat: bool = False
     log_enabled: bool = False
+    max_retries: int = 3
+    retry_delay_seconds: float = 60.0
 
 
 @dataclass(frozen=True)

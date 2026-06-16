@@ -616,10 +616,28 @@ def skill(list_skills: bool=typer.Option(False, '--list', help='Lista skills da 
         _fail(str(exc))
 
 @app.command('skill-create')
-def skill_create(input_dir: Path | None=typer.Option(None, '--input-dir'), output_dir: Path | None=typer.Option(None, '--output-dir'), db_path: Path | None=typer.Option(None, '--db-path'), job: int | None=typer.Option(None, '--job'), keep_chat: bool=typer.Option(False, '--keep-chat'), log: bool=typer.Option(False, '--log')) -> None:
+def skill_create(
+    input_dir: Path | None = typer.Option(None, '--input-dir'),
+    output_dir: Path | None = typer.Option(None, '--output-dir'),
+    db_path: Path | None = typer.Option(None, '--db-path'),
+    job: int | None = typer.Option(None, '--job'),
+    keep_chat: bool = typer.Option(False, '--keep-chat'),
+    log: bool = typer.Option(False, '--log'),
+    max_retries: int = typer.Option(3, '--max-retries', help='Número máximo de tentativas para cada arquivo.'),
+    retry_delay_seconds: float = typer.Option(60.0, '--retry-delay-seconds', help='Atraso entre tentativas em segundos.'),
+) -> None:
     try:
         settings = load_settings()
-        request = build_skill_create_request(input_dir=input_dir, output_dir=output_dir, db_path=resolve_skill_create_db_path(db_path, settings.data_dir), job=job, keep_chat=keep_chat, log=log)
+        request = build_skill_create_request(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            db_path=resolve_skill_create_db_path(db_path, settings.data_dir),
+            job=job,
+            keep_chat=keep_chat,
+            log=log,
+            max_retries=max_retries,
+            retry_delay_seconds=retry_delay_seconds,
+        )
 
         def _progress(message: str) -> None:
             if log:
