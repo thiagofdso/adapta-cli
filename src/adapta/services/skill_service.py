@@ -38,6 +38,8 @@ def build_skill_create_request(
     job: int | None,
     keep_chat: bool,
     log: bool,
+    max_retries: int = 3,
+    retry_delay_seconds: float = 60.0,
 ) -> SkillCreateRequest:
     if input_dir is None or output_dir is None:
         raise ValueError("Informe --input-dir e --output-dir para o comando skill-create.")
@@ -58,6 +60,8 @@ def build_skill_create_request(
         job_filter=job,
         keep_chat=keep_chat,
         log_enabled=log,
+        max_retries=max_retries,
+        retry_delay_seconds=retry_delay_seconds,
     )
 
 
@@ -272,7 +276,7 @@ async def _run_stage1_for_folder(
         prompt = _append_inline_blocks(prompt, [document.source_path])
 
         merged_entries = None
-        max_attempts = 3
+        max_attempts = request.max_retries
         for attempt in range(1, max_attempts + 1):
             try:
                 _validate_skill_entries(existing_entries)
@@ -297,7 +301,7 @@ async def _run_stage1_for_folder(
                     progress_callback(
                         f"Aviso: falha na tentativa {attempt} para {document.source_name}. Retentando... ({exc})"
                     )
-                await asyncio.sleep(2.0)
+                await asyncio.sleep(request.retry_delay_seconds)
 
         if merged_entries is not None:
             existing_entries = merged_entries
