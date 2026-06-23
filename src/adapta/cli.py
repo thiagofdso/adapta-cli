@@ -524,7 +524,22 @@ def folder(list_folders: bool=typer.Option(False, '--list', help='Lista pastas d
         _fail(str(exc))
 
 @app.command()
-def skill(list_skills: bool=typer.Option(False, '--list', help='Lista skills da Adapta e retorna.'), detail: bool=typer.Option(False, '--detail', help='Exibe as instruções de uma skill específica.'), status: bool=typer.Option(False, '--status', help='Exibe se a skill está habilitada ou não.'), create: bool=typer.Option(False, '--create', help='Cria uma nova skill na Adapta.'), delete: bool=typer.Option(False, '--delete', help='Remove uma skill da Adapta.'), enable: bool=typer.Option(False, '--enable', help='Habilita uma skill da Adapta.'), disable: bool=typer.Option(False, '--disable', help='Desabilita uma skill da Adapta.'), id: str | None=typer.Option(None, '--id', help='ID da skill.'), name: str | None=typer.Option(None, '--name', help='Nome (título) da skill.'), title: str | None=typer.Option(None, '--title', help='Título para criação de skill.'), description: str | None=typer.Option(None, '--description', help='Descrição para criação de skill.'), instruction: str | None=typer.Option(None, '--instruction', help='Instruções para criação de skill.')) -> None:
+def skill(
+    list_skills: bool=typer.Option(False, '--list', help='Lista skills da Adapta e retorna.'),
+    detail: bool=typer.Option(False, '--detail', help='Exibe as instruções de uma skill específica.'),
+    status: bool=typer.Option(False, '--status', help='Exibe se a skill está habilitada ou não.'),
+    create: bool=typer.Option(False, '--create', help='Cria uma nova skill na Adapta.'),
+    delete: bool=typer.Option(False, '--delete', help='Remove uma skill da Adapta.'),
+    enable: bool=typer.Option(False, '--enable', help='Habilita uma skill da Adapta.'),
+    disable: bool=typer.Option(False, '--disable', help='Desabilita uma skill da Adapta.'),
+    id: str | None=typer.Option(None, '--id', help='ID da skill.'),
+    name: str | None=typer.Option(None, '--name', help='Nome (título) da skill.'),
+    title: str | None=typer.Option(None, '--title', help='Título para criação de skill.'),
+    description: str | None=typer.Option(None, '--description', help='Descrição para criação de skill.'),
+    instruction: str | None=typer.Option(None, '--instruction', help='Instruções para criação de skill.'),
+    export: bool=typer.Option(False, '--export', help='Salva um markdown para a(s) skill(s) retornada(s).'),
+    folder: Path | None=typer.Option(None, '--folder', help='Pasta local para salvar os markdowns.')
+) -> None:
     try:
         settings = load_settings()
 
@@ -540,6 +555,27 @@ def skill(list_skills: bool=typer.Option(False, '--list', help='Lista skills da 
                 s_active = 'yes' if s.get('isActive') else 'no'
                 s_desc = str(s.get('description') or '')
                 typer.echo(f'{s_id}\t{s_title}\t{s_active}\t{s_desc}')
+            
+            if export:
+                target_folder = folder or Path.cwd()
+                target_folder.mkdir(parents=True, exist_ok=True)
+                for s in skills:
+                    s_id = str(s.get('id', ''))
+                    s_title = str(s.get('title', ''))
+                    safe_title = "".join(c for c in s_title if c.isalnum() or c in " -_").strip()
+                    filename = f"{safe_title}_{s_id}.md" if safe_title else f"{s_id}.md"
+                    file_path = target_folder / filename
+                    
+                    s_inst = s.get('instruction')
+                    if s_inst is None:
+                        async def _get_skill_detail(sid: str) -> dict[str, Any]:
+                            async with create_client(settings) as client:
+                                return await client.get_skill(sid)
+                        detail_data = run_async(_get_skill_detail(s_id))
+                        s_inst = detail_data.get('instruction', '')
+                        
+                    file_path.write_text(str(s_inst), encoding="utf-8")
+                typer.echo(f"\n{len(skills)} skill(s) exportada(s) para {target_folder}")
             return
         if detail or status or delete or enable or disable:
             if not id and (not name):
@@ -572,7 +608,18 @@ def skill(list_skills: bool=typer.Option(False, '--list', help='Lista skills da 
                     async with create_client(settings) as client:
                         return await client.get_skill(target_id)
                 skill_data = run_async(_run_detail())
-                typer.echo(skill_data.get('instruction') or 'Nenhuma instrução encontrada.')
+                
+                if export:
+                    target_folder = folder or Path.cwd()
+                    target_folder.mkdir(parents=True, exist_ok=True)
+                    s_title = str(skill_data.get('title') or target_id)
+                    safe_title = "".join(c for c in s_title if c.isalnum() or c in " -_").strip()
+                    filename = f"{safe_title}_{target_id}.md" if safe_title else f"{target_id}.md"
+                    file_path = target_folder / filename
+                    file_path.write_text(str(skill_data.get('instruction') or ''), encoding="utf-8")
+                    typer.echo(f"Skill exportada para {file_path}")
+                else:
+                    typer.echo(skill_data.get('instruction') or 'Nenhuma instrução encontrada.')
                 return
             if delete:
 
@@ -956,6 +1003,64 @@ def expert(list_experts: bool=typer.Option(False, '--list', help='Lista seus exp
             return
         typer.echo("Use 'adapta expert --list', 'adapta expert --detail [--id|--name]', 'adapta expert --create --name <n> --description <d> --model <m> [--instruction|--instruction-file]', ou 'adapta expert --delete [--id|--name]'.")
     except (ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+@app.command()
+def library(
+    export: bool = typer.Option(False, "--export", help="Salva um markdown para cada prompt retornado."),
+    folder: Path | None = typer.Option(None, "--folder", help="Pasta local para salvar os markdowns."),
+    all: bool = typer.Option(False, "--all", help="Retorna todos os prompts iterando sobre as páginas."),
+    limit: int = typer.Option(20, "--limit", help="Limite de prompts por página."),
+    page: int = typer.Option(1, "--page", help="Página a ser retornada.")
+) -> None:
+    try:
+        settings = load_settings()
+
+        async def _fetch_prompts(p: int) -> list[dict[str, Any]]:
+            async with create_client(settings) as client:
+                data = await client.list_prompts(limit=limit, page=p)
+                return data.get("prompts") or []
+
+        prompts: list[dict[str, Any]] = []
+        if all:
+            current_page = 1
+            while True:
+                page_prompts = run_async(_fetch_prompts(current_page))
+                if not page_prompts:
+                    break
+                prompts.extend(page_prompts)
+                if len(page_prompts) < limit:
+                    break
+                current_page += 1
+        else:
+            prompts = run_async(_fetch_prompts(page))
+
+        if not prompts:
+            typer.echo("Nenhum prompt encontrado.")
+            return
+
+        typer.echo("id\ttitle\tcontent")
+        for p in prompts:
+            p_id = str(p.get("id", ""))
+            p_title = str(p.get("title", ""))
+            p_content = str(p.get("content", ""))
+            snippet = p_content[:50].replace("\n", " ") + ("..." if len(p_content) > 50 else "")
+            typer.echo(f"{p_id}\t{p_title}\t{snippet}")
+
+        if export:
+            target_folder = folder or Path.cwd()
+            target_folder.mkdir(parents=True, exist_ok=True)
+            for p in prompts:
+                p_id = str(p.get("id", ""))
+                p_title = str(p.get("title", ""))
+                p_content = str(p.get("content", ""))
+                safe_title = "".join(c for c in p_title if c.isalnum() or c in " -_").strip()
+                filename = f"{safe_title}_{p_id}.md" if safe_title else f"{p_id}.md"
+                file_path = target_folder / filename
+                file_path.write_text(p_content, encoding="utf-8")
+            typer.echo(f"\n{len(prompts)} prompt(s) exportado(s) para {target_folder}")
+
+    except (ValueError, RuntimeError, OSError) as exc:
         _fail(str(exc))
 
 def main() -> None:

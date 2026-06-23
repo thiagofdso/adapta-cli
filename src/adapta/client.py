@@ -1418,6 +1418,16 @@ class AdaptaConversationClient:
         payload = response.json()
         return payload.get('data') or {}
 
+    async def list_prompts(self, *, limit: int=20, page: int=1) -> dict[str, Any]:
+        client = await self._session.ensure_client()
+        await self._authenticator.ensure_authenticated()
+        token = await self._authenticator.ensure_bearer_token()
+        params: dict[str, Any] = {'limit': limit, 'page': page}
+        response = await client.get(f'{AGENT_BASE_URL}/api/prompts/v1', headers={'accept': '*/*', 'authorization': f'Bearer {token}', 'origin': AGENT_BASE_URL, 'referer': f'{AGENT_BASE_URL}/agentic-chat'}, params=params)
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get('data') or {}
+
 
 
 class AdaptaClientAdapter:
@@ -1552,6 +1562,9 @@ class AdaptaClientAdapter:
 
     async def list_chats(self, *, limit: int=20, page: int=1, folder_id: str | None=None) -> dict[str, Any]:
         return await self._conversations.list_chats(limit=limit, page=page, folder_id=folder_id)
+
+    async def list_prompts(self, *, limit: int=20, page: int=1) -> dict[str, Any]:
+        return await self._conversations.list_prompts(limit=limit, page=page)
 
 
     async def list_context_folders(self) -> list[dict[str, Any]]:
